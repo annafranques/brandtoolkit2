@@ -25,9 +25,49 @@ body {
     min-height: 100vh;
 }
 
+/* Admin Preloader - Hide admin content until authenticated */
+.admin-preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.admin-preloader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.admin-preloader-content {
+    text-align: center;
+}
+
+.admin-preloader-content h1 {
+    color: #000000;
+    font-family: 'Favorit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: 2rem;
+    font-weight: normal;
+    margin: 0;
+    letter-spacing: 0.05em;
+}
+
 .admin-layout {
     display: flex;
     min-height: 100vh;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.admin-layout.loaded {
+    opacity: 1;
 }
 
 /* Left Sidebar Navigation - Clean Light Design */

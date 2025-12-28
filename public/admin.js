@@ -3773,12 +3773,50 @@ async function deleteFont(fontId) {
 }
 
 
+// Hide admin preloader and show content
+function hideAdminPreloader() {
+    const preloader = document.getElementById('admin-preloader');
+    const layout = document.querySelector('.admin-layout');
+    
+    if (preloader) {
+        preloader.classList.add('hidden');
+    }
+    
+    setTimeout(() => {
+        if (layout) {
+            layout.classList.add('loaded');
+        }
+    }, 300);
+}
+
 // Load content on page load
 document.addEventListener('DOMContentLoaded', async () => {
+    // Check if we've already authenticated in this session
+    const adminAuthenticated = sessionStorage.getItem('adminAuthenticated');
+    
+    if (adminAuthenticated === 'true') {
+        // Skip preloader if already authenticated in this session
+        const preloader = document.getElementById('admin-preloader');
+        const layout = document.querySelector('.admin-layout');
+        if (preloader) {
+            preloader.style.display = 'none';
+        }
+        if (layout) {
+            layout.classList.add('loaded');
+        }
+    }
+    
+    // Check authentication - this will redirect if not authenticated
     const isAuthenticated = await checkAuth();
     if (!isAuthenticated) {
         return; // Will redirect to login
     }
+    
+    // Mark as authenticated for this session
+    sessionStorage.setItem('adminAuthenticated', 'true');
+    
+    // Hide preloader and show content
+    hideAdminPreloader();
     
     // Setup save button
     const saveBtn = document.getElementById('save-btn');
