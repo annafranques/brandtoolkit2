@@ -2630,6 +2630,29 @@ async function saveContent() {
             });
         }
         
+        // Check logotype subsections
+        if (hasSectionChanged('logotype.subsections')) {
+            sectionsToSave.push({
+                path: 'logotype.subsections',
+                data: currentContent.logotype?.subsections || []
+            });
+        }
+        // Check logotype mainLogo separately
+        if (hasSectionChanged('logotype.mainLogo')) {
+            sectionsToSave.push({
+                path: 'logotype.mainLogo',
+                data: currentContent.logotype?.mainLogo || ''
+            });
+        }
+        
+        // Check applications subsections
+        if (hasSectionChanged('applications')) {
+            sectionsToSave.push({
+                path: 'applications',
+                data: currentContent.applications || []
+            });
+        }
+        
         // Check top-level fields
         if (hasSectionChanged('brandName')) {
             sectionsToSave.push({
