@@ -7,8 +7,6 @@ const multer = require('multer');
 const https = require('https');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
-const mysql = require('mysql2/promise');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -55,132 +53,25 @@ const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
 const FONTS_DIR = path.join(__dirname, 'public', 'fonts');
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
 
-// MySQL Database Configuration
-const DB_CONFIG = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'u790981395_cursor',
-  password: process.env.DB_PASSWORD || 'vK?D@HR&J8',
-  database: process.env.DB_NAME || 'u790981395_anna',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  // Force IPv4 to avoid ::1 IPv6 issues on Hostinger
-  socketPath: null,
-  // Use TCP/IP connection explicitly
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0
-};
-
-// Initialize database connection
-async function initDatabase() {
-  try {
-    // For Hostinger, ensure we use IPv4 localhost explicitly
-    const config = { ...DB_CONFIG };
-    // Explicitly set to use IPv4 if host is localhost
-    if (config.host === 'localhost' || !config.host) {
-      config.host = '127.0.0.1'; // Force IPv4 instead of ::1
-    }
-    
-    dbPool = mysql.createPool(config);
-    
-    // Test connection
-    const connection = await dbPool.getConnection();
-    console.log('MySQL database connected successfully');
-    
-    // Create content table if it doesn't exist
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS content (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        data TEXT NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    
-    // Check if table is empty, if so initialize with default content
-    const [rows] = await connection.query('SELECT COUNT(*) as count FROM content');
-    if (rows[0].count === 0) {
-      const defaultContent = getDefaultContent();
-      await connection.query('INSERT INTO content (data) VALUES (?)', [JSON.stringify(defaultContent)]);
-      console.log('Initialized database with default content');
-      
-      // Also migrate existing content.json if it exists
-      if (await fs.pathExists(CONTENT_FILE)) {
-        try {
-          const existingContent = await fs.readJson(CONTENT_FILE);
-          await connection.query('UPDATE content SET data = ? WHERE id = 1', [JSON.stringify(existingContent)]);
-          console.log('Migrated existing content.json to database');
-        } catch (err) {
-          console.log('Could not migrate existing content.json:', err.message);
-        }
-      }
-    }
-    
-    connection.release();
-  } catch (error) {
-    console.error('Database connection error:', error);
-    // Fallback to file-based storage if database fails
-    console.log('Falling back to file-based storage');
-  }
-}
-
-// Database helper functions
-async function getContentFromDB() {
-  if (!dbPool) {
-    // Fallback to file if database not available
-    if (await fs.pathExists(CONTENT_FILE)) {
-      return await fs.readJson(CONTENT_FILE);
-    }
-    return getDefaultContent();
+// JSON file-based storage functions
+async function getContent() {
+  // Ensure data directory exists
+  await fs.ensureDir(DATA_DIR);
+  
+  if (await fs.pathExists(CONTENT_FILE)) {
+    return await fs.readJson(CONTENT_FILE);
   }
   
-  try {
-    const [rows] = await dbPool.query('SELECT data FROM content ORDER BY id DESC LIMIT 1');
-    if (rows.length === 0) {
-      const defaultContent = getDefaultContent();
-      await saveContentToDB(defaultContent);
-      return defaultContent;
-    }
-    return JSON.parse(rows[0].data);
-  } catch (error) {
-    console.error('Error reading content from database:', error);
-    // Fallback to file
-    if (await fs.pathExists(CONTENT_FILE)) {
-      return await fs.readJson(CONTENT_FILE);
-    }
-    return getDefaultContent();
-  }
+  // If file doesn't exist, create it with default content
+  const defaultContent = getDefaultContent();
+  await fs.writeJson(CONTENT_FILE, defaultContent, { spaces: 2 });
+  return defaultContent;
 }
 
-async function saveContentToDB(content) {
-  if (!dbPool) {
-    // Fallback to file if database not available
-    await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
-    return;
-  }
-  
-  try {
-    const [rows] = await dbPool.query('SELECT id FROM content ORDER BY id DESC LIMIT 1');
-    const contentJson = JSON.stringify(content);
-    
-    if (rows.length === 0) {
-      // Insert new record
-      await dbPool.query('INSERT INTO content (data) VALUES (?)', [contentJson]);
-    } else {
-      // Update existing record
-      await dbPool.query('UPDATE content SET data = ? WHERE id = ?', [contentJson, rows[0].id]);
-    }
-    
-    // Also keep a backup in file for safety
-    await fs.writeJson(CONTENT_FILE, content, { spaces: 2 }).catch(err => {
-      console.warn('Could not write backup file:', err.message);
-    });
-  } catch (error) {
-    console.error('Error saving content to database:', error);
-    // Fallback to file
-    await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
-    throw error;
-  }
+async function saveContent(content) {
+  // Ensure data directory exists before saving
+  await fs.ensureDir(DATA_DIR);
+  await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
 }
 
 // Ensure data directory exists
@@ -229,11 +120,6 @@ const upload = multer({
 
 // Ensure data directory exists
 fs.ensureDirSync(DATA_DIR);
-
-// Initialize database connection
-initDatabase().catch(err => {
-  console.error('Failed to initialize database:', err);
-});
 
 // Middleware
 app.use(cors());
@@ -326,7 +212,7 @@ app.get('/api/typography', async (req, res) => {
   try {
     let content;
     try {
-      content = await getContentFromDB();
+      content = await getContent();
     } catch (readError) {
       console.error('Error reading content:', readError);
       // If content is corrupted, return empty structure
@@ -354,7 +240,7 @@ app.get('/api/typography', async (req, res) => {
     
     if (needsUpdate) {
       try {
-        await saveContentToDB(content);
+        await saveContent(content);
       } catch (writeError) {
         console.error('Error saving content:', writeError);
         // Continue anyway - we'll return the initialized structure
@@ -405,7 +291,7 @@ app.get('/api/health', (req, res) => {
 // Get all content (public - frontend needs this)
 app.get('/api/content', async (req, res) => {
   try {
-    const content = await getContentFromDB();
+    const content = await getContent();
     const defaultContent = getDefaultContent();
     let needsUpdate = false;
     
@@ -572,7 +458,7 @@ app.get('/api/content', async (req, res) => {
     
     // Save updated content if needed
     if (needsUpdate) {
-      await saveContentToDB(content);
+      await saveContent(content);
     }
     
     res.json(content);
@@ -748,7 +634,7 @@ app.put('/api/content', async (req, res) => {
     if (!newContent.fonts) newContent.fonts = [];
     if (!newContent.typographyStyles) newContent.typographyStyles = {};
     
-    await saveContentToDB(newContent);
+    await saveContent(newContent);
     
     // Generate CSS when typography is updated
     if (req.body.typography) {
@@ -771,7 +657,7 @@ app.put('/api/content', async (req, res) => {
 // Update specific section (authentication removed per user request)
 app.patch('/api/content/:section', async (req, res) => {
   try {
-    const content = await getContentFromDB();
+    const content = await getContent();
     const section = req.params.section;
     
     if (req.body.nested) {
@@ -788,7 +674,7 @@ app.patch('/api/content/:section', async (req, res) => {
     }
     
     content.updatedAt = new Date().toISOString();
-    await saveContentToDB(content);
+    await saveContent(content);
     
     // Generate CSS when typography is updated
     if (req.body.typography) {
@@ -805,7 +691,7 @@ app.patch('/api/content/:section', async (req, res) => {
 // Upload asset (base64 encoded images) (authentication removed per user request)
 app.post('/api/assets', async (req, res) => {
   try {
-    const content = await getContentFromDB();
+    const content = await getContent();
     const { name, data, type } = req.body;
     
     if (!content.assets) {
@@ -822,7 +708,7 @@ app.post('/api/assets', async (req, res) => {
     
     content.assets.push(asset);
     content.updatedAt = new Date().toISOString();
-    await saveContentToDB(content);
+    await saveContent(content);
     
     res.json({ success: true, asset });
   } catch (error) {
@@ -834,14 +720,14 @@ app.post('/api/assets', async (req, res) => {
 // Delete asset (authentication removed per user request)
 app.delete('/api/assets/:id', async (req, res) => {
   try {
-    const content = await getContentFromDB();
+    const content = await getContent();
     if (!content.assets) {
       content.assets = [];
     }
     
     content.assets = content.assets.filter(asset => asset.id !== req.params.id);
     content.updatedAt = new Date().toISOString();
-    await saveContentToDB(content);
+    await saveContent(content);
     
     res.json({ success: true });
   } catch (error) {
@@ -853,7 +739,7 @@ app.delete('/api/assets/:id', async (req, res) => {
 // Toggle section visibility (authentication removed per user request)
 app.patch('/api/sections/:sectionId/visibility', async (req, res) => {
   try {
-    const content = await getContentFromDB();
+    const content = await getContent();
     const sectionId = req.params.sectionId;
     const { hidden } = req.body;
     
@@ -863,7 +749,7 @@ app.patch('/api/sections/:sectionId/visibility', async (req, res) => {
     
     content.hiddenSections[sectionId] = hidden === true;
     content.updatedAt = new Date().toISOString();
-    await saveContentToDB(content);
+    await saveContent(content);
     
     res.json({ success: true, hidden: content.hiddenSections[sectionId] });
   } catch (error) {
@@ -901,12 +787,12 @@ app.post('/api/fonts/upload', upload.single('fontFile'), async (req, res) => {
     console.log('Uploading font:', fontInfo); // Debug log
     
     // Load content to add font
-    const content = await getContentFromDB();
+    const content = await getContent();
     if (!content.fonts) {
       content.fonts = [];
     }
     content.fonts.push(fontInfo);
-    await saveContentToDB(content);
+    await saveContent(content);
     
     res.json({ success: true, font: fontInfo });
   } catch (error) {
@@ -919,7 +805,7 @@ app.post('/api/fonts/upload', upload.single('fontFile'), async (req, res) => {
 app.put('/api/typography/styles', async (req, res) => {
   try {
     const { styles } = req.body;
-    const content = await getContentFromDB();
+    const content = await getContent();
     
     if (!content.typographyStyles) {
       content.typographyStyles = {};
@@ -928,7 +814,7 @@ app.put('/api/typography/styles', async (req, res) => {
     // Replace typography styles (not merge - replace entirely)
     content.typographyStyles = styles;
     
-    await saveContentToDB(content);
+    await saveContent(content);
     
     console.log('Saved typography styles:', JSON.stringify(content.typographyStyles, null, 2)); // Debug log
     
@@ -1270,7 +1156,7 @@ async function generateTypographyCSS(content) {
 app.delete('/api/fonts/:id', async (req, res) => {
   try {
     const fontId = req.params.id;
-    const content = await getContentFromDB();
+    const content = await getContent();
     
     const fontIndex = content.fonts?.findIndex(f => f.id === fontId);
     if (fontIndex === -1 || fontIndex === undefined) {
@@ -1298,7 +1184,7 @@ app.delete('/api/fonts/:id', async (req, res) => {
       });
     }
     
-    await saveContentToDB(content);
+    await saveContent(content);
     
     // Regenerate CSS
     await generateTypographyCSS(content);
@@ -1577,7 +1463,7 @@ app.post('/api/figma/import', async (req, res) => {
     
     // If autoApply is true, update the content
     if (autoApply) {
-      const content = await getContentFromDB();
+      const content = await getContent();
       
       // Update colors if we found any
       if (colors.length > 0) {
@@ -1595,7 +1481,7 @@ app.post('/api/figma/import', async (req, res) => {
         content.typography.secondary = secondaryFont;
       }
       
-      await saveContentToDB(content);
+      await saveContent(content);
       
       // Regenerate CSS if typography was updated
       if (typography.length > 0) {
