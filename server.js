@@ -688,7 +688,123 @@ app.put('/api/content', async (req, res) => {
   }
 });
 
-// Update specific section (authentication removed per user request)
+// Update specific section by path (e.g., frameRebel.aboutTheProject) - MUST come before /api/content/:section
+app.patch('/api/content/section/*', async (req, res) => {
+  try {
+    // Extract the section path from the URL (everything after /section/)
+    const sectionPath = req.params[0]; // Express wildcard (*) captures in params[0]
+    const sectionData = req.body;
+    
+    if (!sectionPath || !sectionData || Object.keys(sectionData).length === 0) {
+      return res.status(400).json({ error: 'Section path and data are required' });
+    }
+    
+    console.log(`PATCH /api/content/section/${sectionPath} - Updating section`);
+    
+    // Load current content
+    const currentContent = await getContent();
+    
+    // Merge section data into content using the path
+    // Example: "frameRebel.aboutTheProject" -> currentContent.frameRebel.aboutTheProject = sectionData
+    const pathParts = sectionPath.split('.');
+    let target = currentContent;
+    
+    // Navigate to the parent object (skip the last part which is the key to set)
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      const part = pathParts[i];
+      if (!target[part]) {
+        target[part] = {};
+      }
+      target = target[part];
+    }
+    
+    // Set the section data (merge if it's an object)
+    const sectionKey = pathParts[pathParts.length - 1];
+    if (typeof sectionData === 'object' && typeof target[sectionKey] === 'object' && target[sectionKey] !== null && !Array.isArray(target[sectionKey])) {
+      // Merge objects
+      target[sectionKey] = { ...target[sectionKey], ...sectionData };
+    } else {
+      // Replace entirely
+      target[sectionKey] = sectionData;
+    }
+    
+    // Update timestamp
+    currentContent.updatedAt = new Date().toISOString();
+    
+    // Save the merged content
+    await saveContent(currentContent);
+    
+    console.log(`Section ${sectionPath} saved successfully`);
+    
+    // Return the full updated content
+    res.json({ success: true, content: currentContent });
+  } catch (error) {
+    console.error('Error updating section:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to update section', details: error.message });
+  }
+});
+
+// Batch update multiple sections
+app.patch('/api/content/sections', async (req, res) => {
+  try {
+    const sections = req.body.sections; // Array of { path: string, data: object }
+    
+    if (!sections || !Array.isArray(sections) || sections.length === 0) {
+      return res.status(400).json({ error: 'Sections array is required' });
+    }
+    
+    console.log(`PATCH /api/content/sections - Updating ${sections.length} sections`);
+    
+    // Load current content
+    const currentContent = await getContent();
+    
+    // Apply all section updates
+    for (const section of sections) {
+      const { path, data } = section;
+      if (!path || !data) continue;
+      
+      const pathParts = path.split('.');
+      let target = currentContent;
+      
+      // Navigate to the parent object
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        if (!target[part]) {
+          target[part] = {};
+        }
+        target = target[part];
+      }
+      
+      // Set the section data
+      const sectionKey = pathParts[pathParts.length - 1];
+      if (typeof data === 'object' && typeof target[sectionKey] === 'object' && target[sectionKey] !== null && !Array.isArray(target[sectionKey])) {
+        // Merge objects
+        target[sectionKey] = { ...target[sectionKey], ...data };
+      } else {
+        // Replace entirely
+        target[sectionKey] = data;
+      }
+    }
+    
+    // Update timestamp
+    currentContent.updatedAt = new Date().toISOString();
+    
+    // Save the merged content
+    await saveContent(currentContent);
+    
+    console.log(`Saved ${sections.length} sections successfully`);
+    
+    // Return the full updated content
+    res.json({ success: true, content: currentContent });
+  } catch (error) {
+    console.error('Error updating sections:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to update sections', details: error.message });
+  }
+});
+
+// Update specific section (legacy endpoint - kept for backward compatibility)
 app.patch('/api/content/:section', async (req, res) => {
   try {
     const content = await getContent();
