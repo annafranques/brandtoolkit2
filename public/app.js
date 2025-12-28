@@ -1690,43 +1690,82 @@ function initUsageTabs() {
     });
 }
 
-// Hide preloader function
+// Hide preloader function - ensures minimum 3 seconds display time
 function hidePreloader() {
     const preloader = document.getElementById('preloader');
     const layout = document.querySelector('.layout');
+    const preloaderStartTime = sessionStorage.getItem('preloaderStartTime');
+    const now = Date.now();
     
-    if (preloader) {
-        preloader.classList.add('hidden');
-    }
-    
-    // Show layout content after preloader fades out
-    setTimeout(() => {
-        if (layout) {
-            layout.classList.add('loaded');
+    if (preloaderStartTime) {
+        const elapsed = now - parseInt(preloaderStartTime);
+        const minDisplayTime = 3000; // 3 seconds minimum
+        const remainingTime = Math.max(0, minDisplayTime - elapsed);
+        
+        setTimeout(() => {
+            if (preloader) {
+                preloader.classList.add('hidden');
+            }
+            // Show layout content after preloader fades out
+            setTimeout(() => {
+                if (layout) {
+                    layout.classList.add('loaded');
+                }
+            }, 300);
+        }, remainingTime);
+    } else {
+        // Fallback: hide immediately if start time not found
+        if (preloader) {
+            preloader.classList.add('hidden');
         }
-    }, 300);
+        setTimeout(() => {
+            if (layout) {
+                layout.classList.add('loaded');
+            }
+        }, 300);
+    }
 }
 
 // Load content on page load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded, starting content load...');
+    
+    // Check if preloader was already shown in this session
+    const preloaderShown = sessionStorage.getItem('preloaderShown');
+    const preloader = document.getElementById('preloader');
+    const layout = document.querySelector('.layout');
+    
+    if (preloaderShown === 'true') {
+        // Skip preloader if already shown in this session
+        if (preloader) {
+            preloader.style.display = 'none';
+        }
+        if (layout) {
+            layout.classList.add('loaded');
+        }
+    } else {
+        // Mark preloader as shown and record start time
+        sessionStorage.setItem('preloaderShown', 'true');
+        sessionStorage.setItem('preloaderStartTime', Date.now().toString());
+    }
+    
     try {
         // Initialize smooth scrolling early (it will wait for nav to exist)
         initSmoothScrolling();
         loadContent().then(() => {
             console.log('Content loaded successfully');
             initUsageTabs();
-            // Hide preloader after content is loaded
+            // Hide preloader after content is loaded (respects minimum 3 seconds)
             hidePreloader();
         }).catch((error) => {
             console.error('Error in loadContent promise:', error);
-            // Hide preloader even on error
+            // Hide preloader even on error (respects minimum 3 seconds)
             hidePreloader();
         });
         loadTypographyPreview();
     } catch (error) {
         console.error('Error in DOMContentLoaded:', error);
-        // Hide preloader on error
+        // Hide preloader on error (respects minimum 3 seconds)
         hidePreloader();
     }
 });
