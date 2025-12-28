@@ -1690,6 +1690,21 @@ function initUsageTabs() {
     });
 }
 
+// Hide preloader function
+function hidePreloader() {
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+        preloader.classList.add('hidden');
+        // Show layout content after preloader fades out
+        setTimeout(() => {
+            const layout = document.querySelector('.layout');
+            if (layout) {
+                layout.style.opacity = '1';
+            }
+        }, 300);
+    }
+}
+
 // Load content on page load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded, starting content load...');
@@ -1699,11 +1714,17 @@ document.addEventListener('DOMContentLoaded', () => {
         loadContent().then(() => {
             console.log('Content loaded successfully');
             initUsageTabs();
+            // Hide preloader after content is loaded
+            hidePreloader();
         }).catch((error) => {
             console.error('Error in loadContent promise:', error);
+            // Hide preloader even on error
+            hidePreloader();
         });
         loadTypographyPreview();
     } catch (error) {
         console.error('Error in DOMContentLoaded:', error);
+        // Hide preloader on error
+        hidePreloader();
     }
 });
