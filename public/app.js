@@ -1693,16 +1693,18 @@ function initUsageTabs() {
 // Hide preloader function
 function hidePreloader() {
     const preloader = document.getElementById('preloader');
+    const layout = document.querySelector('.layout');
+    
     if (preloader) {
         preloader.classList.add('hidden');
-        // Show layout content after preloader fades out
-        setTimeout(() => {
-            const layout = document.querySelector('.layout');
-            if (layout) {
-                layout.style.opacity = '1';
-            }
-        }, 300);
     }
+    
+    // Show layout content after preloader fades out
+    setTimeout(() => {
+        if (layout) {
+            layout.classList.add('loaded');
+        }
+    }, 300);
 }
 
 // Load content on page load

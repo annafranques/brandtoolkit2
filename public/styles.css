@@ -35,8 +35,6 @@ body {
 .layout {
     display: flex;
     min-height: 100vh;
-    opacity: 0;
-    transition: opacity 0.3s ease;
 }
 
 /* Left Sidebar Navigation - Matching Backend Light Theme */
@@ -1144,7 +1142,12 @@ body {
     letter-spacing: 0.05em;
 }
 
-/* Hide layout content initially when preloader is visible */
-body:has(.preloader:not(.hidden)) .layout {
+/* Layout starts hidden and becomes visible after preloader hides */
+.layout {
     opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.layout.loaded {
+    opacity: 1;
 }
