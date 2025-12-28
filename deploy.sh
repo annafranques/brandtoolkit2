@@ -26,6 +26,12 @@ rsync -av \
   --exclude='deploy.sh' \
   . "${DEPLOY_DIR}/"
 
+# Create data directory structure (empty, so existing data on server isn't overwritten)
+echo "Creating data directory structure..."
+mkdir -p "${DEPLOY_DIR}/data"
+# Create a .gitkeep file to ensure the directory is included
+touch "${DEPLOY_DIR}/data/.gitkeep"
+
 # Set proper permissions for all files and directories
 echo "Setting file permissions..."
 find "${DEPLOY_DIR}" -type d -exec chmod 755 {} \;  # Directories: rwxr-xr-x
