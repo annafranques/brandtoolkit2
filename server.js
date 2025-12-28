@@ -55,27 +55,56 @@ const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
 
 // JSON file-based storage functions
 async function getContent() {
-  // Ensure data directory exists
-  await fs.ensureDir(DATA_DIR);
-  
-  if (await fs.pathExists(CONTENT_FILE)) {
-    return await fs.readJson(CONTENT_FILE);
+  try {
+    // Ensure data directory exists
+    await fs.ensureDir(DATA_DIR);
+    console.log('Data directory ensured:', DATA_DIR);
+    
+    if (await fs.pathExists(CONTENT_FILE)) {
+      const content = await fs.readJson(CONTENT_FILE);
+      console.log('Content loaded from:', CONTENT_FILE);
+      return content;
+    }
+    
+    // If file doesn't exist, create it with default content
+    const defaultContent = getDefaultContent();
+    await fs.writeJson(CONTENT_FILE, defaultContent, { spaces: 2 });
+    console.log('Default content created at:', CONTENT_FILE);
+    return defaultContent;
+  } catch (error) {
+    console.error('Error in getContent:', error);
+    throw error;
   }
-  
-  // If file doesn't exist, create it with default content
-  const defaultContent = getDefaultContent();
-  await fs.writeJson(CONTENT_FILE, defaultContent, { spaces: 2 });
-  return defaultContent;
 }
 
 async function saveContent(content) {
-  // Ensure data directory exists before saving
-  await fs.ensureDir(DATA_DIR);
-  await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
+  try {
+    // Ensure data directory exists before saving
+    await fs.ensureDir(DATA_DIR);
+    
+    // Write the content to file
+    await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
+    
+    console.log('Content saved successfully to:', CONTENT_FILE);
+  } catch (error) {
+    console.error('Error saving content:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      path: CONTENT_FILE,
+      dataDir: DATA_DIR
+    });
+    throw error;
+  }
 }
 
-// Ensure data directory exists
-fs.ensureDirSync(DATA_DIR);
+// Ensure data directory exists at startup
+try {
+  fs.ensureDirSync(DATA_DIR);
+  console.log('Data directory created/verified at startup:', DATA_DIR);
+} catch (error) {
+  console.error('Error ensuring data directory at startup:', error);
+}
 
 // Ensure fonts directory exists
 fs.ensureDirSync(FONTS_DIR);
@@ -118,8 +147,13 @@ const upload = multer({
   }
 });
 
-// Ensure data directory exists
-fs.ensureDirSync(DATA_DIR);
+// Ensure data directory exists at startup
+try {
+  fs.ensureDirSync(DATA_DIR);
+  console.log('Data directory created/verified at startup:', DATA_DIR);
+} catch (error) {
+  console.error('Error ensuring data directory at startup:', error);
+}
 
 // Middleware
 app.use(cors());
