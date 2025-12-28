@@ -1,0 +1,1709 @@
+// Helper function to convert RGB to hex - Attached to window for global access
+function rgbToHex(rgb) {
+    if (!rgb) return '#ffffff';
+    // Handle rgb(r, g, b) format
+    const match = rgb.match(/\d+/g);
+    if (!match || match.length < 3) return '#ffffff';
+    const r = parseInt(match[0]);
+    const g = parseInt(match[1]);
+    const b = parseInt(match[2]);
+    return '#' + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+}
+window.rgbToHex = rgbToHex;
+
+// Helper function to convert markdown bold (**text**) to HTML bold
+function parseMarkdownBold(text) {
+    if (!text) return '';
+    // Convert **text** to <strong>text</strong>
+    return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function getContrastColor(hexColor) {
+    if (!hexColor) return '#000000';
+    hexColor = hexColor.replace('#', '');
+    const r = parseInt(hexColor.substr(0, 2), 16);
+    const g = parseInt(hexColor.substr(2, 2), 16);
+    const b = parseInt(hexColor.substr(4, 2), 16);
+    
+    // Calculate relative luminance (WCAG formula)
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Use white text if background is dark, black if light
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+window.getContrastColor = getContrastColor;
+
+// Fetch and display brand content
+async function loadContent() {
+    try {
+        const response = await fetch('/api/content');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const content = await response.json();
+        
+        // Debug: Log the entire content structure
+        console.log('=== FULL CONTENT LOADED ===');
+        console.log('Content structure:', content);
+        console.log('Logotype:', content.logotype);
+        if (content.logotype) {
+            console.log('Logotype subsections:', content.logotype.subsections);
+            if (content.logotype.subsections) {
+                console.log('Subsections count:', content.logotype.subsections.length);
+                content.logotype.subsections.forEach((sub, idx) => {
+                    console.log(`Subsection ${idx}:`, { title: sub.title, hasContent: !!sub.content, contentLength: sub.content ? sub.content.length : 0, hasImage: !!sub.image, hasTabs: !!sub.hasTabs });
+                });
+            }
+        }
+        console.log('=== END CONTENT DEBUG ===');
+        
+        // Set brand name
+        const brandName = content.brandName || 'Brand';
+        const sidebarBrandName = document.getElementById('sidebar-brand-name');
+        if (sidebarBrandName) sidebarBrandName.textContent = brandName;
+        
+        // Get brand colors for section separations - use light secondary colors
+        const brandColors = content.colors || [];
+        const lightColors = brandColors
+            .filter(c => c.type === 'secondary')
+            .map(c => c.hex)
+            .filter(hex => {
+                // Filter to only include light colors (high brightness)
+                if (!hex) return false;
+                hex = hex.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16);
+                const g = parseInt(hex.substr(2, 2), 16);
+                const b = parseInt(hex.substr(4, 2), 16);
+                // Calculate brightness (0-255)
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                return brightness > 150; // Only light colors
+            });
+        
+        // Default light colors if none found
+        const defaultLightColors = ['#ffffff', '#f5f5f5'];
+        const sectionColors = lightColors.length > 0 ? lightColors : defaultLightColors;
+        
+        // Helper function to render section with hero image
+        function renderSectionWithHero(sectionId, sectionData, sectionTitle, sectionIndex = 0) {
+            const section = document.getElementById(sectionId);
+            const contentDiv = document.getElementById(`${sectionId}-content`);
+            if (!section || !contentDiv) return;
+            
+            // Remove existing hero if any
+            const existingHero = section.querySelector('.content-section-hero');
+            if (existingHero) existingHero.remove();
+            
+            const h2 = section.querySelector('h2');
+            if (!h2) return;
+            
+            let hasImage = false;
+            if (sectionData && typeof sectionData === 'object' && sectionData.image) {
+                hasImage = true;
+                section.classList.add('has-hero');
+                
+                // Create hero div
+                const heroDiv = document.createElement('div');
+                heroDiv.className = 'content-section-hero';
+                
+                // Create and add image
+                const img = document.createElement('img');
+                img.src = sectionData.image;
+                img.alt = sectionTitle || '';
+                img.className = 'content-section-hero-image';
+                heroDiv.appendChild(img);
+                
+                // Move h2 into hero
+                const h2Clone = h2.cloneNode(true);
+                heroDiv.appendChild(h2Clone);
+                h2.remove();
+                
+                // Insert hero at the beginning
+                section.insertBefore(heroDiv, section.firstChild);
+            } else {
+                section.classList.remove('has-hero');
+            }
+            
+            // Render content with alternating light color backgrounds
+            contentDiv.className = 'content-section-content';
+            
+            // Apply light brand color as background (alternating through light colors)
+            const colorIndex = sectionIndex % sectionColors.length;
+            const bgColor = sectionColors[colorIndex] || '#ffffff';
+            contentDiv.style.backgroundColor = bgColor;
+            section.setAttribute('data-section-index', sectionIndex);
+            
+            if (sectionData && typeof sectionData === 'object') {
+                contentDiv.innerHTML = formatContent(sectionData.content || '');
+            } else if (sectionData) {
+                contentDiv.innerHTML = formatContent(sectionData);
+            }
+        }
+        
+        // Get hidden sections early
+        const hiddenSections = content.hiddenSections || {};
+        
+        let sectionIndex = 0;
+        
+        // 00. The Name of the Project (now includes introduction content)
+        const frameRebelSection = document.getElementById('frame-rebel');
+        const frameRebelContent = document.getElementById('frame-rebel-content');
+        if (frameRebelSection && frameRebelContent && !hiddenSections['frame-rebel'] && content.frameRebel) {
+            const h2 = frameRebelSection.querySelector('h2');
+            const hasFrameRebelHero = content.frameRebel.aboutTheProject && content.frameRebel.aboutTheProject.image && h2;
+            if (hasFrameRebelHero) {
+                frameRebelSection.classList.add('has-hero');
+                const existingHero = frameRebelSection.querySelector('.content-section-hero');
+                if (!existingHero) {
+                    const heroDiv = document.createElement('div');
+                    heroDiv.className = 'content-section-hero';
+                    const img = document.createElement('img');
+                    img.src = content.frameRebel.aboutTheProject.image;
+                    img.alt = brandName;
+                    img.className = 'content-section-hero-image';
+                    heroDiv.appendChild(img);
+                    const h2Clone = h2.cloneNode(true);
+                    heroDiv.appendChild(h2Clone);
+                    frameRebelSection.insertBefore(heroDiv, frameRebelSection.firstChild);
+                    h2.remove();
+                }
+            }
+            let html = '';
+            if (content.frameRebel.aboutTheProject) {
+                html += '<div class="subsection" id="frame-rebel-aboutTheProject"><div class="subsection-title">About The Project</div>';
+                if (content.frameRebel.aboutTheProject.image) {
+                    html += `<div class="hero-image"><img src="${content.frameRebel.aboutTheProject.image}" alt="About The Project"></div>`;
+                }
+                html += `<div class="subsection-content">${formatContent(content.frameRebel.aboutTheProject.content || '')}</div></div>`;
+            }
+            if (content.frameRebel.fundamentalPillars) {
+                html += '<div class="subsection" id="frame-rebel-fundamentalPillars"><div class="subsection-title">Fundamental Pillars</div>';
+                if (content.frameRebel.fundamentalPillars.image) {
+                    html += `<div class="hero-image"><img src="${content.frameRebel.fundamentalPillars.image}" alt="Fundamental Pillars"></div>`;
+                }
+                html += `<div class="subsection-content">${formatContent(content.frameRebel.fundamentalPillars.content || '')}</div></div>`;
+            }
+            if (content.frameRebel.toneOfVoice) {
+                html += '<div class="subsection" id="frame-rebel-toneOfVoice"><div class="subsection-title">Tone of Voice</div>';
+                if (content.frameRebel.toneOfVoice.image) {
+                    html += `<div class="hero-image"><img src="${content.frameRebel.toneOfVoice.image}" alt="Tone of Voice"></div>`;
+                }
+                html += `<div class="subsection-content">${formatContent(content.frameRebel.toneOfVoice.content || '')}</div></div>`;
+            }
+            frameRebelContent.className = 'content-section-content';
+            frameRebelContent.innerHTML = html;
+            sectionIndex++;
+        }
+        
+        // 01. Logotype - Add/Remove approach
+        const logotypeSection = document.getElementById('logotype');
+        const logotypeContent = document.getElementById('logotype-content');
+        
+        // Use add/remove approach - only render if not hidden and data exists
+        if (logotypeSection && logotypeContent && !hiddenSections['logotype'] && content.logotype) {
+            let logoHtml = '';
+            
+            // Helper function to render a single subsection
+            function renderLogotypeSubsection(subsection, index) {
+                const title = subsection.title || '';
+                const contentText = subsection.content || '';
+                const image = subsection.image || '';
+                const hasImage = !!image;
+                const contentOnlyClass = !hasImage && contentText ? 'logotype-content-only' : '';
+                const subsectionId = `logotype-subsection-${index}`;
+                
+                console.log(`Rendering subsection ${index}:`, { title, hasContent: !!contentText, hasImage, contentLength: contentText.length });
+                
+                let html = `<div class="subsection ${contentOnlyClass}" id="${subsectionId}">`;
+                html += `<div class="subsection-title">${title}</div>`;
+                
+                if (hasImage) {
+                    html += `<div class="hero-image"><img src="${image}" alt="${title}"></div>`;
+                }
+                
+                // Always render content div, even if empty
+                html += `<div class="subsection-content">${formatContent(contentText)}</div>`;
+                html += `</div>`;
+                
+                return html;
+            }
+            
+            // Render subsections array (new structure)
+            if (content.logotype && content.logotype.subsections && Array.isArray(content.logotype.subsections) && content.logotype.subsections.length > 0) {
+                content.logotype.subsections.forEach((subsection, index) => {
+                    // Check if this subsection has tabs (for Usage section)
+                    if (subsection.tabs && subsection.hasTabs) {
+                        // Render tabbed subsection
+                        const tabKeys = Object.keys(subsection.tabs);
+                        if (tabKeys.length > 0) {
+                            logoHtml += '<div class="logo-usage-section">';
+                            logoHtml += `<div class="subsection-title">${subsection.title || 'Usage'}</div>`;
+                            logoHtml += '<div class="usage-tabs">';
+                            
+                            // Render tab buttons
+                            tabKeys.forEach((tabKey, tabIndex) => {
+                                const tabLabel = tabKey === 'light' ? 'Light' : tabKey === 'dark' ? 'Dark' : tabKey === 'color' ? 'Color' : tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+                                logoHtml += `<button class="usage-tab ${tabIndex === 0 ? 'active' : ''}" data-tab="${tabKey}">${tabLabel}</button>`;
+                            });
+                            
+                            logoHtml += '</div>';
+                            
+                            // Render tab content
+                            tabKeys.forEach((tabKey, tabIndex) => {
+                                const tab = subsection.tabs[tabKey];
+                                const tabContent = tab.content || '';
+                                const tabImage = tab.image || '';
+                                const hasTabImage = !!tabImage;
+                                const tabContentOnlyClass = !hasTabImage && tabContent ? 'logotype-content-only' : '';
+                                
+                                logoHtml += `<div class="usage-tab-content ${tabIndex === 0 ? 'active' : ''}" data-content="${tabKey}">`;
+                                logoHtml += `<div class="subsection ${tabContentOnlyClass}" id="logotype-usage-${tabKey}">`;
+                                
+                                if (hasTabImage) {
+                                    logoHtml += `<div class="hero-image"><img src="${tabImage}" alt="${subsection.title} - ${tabKey}"></div>`;
+                                }
+                                
+                                logoHtml += `<div class="subsection-content">${formatContent(tabContent)}</div>`;
+                                logoHtml += `</div>`;
+                                logoHtml += `</div>`;
+                            });
+                            
+                            logoHtml += '</div>';
+                        }
+                    } else {
+                        // Regular subsection
+                        logoHtml += renderLogotypeSubsection(subsection, index);
+                    }
+                });
+            } else {
+                console.log('No logotype.subsections array found, using fallback');
+                // Fallback: handle old structure for backwards compatibility
+                if (content.logotype.main && content.logotype.main.positive) {
+                    logoHtml += renderLogotypeSubsection({ title: 'Main (Positive)', ...content.logotype.main.positive }, 0);
+                }
+                if (content.logotype.black || content.logotype.white || content.logotype.color) {
+                    logoHtml += '<div class="logo-usage-section">';
+                    logoHtml += '<div class="subsection-title">Logo Usage</div>';
+                    logoHtml += '<div class="usage-tabs">';
+                    
+                    let firstTab = true;
+                    if (content.logotype.black) {
+                        logoHtml += `<button class="usage-tab ${firstTab ? 'active' : ''}" data-tab="black">Dark</button>`;
+                        firstTab = false;
+                    }
+                    if (content.logotype.white) {
+                        logoHtml += `<button class="usage-tab ${firstTab ? 'active' : ''}" data-tab="white">Light</button>`;
+                        firstTab = false;
+                    }
+                    if (content.logotype.color) {
+                        logoHtml += `<button class="usage-tab ${firstTab ? 'active' : ''}" data-tab="color">Color</button>`;
+                    }
+                    logoHtml += '</div>';
+                    
+                    let firstContent = true;
+                    if (content.logotype.black) {
+                        logoHtml += `<div class="usage-tab-content ${firstContent ? 'active' : ''}" data-content="black">`;
+                        logoHtml += renderLogotypeSubsection({ title: 'Dark', ...content.logotype.black }, 'black');
+                        logoHtml += '</div>';
+                        firstContent = false;
+                    }
+                    if (content.logotype.white) {
+                        logoHtml += `<div class="usage-tab-content ${firstContent ? 'active' : ''}" data-content="white">`;
+                        logoHtml += renderLogotypeSubsection({ title: 'Light', ...content.logotype.white }, 'white');
+                        logoHtml += '</div>';
+                        firstContent = false;
+                    }
+                    if (content.logotype.color) {
+                        logoHtml += `<div class="usage-tab-content ${firstContent ? 'active' : ''}" data-content="color">`;
+                        logoHtml += renderLogotypeSubsection({ title: 'Color', ...content.logotype.color }, 'color');
+                        logoHtml += '</div>';
+                    }
+                    logoHtml += '</div>';
+                }
+            }
+            
+            logotypeContent.className = 'content-section-content';
+            if (logoHtml && logoHtml.trim().length > 0) {
+                logotypeContent.innerHTML = logoHtml;
+            } else {
+                logotypeContent.innerHTML = '<p>No logotype content available. Please add subsections in the admin panel.</p>';
+            }
+            sectionIndex++;
+        } else if (logotypeSection && hiddenSections['logotype']) {
+            // Remove section if hidden
+            logotypeSection.remove();
+        }
+        
+        // 03. Typography section (special handling - has preview)
+        const typographySection = document.getElementById('typography');
+        const typographyContent = document.getElementById('typography-content');
+        if (typographySection && typographyContent && !hiddenSections['typography'] && content.typographySection) {
+            const h2 = typographySection.querySelector('h2');
+            const typographyData = typeof content.typographySection.mainTypography === 'object' ? content.typographySection.mainTypography : { content: content.typographySection.mainTypography?.content || '' };
+            
+            // Handle hero image if exists
+            if (typographyData.image && h2) {
+                typographySection.classList.add('has-hero');
+                const existingHero = typographySection.querySelector('.content-section-hero');
+                if (!existingHero) {
+                    const heroDiv = document.createElement('div');
+                    heroDiv.className = 'content-section-hero';
+                    const img = document.createElement('img');
+                    img.src = typographyData.image;
+                    img.alt = 'Typography';
+                    img.className = 'content-section-hero-image';
+                    heroDiv.appendChild(img);
+                    const h2Clone = h2.cloneNode(true);
+                    heroDiv.appendChild(h2Clone);
+                    typographySection.insertBefore(heroDiv, typographySection.firstChild);
+                    h2.remove();
+                }
+            } else {
+                typographySection.classList.remove('has-hero');
+            }
+            
+            typographySection.setAttribute('data-section-index', sectionIndex++);
+            
+            // Load fonts for download section
+            loadFontsDownloadList();
+            
+            // Render typography subsections (after preview and download sections)
+            let typographySubsectionsHtml = '';
+            
+            if (content.typographySection.mainTypography) {
+                typographySubsectionsHtml += '<div class="subsection" id="typography-mainTypography"><div class="subsection-title">Main Typography</div>';
+                if (content.typographySection.mainTypography.image) {
+                    typographySubsectionsHtml += `<div class="hero-image"><img src="${content.typographySection.mainTypography.image}" alt="Main Typography"></div>`;
+                }
+                const mainContent = typeof content.typographySection.mainTypography === 'object' ? content.typographySection.mainTypography.content : content.typographySection.mainTypography;
+                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(mainContent || '')}</div></div>`;
+            }
+            
+            if (content.typographySection.secondaryTypography) {
+                typographySubsectionsHtml += '<div class="subsection" id="typography-secondaryTypography"><div class="subsection-title">Secondary Typography</div>';
+                if (content.typographySection.secondaryTypography.image) {
+                    typographySubsectionsHtml += `<div class="hero-image"><img src="${content.typographySection.secondaryTypography.image}" alt="Secondary Typography"></div>`;
+                }
+                const secondaryContent = typeof content.typographySection.secondaryTypography === 'object' ? content.typographySection.secondaryTypography.content : content.typographySection.secondaryTypography;
+                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(secondaryContent || '')}</div></div>`;
+            }
+            
+            if (content.typographySection.readingLevels) {
+                typographySubsectionsHtml += '<div class="subsection" id="typography-readingLevels"><div class="subsection-title">Reading Levels</div>';
+                if (content.typographySection.readingLevels.image) {
+                    typographySubsectionsHtml += `<div class="hero-image"><img src="${content.typographySection.readingLevels.image}" alt="Reading Levels"></div>`;
+                }
+                const readingLevelsContent = typeof content.typographySection.readingLevels === 'object' ? content.typographySection.readingLevels.content : content.typographySection.readingLevels;
+                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(readingLevelsContent || '')}</div></div>`;
+            }
+            
+            // Append subsections to existing content (after preview and download sections)
+            if (typographySubsectionsHtml) {
+                typographyContent.insertAdjacentHTML('beforeend', typographySubsectionsHtml);
+            }
+        }
+        
+        
+        // 02. Color section
+        const colorSection = document.getElementById('color');
+        const colorContent = document.getElementById('color-content');
+        if (colorSection && colorContent && !hiddenSections['color']) {
+            const h2 = colorSection.querySelector('h2');
+            
+            // Check if there's a color hero image
+            if (content.color && content.color.corporateColors && content.color.corporateColors.image && h2) {
+                colorSection.classList.add('has-hero');
+                const existingHero = colorSection.querySelector('.content-section-hero');
+                if (!existingHero) {
+                    const heroDiv = document.createElement('div');
+                    heroDiv.className = 'content-section-hero';
+                    const img = document.createElement('img');
+                    img.src = content.color.corporateColors.image;
+                    img.alt = 'Color';
+                    img.className = 'content-section-hero-image';
+                    heroDiv.appendChild(img);
+                    const h2Clone = h2.cloneNode(true);
+                    heroDiv.appendChild(h2Clone);
+                    colorSection.insertBefore(heroDiv, colorSection.firstChild);
+                    h2.remove();
+                }
+            } else {
+                colorSection.classList.remove('has-hero');
+            }
+            
+            colorSection.setAttribute('data-section-index', sectionIndex++);
+            
+            // Render color subsections
+            let colorHtml = '';
+            
+            // Render Corporate Colors explanation FIRST, before the palette
+            if (content.color && content.color.corporateColors) {
+                colorHtml += '<div class="subsection" id="color-corporateColors"><div class="subsection-title">Corporate Colors</div>';
+                colorHtml += `<div class="subsection-content">${formatContent(content.color.corporateColors.content || '')}</div></div>`;
+            }
+            
+            // Then render the color palette
+            if (content.colors && Array.isArray(content.colors)) {
+                colorHtml += renderColorPalette(content.colors);
+            }
+            if (content.color && content.color.correctApplications) {
+                colorHtml += '<div class="subsection" id="color-correctApplications"><div class="subsection-title">Correct Applications</div>';
+                colorHtml += `<div class="subsection-content subsection-content-two-columns">${formatContent(content.color.correctApplications.content || '')}</div>`;
+                // Auto-generate examples from brand colors
+                if (content.logo && content.colors && Array.isArray(content.colors) && content.colors.length > 0) {
+                    colorHtml += '<div class="color-examples-grid">';
+                    content.colors.forEach((color) => {
+                        if (color.hex) {
+                            // Determine logo color based on background luminance
+                            const logoColor = getTextColorForBackground(color.hex);
+                            // Apply color to SVG using string replacement
+                            const coloredLogo = applyColorToSVG(content.logo, logoColor);
+                            colorHtml += `<div class="color-example-item" style="background-color: ${color.hex};">
+                                <div class="color-example-logo" style="color: ${logoColor};">${coloredLogo}</div>
+                            </div>`;
+                        }
+                    });
+                    colorHtml += '</div>';
+                }
+                colorHtml += '</div>';
+            }
+            if (content.color && content.color.monochromatic) {
+                colorHtml += '<div class="subsection" id="color-monochromatic"><div class="subsection-title">Monochromatic (One Ink)</div>';
+                colorHtml += `<div class="subsection-content subsection-content-two-columns">${formatContent(content.color.monochromatic.content || '')}</div>`;
+                // Auto-generate monochromatic examples: black background (white logo) and white background (black logo)
+                if (content.logo) {
+                    colorHtml += '<div class="color-examples-grid">';
+                    // Black background with white logo
+                    const whiteLogo = applyColorToSVG(content.logo, '#ffffff');
+                    colorHtml += `<div class="color-example-item" style="background-color: #000000;">
+                        <div class="color-example-logo" style="color: #ffffff;">${whiteLogo}</div>
+                    </div>`;
+                    // White background with black logo
+                    const blackLogo = applyColorToSVG(content.logo, '#000000');
+                    colorHtml += `<div class="color-example-item" style="background-color: #ffffff;">
+                        <div class="color-example-logo" style="color: #000000;">${blackLogo}</div>
+                    </div>`;
+                    colorHtml += '</div>';
+                }
+                colorHtml += '</div>';
+            }
+            if (content.color && content.color.incorrectApplications) {
+                colorHtml += '<div class="subsection" id="color-incorrectApplications"><div class="subsection-title">Incorrect Applications</div>';
+                colorHtml += `<div class="subsection-content subsection-content-two-columns">${formatContent(content.color.incorrectApplications.content || '')}</div>`;
+                // Auto-generate incorrect examples with random/poor contrast colors
+                if (content.logo) {
+                    const incorrectColors = generateIncorrectColorExamples(content.colors);
+                    colorHtml += '<div class="color-examples-grid">';
+                    incorrectColors.forEach((bgColor) => {
+                        // Determine logo color based on background luminance
+                        const logoColor = getTextColorForBackground(bgColor);
+                        // Apply color to SVG using string replacement
+                        const coloredLogo = applyColorToSVG(content.logo, logoColor);
+                        colorHtml += `<div class="color-example-item" style="background-color: ${bgColor};">
+                            <div class="color-example-logo" style="color: ${logoColor};">${coloredLogo}</div>
+                        </div>`;
+                    });
+                    colorHtml += '</div>';
+                }
+                colorHtml += '</div>';
+            }
+            
+            colorContent.className = 'content-section-content';
+            colorContent.innerHTML = colorHtml;
+            
+            // After rendering, check the computed background color and adjust text color
+            // Only apply to text content before the color palette
+            setTimeout(() => {
+                const computedStyle = window.getComputedStyle(colorContent);
+                const bgColor = computedStyle.backgroundColor || 'rgb(255, 255, 255)';
+                const bgHex = rgbToHex(bgColor);
+                const textColor = getContrastColor(bgHex);
+                
+                // Find the color palette container to exclude it from text color changes
+                const colorPalette = colorContent.querySelector('.color-palette-container');
+                
+                // Apply text color to all text content BEFORE the color palette
+                const allElements = colorContent.querySelectorAll('*');
+                allElements.forEach(el => {
+                    // Skip if this element is inside the color palette
+                    if (colorPalette && colorPalette.contains(el)) {
+                        return;
+                    }
+                    // Apply text color to text elements
+                    if (el.tagName === 'P' || el.classList.contains('subsection') || 
+                        el.classList.contains('subsection-content') || 
+                        el.classList.contains('subsection-title') || 
+                        el.classList.contains('subsection-number')) {
+                        el.style.color = textColor;
+                    }
+                });
+                
+                // Also set on the container itself for any direct text (but don't override color palette)
+                if (!colorPalette || !colorContent.contains(colorPalette) || colorContent.firstChild !== colorPalette) {
+                    colorContent.style.color = textColor;
+                }
+            }, 0);
+        }
+        
+        // 04. Applications
+        const applicationsSection = document.getElementById('applications');
+        const applicationsContent = document.getElementById('applications-content');
+        if (applicationsSection && applicationsContent && !hiddenSections['applications'] && content.applications) {
+            // Check if it's array format (new) or object format (old)
+            let applicationsArray = [];
+            if (Array.isArray(content.applications)) {
+                applicationsArray = content.applications;
+            } else {
+                // Migrate old format to array
+                const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
+                const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
+                oldSubsections.forEach((subsection, index) => {
+                    if (content.applications[subsection]) {
+                        const data = content.applications[subsection];
+                        applicationsArray.push({
+                            title: oldNames[index],
+                            content: typeof data === 'object' ? data.content : data,
+                            image: typeof data === 'object' ? data.image : ''
+                        });
+                    }
+                });
+            }
+            
+            // Check if any application has an image (for hero)
+            const hasApplicationImage = applicationsArray.some(app => app.image);
+            
+            // Background will be handled by CSS :not(.has-hero) selector
+            let html = '';
+            applicationsArray.forEach((app, index) => {
+                if (!app.title) return; // Skip if no title
+                const subsectionId = `applications-${index}`;
+                html += `<div class="subsection" id="${subsectionId}"><div class="subsection-title">${app.title}</div>`;
+                if (app.image) {
+                    html += `<div class="hero-image"><img src="${app.image}" alt="${app.title}"></div>`;
+                }
+                html += `<div class="subsection-content">${formatContent(app.content || '')}</div></div>`;
+            });
+            
+            applicationsContent.className = 'content-section-content';
+            applicationsContent.innerHTML = html;
+            sectionIndex++;
+        }
+        
+        // Frontend section order mapping (matching new structure)
+        const FRONTEND_SECTION_ORDER = [
+            { id: 'frame-rebel', name: content.brandName || 'The Name of the Project', navName: content.brandName || 'The Name of the Project' },
+            { id: 'logotype', name: 'Logotype', navName: 'Logotype' },
+            { id: 'color', name: 'Color', navName: 'Color' },
+            { id: 'typography', name: 'Typography', navName: 'Typography' },
+            { id: 'applications', name: 'Applications', navName: 'Applications' }
+        ];
+        
+        // Build navigation dynamically based on visible sections
+        function buildNavigation() {
+            const sidebarNav = document.querySelector('.sidebar-nav');
+            if (!sidebarNav) return;
+            
+            const navList = document.getElementById('main-nav-list') || sidebarNav.querySelector('.nav-list');
+            if (!navList) return;
+            
+            // Clear existing navigation
+            navList.innerHTML = '';
+            
+            // Define subsections for each section
+            const sectionSubsections = {
+                'frame-rebel': [
+                    { id: 'aboutTheProject', name: 'About The Project' },
+                    { id: 'fundamentalPillars', name: 'Fundamental Pillars' },
+                    { id: 'toneOfVoice', name: 'Tone of Voice' }
+                ],
+                'logotype': [], // Will be populated dynamically from content.logotype.subsections array
+                'color': [
+                    { id: 'corporateColors', name: 'Corporate Colors' },
+                    { id: 'correctApplications', name: 'Correct Applications' },
+                    { id: 'monochromatic', name: 'Monochromatic' },
+                    { id: 'incorrectApplications', name: 'Incorrect Applications' }
+                ],
+                'typography': [
+                    { id: 'mainTypography', name: 'Main Typography' },
+                    { id: 'secondaryTypography', name: 'Secondary Typography' },
+                    { id: 'readingLevels', name: 'Reading Levels' }
+                ],
+                'applications': [] // Will be populated dynamically from content.applications array
+            };
+            
+            // Populate logotype subsections dynamically from content
+            if (content.logotype && content.logotype.subsections && Array.isArray(content.logotype.subsections)) {
+                // Populate navigation from logotype subsections array - include ALL subsections (even tabbed ones)
+                sectionSubsections['logotype'] = content.logotype.subsections
+                    .map((subsection, originalIndex) => ({ subsection, originalIndex }))
+                    .filter(({ subsection }) => subsection.title) // Only include subsections with titles
+                    .map(({ subsection, originalIndex }) => ({
+                        id: `logotype-subsection-${originalIndex}`, // Use originalIndex to match rendered HTML IDs
+                        name: subsection.title || `Logotype Subsection ${originalIndex + 1}`
+                    }));
+            }
+            
+            // Populate applications subsections dynamically from content
+            if (content.applications) {
+                let applicationsArray = [];
+                if (Array.isArray(content.applications)) {
+                    applicationsArray = content.applications;
+                } else {
+                    // Migrate old format
+                    const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
+                    const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
+                    oldSubsections.forEach((subsection, index) => {
+                        if (content.applications[subsection]) {
+                            applicationsArray.push({
+                                title: oldNames[index],
+                                content: typeof content.applications[subsection] === 'object' ? content.applications[subsection].content : content.applications[subsection],
+                                image: typeof content.applications[subsection] === 'object' ? content.applications[subsection].image : ''
+                            });
+                        }
+                    });
+                }
+                
+                // Build subsections array for navigation
+                sectionSubsections['applications'] = applicationsArray
+                    .filter(app => app.title) // Only include items with titles
+                    .map((app, index) => ({
+                        id: index.toString(),
+                        name: app.title
+                    }));
+            }
+            
+            let visibleNumber = 0; // Start at 0 for "00. Introduction"
+            FRONTEND_SECTION_ORDER.forEach(section => {
+                const isHidden = hiddenSections[section.id];
+                if (!isHidden) {
+                    const listItem = document.createElement('li');
+                    const navLink = document.createElement('a');
+                    navLink.href = `#${section.id}`;
+                    navLink.className = 'nav-link';
+                    navLink.setAttribute('data-section', section.id);
+                    navLink.textContent = `${String(visibleNumber).padStart(2, '0')}. ${section.navName}`;
+                    listItem.appendChild(navLink);
+                    
+                    // Add subsections if they exist
+                    const subsections = sectionSubsections[section.id];
+                    if (subsections && subsections.length > 0) {
+                        const subList = document.createElement('ul');
+                        subsections.forEach(subsection => {
+                            const subListItem = document.createElement('li');
+                            const subNavLink = document.createElement('a');
+                            // For logotype and applications, use the ID directly (already includes prefix)
+                            // For other sections, combine section id with subsection id
+                            const subsectionId = (section.id === 'applications' || section.id === 'logotype') 
+                                ? subsection.id 
+                                : `${section.id}-${subsection.id}`;
+                            subNavLink.href = `#${subsectionId}`;
+                            subNavLink.className = 'nav-link subsection-link';
+                            subNavLink.setAttribute('data-section', section.id);
+                            subNavLink.setAttribute('data-subsection', subsection.id);
+                            subNavLink.textContent = subsection.name;
+                            subListItem.appendChild(subNavLink);
+                            subList.appendChild(subListItem);
+                        });
+                        listItem.appendChild(subList);
+                    }
+                    
+                    navList.appendChild(listItem);
+                    visibleNumber++;
+                }
+            });
+        }
+        
+        // Renumber section headers on frontend
+        function renumberFrontendSections() {
+            let visibleNumber = 0; // Start at 0 for "00. Introduction"
+            
+            FRONTEND_SECTION_ORDER.forEach(section => {
+                const isHidden = hiddenSections[section.id];
+                if (!isHidden) {
+                    const sectionElement = document.getElementById(section.id);
+                    if (sectionElement) {
+                        // Special handling for frame-rebel section to use brand name
+                        if (section.id === 'frame-rebel') {
+                            const h2 = sectionElement.querySelector('h2');
+                            if (h2) {
+                                h2.textContent = `${String(visibleNumber).padStart(2, '0')}. ${brandName}`;
+                            }
+                        } else {
+                            const h2 = sectionElement.querySelector('h2');
+                            if (h2) {
+                                h2.textContent = `${String(visibleNumber).padStart(2, '0')}. ${section.name}`;
+                            }
+                        }
+                    }
+                    visibleNumber++;
+                }
+            });
+        }
+        
+        // Handle hidden sections
+        if (content.hiddenSections) {
+            Object.keys(content.hiddenSections).forEach(sectionId => {
+                if (content.hiddenSections[sectionId]) {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        section.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Build navigation and renumber sections
+        buildNavigation();
+        renumberFrontendSections();
+        
+        // Initialize smooth scrolling (uses delegation, so only needs to be called once)
+        initSmoothScrolling();
+        
+        // Re-initialize scroll spy after navigation is rebuilt
+        setTimeout(() => {
+            initScrollSpy();
+            // Set initial active section on load
+            const firstSection = document.querySelector('.content-section');
+            if (firstSection) {
+                const firstSectionId = firstSection.getAttribute('id');
+                const firstNavItem = document.querySelector(`.nav-list > li .nav-link[data-section="${firstSectionId}"]`);
+                if (firstNavItem && firstNavItem.parentElement) {
+                    firstNavItem.classList.add('active');
+                    firstNavItem.parentElement.classList.add('active-section', 'expanded');
+                }
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('Error loading content:', error);
+        console.error('Error details:', error.message, error.stack);
+        const sidebarBrandName = document.getElementById('sidebar-brand-name');
+        if (sidebarBrandName) sidebarBrandName.textContent = 'Error loading content';
+        
+        // Show error in main content area too
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div style="padding: 2rem; text-align: center;">
+                    <h2>Error Loading Content</h2>
+                    <p>${error.message || 'Unknown error occurred'}</p>
+                    <p style="color: #999; font-size: 0.875rem;">Check the browser console for more details.</p>
+                </div>
+            `;
+        }
+    }
+}
+
+// Format content - convert newlines to paragraphs, handle subsections
+function formatContent(text) {
+    if (!text) return '<p>No content yet. Edit via admin panel.</p>';
+    
+    const lines = text.trim().split('\n').filter(line => line.trim());
+    let html = '';
+    let currentSubsection = null;
+    let currentContent = [];
+    
+    lines.forEach((line, index) => {
+        const trimmed = line.trim();
+        
+        // Check if line is a subsection header (e.g., "01.1 Our Proposition:" or "01.1 Our Proposition")
+        const subsectionMatch = trimmed.match(/^(\d+\.\d+)\s+(.+?)(:)?$/);
+        if (subsectionMatch) {
+            // Close previous subsection if any
+            if (currentSubsection) {
+                html += renderSubsection(currentSubsection, currentContent);
+            }
+            // Start new subsection
+            currentSubsection = {
+                number: subsectionMatch[1],
+                title: subsectionMatch[2]
+            };
+            currentContent = [];
+        } else {
+            // Regular content line
+            currentContent.push(trimmed);
+        }
+    });
+    
+    // Close last subsection if any
+    if (currentSubsection) {
+        html += renderSubsection(currentSubsection, currentContent);
+    } else if (currentContent.length > 0) {
+        // No subsections, just render as paragraphs
+        currentContent.forEach(line => {
+            if (line.trim()) {
+                // Apply markdown bold parsing
+                const processedLine = parseMarkdownBold(line.trim());
+                html += `<p>${processedLine}</p>`;
+            }
+        });
+    }
+    
+    return html;
+}
+
+// Render a subsection
+function renderSubsection(subsection, content) {
+    let html = '<div class="subsection">';
+    html += `<div class="subsection-number">${subsection.number}</div>`;
+    html += `<div class="subsection-title">${subsection.title}</div>`;
+    html += '<div class="subsection-content">';
+    content.forEach(line => {
+        if (line.trim()) {
+            // Apply markdown bold parsing
+            const processedLine = parseMarkdownBold(line.trim());
+            html += `<p>${processedLine}</p>`;
+        }
+    });
+    html += '</div></div>';
+    return html;
+}
+
+// Initialize smooth scrolling for navigation links using event delegation
+let smoothScrollingInitialized = false;
+function initSmoothScrolling() {
+    // Use event delegation to avoid duplicate listeners when navigation is rebuilt
+    if (smoothScrollingInitialized) return;
+    
+    // Use event delegation on the sidebar-nav container (which exists in HTML)
+    // This works even when the navigation list is rebuilt via innerHTML
+    const sidebarNav = document.querySelector('.sidebar-nav');
+    if (!sidebarNav) {
+        // If sidebar nav doesn't exist yet, try again later
+        setTimeout(initSmoothScrolling, 100);
+        return;
+    }
+    
+    sidebarNav.addEventListener('click', function(e) {
+        const link = e.target.closest('.nav-link');
+        if (!link) return;
+        
+        e.preventDefault();
+        
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+            const targetId = href.substring(1);
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                // Get absolute position of element
+                let elementTop = 0;
+                let element = targetElement;
+                do {
+                    elementTop += element.offsetTop;
+                    element = element.offsetParent;
+                } while (element);
+                
+                // Calculate scroll position with offset for header
+                const headerOffset = 100;
+                const scrollPosition = elementTop - headerOffset;
+                
+                // Scroll smoothly
+                window.scrollTo({
+                    top: Math.max(0, scrollPosition),
+                    behavior: 'smooth'
+                });
+            }
+        }
+    });
+    
+    smoothScrollingInitialized = true;
+}
+
+// Scroll spy to highlight active navigation item
+let scrollSpyInitialized = false;
+let scrollSpyUpdateFunction = null;
+
+function initScrollSpy() {
+    // Remove old scroll listener if it exists
+    if (scrollSpyUpdateFunction) {
+        window.removeEventListener('scroll', scrollSpyUpdateFunction);
+        scrollSpyUpdateFunction = null;
+    }
+    
+    const sections = document.querySelectorAll('.content-section');
+    const navLinks = document.querySelectorAll('.nav-link:not(.subsection-link)');
+    const subsectionLinks = document.querySelectorAll('.nav-link.subsection-link');
+    const navListItems = document.querySelectorAll('.nav-list > li');
+    
+    let currentActiveSection = '';
+    let currentActiveSubsection = '';
+    
+    function updateActiveNav() {
+        let current = '';
+        let currentSubsection = '';
+        const scrollY = window.pageYOffset || window.scrollY;
+        
+        // First check for subsections (more specific)
+        const allSubsections = document.querySelectorAll('.subsection[id]');
+        allSubsections.forEach(subsection => {
+            // Calculate absolute position relative to document
+            let subsectionTop = 0;
+            let element = subsection;
+            do {
+                subsectionTop += element.offsetTop;
+                element = element.offsetParent;
+            } while (element);
+            
+            const subsectionHeight = subsection.offsetHeight;
+            const subsectionId = subsection.getAttribute('id');
+            
+            // Check if we're in this subsection (with some offset)
+            if (scrollY >= subsectionTop - 250 && scrollY < subsectionTop + subsectionHeight - 250) {
+                currentSubsection = subsectionId;
+                // Also set the parent section
+                const parentSection = subsection.closest('.content-section');
+                if (parentSection) {
+                    current = parentSection.getAttribute('id');
+                }
+            }
+        });
+        
+        // If no subsection found, check main sections
+        if (!current) {
+            sections.forEach(section => {
+                // Calculate absolute position relative to document
+                let sectionTop = 0;
+                let element = section;
+                do {
+                    sectionTop += element.offsetTop;
+                    element = element.offsetParent;
+                } while (element);
+                
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+                
+                // Check if we're in this section (with some offset)
+                if (scrollY >= sectionTop - 200 && scrollY < sectionTop + sectionHeight - 200) {
+                    current = sectionId;
+                }
+            });
+        }
+        
+        // Only update if section or subsection changed
+        if (current === currentActiveSection && currentSubsection === currentActiveSubsection) {
+            return;
+        }
+        currentActiveSection = current;
+        currentActiveSubsection = currentSubsection;
+        
+        // Update nav links - only main headings, not subsections
+        navLinks.forEach(link => {
+            if (link.classList.contains('subsection-link')) {
+                link.classList.remove('active');
+                return;
+            }
+            
+            const linkSection = link.getAttribute('data-section');
+            if (linkSection === current) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+        
+        // Update subsection links - remove active class (subsections should never be active)
+        subsectionLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Expand/collapse subsections based on active section
+        navListItems.forEach(listItem => {
+            const mainLink = listItem.querySelector('.nav-link:not(.subsection-link)');
+            if (!mainLink) return;
+            
+            const linkSection = mainLink.getAttribute('data-section');
+            const subsectionList = listItem.querySelector('ul');
+            
+            // Only handle expand/collapse if this section has subsections
+            if (subsectionList) {
+                if (linkSection === current) {
+                    // Expand this section's subsections
+                    listItem.classList.add('active-section', 'expanded');
+                } else {
+                    // Collapse this section's subsections
+                    listItem.classList.remove('active-section', 'expanded');
+                }
+            }
+        });
+    }
+    
+    // Throttle scroll events with passive listener for better performance
+    let ticking = false;
+    
+    function handleScroll() {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                updateActiveNav();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }
+    
+    // Store the handler so we can remove it later
+    scrollSpyUpdateFunction = handleScroll;
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check with a small delay to ensure DOM is ready
+    setTimeout(() => {
+        updateActiveNav();
+    }, 100);
+}
+
+// Setup usage tabs for logo section
+function setupUsageTabs() {
+    document.querySelectorAll('.usage-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            
+            // Remove active from all tabs and content
+            document.querySelectorAll('.usage-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.usage-tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active to clicked tab and corresponding content
+            this.classList.add('active');
+            const content = document.querySelector(`.usage-tab-content[data-content="${tabName}"]`);
+            if (content) {
+                content.classList.add('active');
+            }
+        });
+    });
+}
+
+// Typography preview functions
+let currentDevice = 'desktop';
+
+function switchDevice(device) {
+    currentDevice = device;
+    
+    // Update button states
+    document.querySelectorAll('.device-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.device === device) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Re-render typography preview
+    loadTypographyPreview();
+}
+
+async function loadTypographyPreview() {
+    try {
+        const response = await fetch('/api/typography');
+        if (!response.ok) {
+            throw new Error('Failed to load typography data');
+        }
+        const typographyData = await response.json();
+        await renderTypographyPreview(typographyData);
+    } catch (error) {
+        console.error('Error loading typography preview:', error);
+    }
+}
+
+async function renderTypographyPreview(typographyData) {
+    const previewArea = document.getElementById('typography-preview');
+    if (!previewArea) return;
+    
+    let primaryFontName = '';
+    let secondaryFontName = '';
+    try {
+        const contentResponse = await fetch('/api/content');
+        if (contentResponse.ok) {
+            const content = await contentResponse.json();
+            primaryFontName = content.typography?.primary || '';
+            secondaryFontName = content.typography?.secondary || '';
+
+            // Dynamically load Google Fonts if they are set
+            loadGoogleFontIfNeeded(primaryFontName);
+            loadGoogleFontIfNeeded(secondaryFontName);
+        }
+    } catch (error) {
+        console.error('Error loading content for typography preview:', error);
+    }
+    
+    const { fonts = [] } = typographyData;
+    
+    // Typography style specifications
+    const styleSpecs = {
+        desktop: {
+            display: { fontSize: '96px', lineHeight: '100%', letterSpacing: '-0.02em' },
+            heading1: { fontSize: '60px', lineHeight: '100%', letterSpacing: '-0.01em' },
+            heading2: { fontSize: '42px', lineHeight: '110%', letterSpacing: '-0.01em' },
+            heading3: { fontSize: '32px', lineHeight: '120%', letterSpacing: '-0.01em' },
+            heading4: { fontSize: '24px', lineHeight: '120%', letterSpacing: '0' },
+            body1: { fontSize: '20px', lineHeight: '124%', letterSpacing: '0' },
+            body2: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0' },
+            button: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0.01em' },
+            tag: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0.01em' },
+            caption: { fontSize: '12px', lineHeight: '140%', letterSpacing: '0.04em' }
+        },
+        tablet: {
+            display: { fontSize: '72px', lineHeight: '100%', letterSpacing: '-0.02em' },
+            heading1: { fontSize: '48px', lineHeight: '100%', letterSpacing: '-0.01em' },
+            heading2: { fontSize: '36px', lineHeight: '110%', letterSpacing: '-0.01em' },
+            heading3: { fontSize: '28px', lineHeight: '120%', letterSpacing: '-0.01em' },
+            heading4: { fontSize: '20px', lineHeight: '120%', letterSpacing: '0' },
+            body1: { fontSize: '18px', lineHeight: '124%', letterSpacing: '0' },
+            body2: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0' },
+            button: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
+            tag: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
+            caption: { fontSize: '11px', lineHeight: '140%', letterSpacing: '0.04em' }
+        },
+        mobile: {
+            display: { fontSize: '48px', lineHeight: '100%', letterSpacing: '-0.02em' },
+            heading1: { fontSize: '36px', lineHeight: '100%', letterSpacing: '-0.01em' },
+            heading2: { fontSize: '28px', lineHeight: '110%', letterSpacing: '-0.01em' },
+            heading3: { fontSize: '24px', lineHeight: '120%', letterSpacing: '-0.01em' },
+            heading4: { fontSize: '18px', lineHeight: '120%', letterSpacing: '0' },
+            body1: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0' },
+            body2: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0' },
+            button: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' },
+            tag: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' },
+            caption: { fontSize: '10px', lineHeight: '140%', letterSpacing: '0.04em' }
+        }
+    };
+    
+    const specs = styleSpecs[currentDevice] || styleSpecs.desktop;
+    
+    // Use primary and secondary font names directly
+    let displayFont = primaryFontName || '';
+    let headingFont = primaryFontName || '';
+    let bodyFont = secondaryFontName || primaryFontName || '';
+    
+    previewArea.innerHTML = `
+        <!-- Display Section -->
+        <div class="preview-section">
+            <div class="preview-section-header">
+                <h4 class="preview-section-title">Display</h4>
+                <div class="preview-section-specs">
+                    <div class="preview-section-spec">
+                        <span>Letter Spacing:</span>
+                        <span>${specs.display.letterSpacing}</span>
+                    </div>
+                    <div class="preview-section-spec">
+                        <span>Line Height:</span>
+                        <span>${specs.display.lineHeight}</span>
+                    </div>
+                </div>
+            </div>
+            <p class="preview-text preview-display" style="font-family: '${displayFont || 'inherit'}' !important; font-size: ${specs.display.fontSize} !important; line-height: ${specs.display.lineHeight} !important; letter-spacing: ${specs.display.letterSpacing} !important;">
+                The Quick Brown Fox
+            </p>
+        </div>
+        
+        <!-- Heading Section -->
+        <div class="preview-section">
+            <div class="preview-section-header">
+                <h4 class="preview-section-title">Heading</h4>
+                <div class="preview-section-specs">
+                    <div class="preview-section-spec">
+                        <span>Letter Spacing:</span>
+                        <span>${specs.heading1.letterSpacing}</span>
+                    </div>
+                    <div class="preview-section-spec">
+                        <span>Line Height:</span>
+                        <span>${specs.heading1.lineHeight}</span>
+                    </div>
+                </div>
+            </div>
+            <h1 class="preview-text preview-heading" style="font-family: '${headingFont || 'inherit'}' !important; font-size: ${specs.heading1.fontSize} !important; line-height: ${specs.heading1.lineHeight} !important; letter-spacing: ${specs.heading1.letterSpacing} !important;">
+                The Quick Brown Fox Jumps Over The Lazy Dog
+            </h1>
+        </div>
+        
+        <!-- Body Section -->
+        <div class="preview-section">
+            <div class="preview-section-header">
+                <h4 class="preview-section-title">Body</h4>
+                <div class="preview-section-specs">
+                    <div class="preview-section-spec">
+                        <span>Letter Spacing:</span>
+                        <span>${specs.body1.letterSpacing}</span>
+                    </div>
+                    <div class="preview-section-spec">
+                        <span>Line Height:</span>
+                        <span>${specs.body1.lineHeight}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-body-columns">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                </p>
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                </p>
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Button Section -->
+        <div class="preview-section">
+            <div class="preview-section-header">
+                <h4 class="preview-section-title">Button</h4>
+                <div class="preview-section-specs">
+                    <div class="preview-section-spec">
+                        <span>Letter Spacing:</span>
+                        <span>${specs.button.letterSpacing}</span>
+                    </div>
+                    <div class="preview-section-spec">
+                        <span>Line Height:</span>
+                        <span>${specs.button.lineHeight}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-button" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.button.fontSize} !important; line-height: ${specs.button.lineHeight} !important; letter-spacing: ${specs.button.letterSpacing} !important;">
+                Button Text
+            </div>
+        </div>
+        
+        <!-- Tag Section -->
+        <div class="preview-section">
+            <div class="preview-section-header">
+                <h4 class="preview-section-title">Tag</h4>
+                <div class="preview-section-specs">
+                    <div class="preview-section-spec">
+                        <span>Letter Spacing:</span>
+                        <span>${specs.tag.letterSpacing}</span>
+                    </div>
+                    <div class="preview-section-spec">
+                        <span>Line Height:</span>
+                        <span>${specs.tag.lineHeight}</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important;">
+                    Cardboard Box
+                </span>
+                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important;">
+                    Rolex Booklet
+                </span>
+            </div>
+        </div>
+        
+        <!-- Caption Section -->
+        <div class="preview-section">
+            <div class="preview-section-header">
+                <h4 class="preview-section-title">Caption</h4>
+                <div class="preview-section-specs">
+                    <div class="preview-section-spec">
+                        <span>Letter Spacing:</span>
+                        <span>${specs.caption.letterSpacing}</span>
+                    </div>
+                    <div class="preview-section-spec">
+                        <span>Line Height:</span>
+                        <span>${specs.caption.lineHeight}</span>
+                    </div>
+                </div>
+            </div>
+            <p class="preview-text preview-caption" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.caption.fontSize} !important; line-height: ${specs.caption.lineHeight} !important; letter-spacing: ${specs.caption.letterSpacing} !important;">
+                This is a caption text example showing how small text appears.
+            </p>
+        </div>
+    `;
+    
+    previewArea.setAttribute('data-device', currentDevice);
+}
+
+// List of common Google Fonts to check against
+const GOOGLE_FONTS = [
+    'Work Sans', 'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Oswald', 'Raleway',
+    'Merriweather', 'Playfair Display', 'Lora', 'Noto Serif', 'PT Serif', 'Source Serif Pro',
+    'Fira Sans', 'Ubuntu', 'Poppins', 'Nunito', 'Quicksand', 'Rubik', 'Karla', 'Cabin',
+    'Libre Franklin', 'Space Mono', 'IBM Plex Sans', 'DM Sans', 'Public Sans', 'Manrope',
+    'Outfit', 'Plus Jakarta Sans', 'Lexend', 'Sora', 'Urbanist', 'Epilogue', 'Inter Tight',
+    'Figtree', 'Onest', 'Geist Sans', 'General Sans', 'Neue Haas Grotesk Display Pro', 'Favorit'
+];
+
+// Function to dynamically load Google Fonts if needed
+function loadGoogleFontIfNeeded(fontFamily) {
+    if (!fontFamily || !GOOGLE_FONTS.includes(fontFamily)) {
+        return; // Not a recognized Google Font or already loaded
+    }
+
+    // Check if the font is already in the document head
+    const existingLink = document.querySelector(`link[href*="family=${encodeURIComponent(fontFamily)}"]`);
+    if (existingLink) {
+        return; // Font already linked
+    }
+
+    // Create a new link element for the Google Font
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;500;600;700&display=swap`;
+    document.head.appendChild(link);
+    console.log(`Dynamically loaded Google Font: ${fontFamily}`);
+}
+
+// Render color palette HTML
+// Helper function to convert HEX to RGB
+function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    return { r, g, b };
+}
+
+// Helper function to convert RGB to CMYK
+function rgbToCmyk(r, g, b) {
+    r = r / 255;
+    g = g / 255;
+    b = b / 255;
+    
+    const k = 1 - Math.max(r, g, b);
+    const c = k === 1 ? 0 : (1 - r - k) / (1 - k);
+    const m = k === 1 ? 0 : (1 - g - k) / (1 - k);
+    const y = k === 1 ? 0 : (1 - b - k) / (1 - k);
+    
+    return {
+        c: Math.round(c * 100),
+        m: Math.round(m * 100),
+        y: Math.round(y * 100),
+        k: Math.round(k * 100)
+    };
+}
+
+// Helper function to calculate luminance and determine text color
+function getTextColorForBackground(hex) {
+    const rgb = hexToRgb(hex);
+    // Calculate relative luminance (0-1)
+    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+    // Return black for light backgrounds, white for dark backgrounds
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
+// Apply color to SVG by setting fill and stroke attributes using string manipulation
+function applyColorToSVG(svgString, color) {
+    if (!svgString || !svgString.trim().startsWith('<svg')) {
+        return svgString;
+    }
+    
+    let modifiedSVG = svgString;
+    
+    // Replace fill attributes in SVG elements, but preserve fill="none"
+    // Match fill="..." or fill='...' and replace with the new color, but skip fill="none" or fill='none'
+    modifiedSVG = modifiedSVG.replace(/fill="(?!none)[^"]*"/gi, `fill="${color}"`);
+    modifiedSVG = modifiedSVG.replace(/fill='(?!none)[^']*'/gi, `fill='${color}'`);
+    
+    // Also replace stroke attributes if they exist and aren't "none"
+    modifiedSVG = modifiedSVG.replace(/stroke="(?!none)[^"]*"/gi, `stroke="${color}"`);
+    modifiedSVG = modifiedSVG.replace(/stroke='(?!none)[^']*'/gi, `stroke='${color}'`);
+    
+    // Add fill attribute to elements that don't have one (path, circle, rect, ellipse, polygon, polyline, line, text, g)
+    // Match opening tags without fill attribute and add fill
+    const svgElements = ['path', 'circle', 'rect', 'ellipse', 'polygon', 'polyline', 'line', 'text', 'g'];
+    svgElements.forEach(element => {
+        // Match <element  or <element> without fill attribute and add fill
+        const regex = new RegExp(`<${element}(?![^>]*\\bfill\\s*=)([^>]*)>`, 'gi');
+        modifiedSVG = modifiedSVG.replace(regex, `<${element}$1 fill="${color}">`);
+    });
+    
+    return modifiedSVG;
+}
+
+// Generate incorrect color examples - colors that are NOT in the brand palette or have poor contrast
+function generateIncorrectColorExamples(brandColors) {
+    const incorrectColors = [];
+    const brandHexes = brandColors ? brandColors.map(c => c.hex?.toLowerCase()) : [];
+    
+    // Common "wrong" colors that are typically not in brand palettes
+    const wrongColors = [
+        '#FF0000', // Bright red
+        '#00FF00', // Bright green  
+        '#0000FF', // Bright blue
+        '#FFFF00', // Bright yellow
+        '#FF00FF', // Bright magenta
+        '#00FFFF', // Bright cyan
+        '#FFA500', // Orange
+        '#800080', // Purple
+        '#FFC0CB', // Pink
+        '#A52A2A', // Brown
+        '#808080', // Gray (neutral, not brand-specific)
+        '#C0C0C0', // Silver
+    ];
+    
+    // Filter out any colors that might accidentally be in brand palette
+    wrongColors.forEach(color => {
+        if (!brandHexes.includes(color.toLowerCase())) {
+            incorrectColors.push(color);
+        }
+    });
+    
+    // If we need more examples, generate random colors
+    while (incorrectColors.length < 8) {
+        const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+        if (!brandHexes.includes(randomColor.toLowerCase())) {
+            incorrectColors.push(randomColor);
+        }
+    }
+    
+    // Return up to 8 incorrect examples
+    return incorrectColors.slice(0, 8);
+}
+
+function renderColorPalette(colors) {
+    // Group colors by type for layout
+    const primaryColors = colors.filter(c => c.type === 'primary');
+    const secondaryColors = colors.filter(c => c.type === 'secondary');
+    const allColors = [...primaryColors, ...secondaryColors];
+    
+    return `
+        <div class="color-palette-container">
+            <div class="color-grid" id="color-grid">
+                ${allColors.map((color, index) => {
+                    // First color always spans full width
+                    const isFirst = index === 0;
+                    // After first color, use pairs (2 columns)
+                    const spanFull = isFirst;
+                    
+                    // Convert HEX to RGB and CMYK
+                    const rgb = hexToRgb(color.hex);
+                    const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
+                    const rgbString = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+                    const cmykString = `${cmyk.c}%, ${cmyk.m}%, ${cmyk.y}%, ${cmyk.k}%`;
+                    
+                    // Determine text color based on background
+                    const textColor = getTextColorForBackground(color.hex);
+                    
+                    const colorId = `color-${index}`;
+                    
+                    const isLightBg = textColor === '#000000';
+                    const overlayColor = isLightBg ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)';
+                    
+                    return `
+                        <div class="color-item-wrapper ${spanFull ? 'color-item-full' : ''}">
+                            <div class="color-item ${isLightBg ? 'light-bg' : 'dark-bg'}" style="background-color: ${color.hex}; color: ${textColor};" id="${colorId}" data-text-color="${textColor}">
+                                <span class="color-type-label ${color.type}" style="color: ${textColor}; opacity: 0.7;">${color.type}</span>
+                                <div class="color-item-content">
+                                    <div class="color-info">
+                                        <span class="color-name" style="color: ${textColor};">${color.name}</span>
+                                        <div class="color-value-display" style="color: ${textColor};">
+                                            <span class="color-value-text" data-hex="${color.hex}" data-rgb="${rgbString}" data-cmyk="${cmykString}">${color.hex}</span>
+                                        </div>
+                                    </div>
+                                    <div class="color-format-switcher">
+                                        <button class="format-btn active" data-format="hex" data-color-id="${colorId}" onclick="switchColorFormat('${colorId}', 'hex')" style="color: ${textColor}; border-color: ${textColor};">HEX</button>
+                                        <button class="format-btn" data-format="rgb" data-color-id="${colorId}" onclick="switchColorFormat('${colorId}', 'rgb')" style="color: ${textColor}; border-color: ${textColor};">RGB</button>
+                                        <button class="format-btn" data-format="cmyk" data-color-id="${colorId}" onclick="switchColorFormat('${colorId}', 'cmyk')" style="color: ${textColor}; border-color: ${textColor};">CMYK</button>
+                                    </div>
+                                </div>
+                                <button class="color-copy-btn" onclick="copyColorValue('${colorId}')" title="Copy color value" style="color: ${textColor};">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5.5 3.5H3.5C2.94772 3.5 2.5 3.94772 2.5 4.5V12.5C2.5 13.0523 2.94772 13.5 3.5 13.5H11.5C12.0523 13.5 12.5 13.0523 12.5 12.5V10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        <path d="M6.5 2.5H13.5C14.0523 2.5 14.5 2.94772 14.5 3.5V10.5C14.5 11.0523 14.0523 11.5 13.5 11.5H12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// Function to switch color format - Attached to window for global access
+function switchColorFormat(colorId, format) {
+    const colorItem = document.getElementById(colorId);
+    if (!colorItem) return;
+    
+    const valueText = colorItem.querySelector('.color-value-text');
+    const formatBtns = colorItem.querySelectorAll('.format-btn');
+    
+    if (!valueText) return;
+    
+    // Remove active class from all buttons
+    formatBtns.forEach(btn => btn.classList.remove('active'));
+    
+    // Add active class to clicked button
+    const activeBtn = colorItem.querySelector(`.format-btn[data-format="${format}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+    
+    // Update displayed value
+    if (format === 'hex') {
+        valueText.textContent = valueText.getAttribute('data-hex');
+    } else if (format === 'rgb') {
+        valueText.textContent = valueText.getAttribute('data-rgb');
+    } else if (format === 'cmyk') {
+        valueText.textContent = valueText.getAttribute('data-cmyk');
+    }
+}
+window.switchColorFormat = switchColorFormat;
+
+// Function to copy current color value - Attached to window for global access
+function copyColorValue(colorId) {
+    const colorItem = document.getElementById(colorId);
+    if (!colorItem) return;
+    
+    const activeBtn = colorItem.querySelector('.format-btn.active');
+    const valueText = colorItem.querySelector('.color-value-text');
+    
+    if (!activeBtn || !valueText) return;
+    
+    const format = activeBtn.getAttribute('data-format');
+    let valueToCopy = '';
+    
+    if (format === 'hex') {
+        valueToCopy = valueText.getAttribute('data-hex');
+    } else if (format === 'rgb') {
+        valueToCopy = valueText.getAttribute('data-rgb');
+    } else if (format === 'cmyk') {
+        valueToCopy = valueText.getAttribute('data-cmyk');
+    }
+    
+    if (valueToCopy) {
+        copyToClipboard(valueToCopy);
+    }
+}
+window.copyColorValue = copyColorValue;
+
+// Copy to clipboard function - Attached to window for global access
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show feedback (you can add a toast notification here)
+        console.log('Copied to clipboard:', text);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+window.copyToClipboard = copyToClipboard;
+
+// Download image function
+function downloadImage(imageSrc, filename) {
+    // If it's a base64 data URL
+    if (imageSrc.startsWith('data:')) {
+        const link = document.createElement('a');
+        link.href = imageSrc;
+        link.download = filename || 'image';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        // If it's a URL, fetch and download
+        fetch(imageSrc)
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename || 'image';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(err => {
+                console.error('Error downloading image:', err);
+            });
+    }
+}
+
+// Download font function
+function downloadFont(fontPath, fontName) {
+    const link = document.createElement('a');
+    link.href = fontPath;
+    link.download = fontName || 'font';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Load fonts download list
+async function loadFontsDownloadList() {
+    try {
+        const response = await fetch('/api/typography');
+        if (!response.ok) {
+            return;
+        }
+        const typographyData = await response.json();
+        const fonts = typographyData.fonts || [];
+        
+        const fontsDownloadList = document.getElementById('fonts-download-list');
+        if (!fontsDownloadList) return;
+        
+        if (fonts.length === 0) {
+            fontsDownloadList.innerHTML = '<p>No fonts available for download.</p>';
+            return;
+        }
+        
+        fontsDownloadList.innerHTML = fonts.map(font => {
+            const fontName = font.fontFamily || font.filename || 'Font';
+            const fontPath = font.path || `/fonts/${font.filename}`;
+            const fontFilename = font.filename || fontName;
+            return `
+                <div class="font-download-item">
+                    <div class="font-download-info">
+                        <span class="font-download-name">${fontName}</span>
+                        ${font.filename ? `<span class="font-download-filename">${font.filename}</span>` : ''}
+                    </div>
+                    <button class="download-asset-btn font-download-btn" data-font-path="${fontPath.replace(/"/g, '&quot;')}" data-font-filename="${fontFilename.replace(/"/g, '&quot;')}" title="Download font file">
+                        Download
+                    </button>
+                </div>
+            `;
+        }).join('');
+        
+        // Setup download button event listeners for fonts
+        fontsDownloadList.querySelectorAll('.font-download-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const fontPath = this.getAttribute('data-font-path');
+                const fontFilename = this.getAttribute('data-font-filename') || 'font';
+                downloadFont(fontPath, fontFilename);
+            });
+        });
+    } catch (error) {
+        console.error('Error loading fonts download list:', error);
+    }
+}
+
+// Initialize usage tabs
+function initUsageTabs() {
+    const tabs = document.querySelectorAll('.usage-tab');
+    const tabContents = document.querySelectorAll('.usage-tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            
+            // Remove active class from all tabs and contents
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            tab.classList.add('active');
+            const targetContent = document.querySelector(`.usage-tab-content[data-content="${targetTab}"]`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+}
+
+// Load content on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded, starting content load...');
+    try {
+        // Initialize smooth scrolling early (it will wait for nav to exist)
+        initSmoothScrolling();
+        loadContent().then(() => {
+            console.log('Content loaded successfully');
+            initUsageTabs();
+        }).catch((error) => {
+            console.error('Error in loadContent promise:', error);
+        });
+        loadTypographyPreview();
+    } catch (error) {
+        console.error('Error in DOMContentLoaded:', error);
+    }
+});

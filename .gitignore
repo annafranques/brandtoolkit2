@@ -1,0 +1,21 @@
+node_modules/
+data/
+.env
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Deployment archives
+brand-toolkit-deploy-*.zip
+brand-toolkit-deploy-*.tar.gz
+brand-toolkit.zip
+brand-toolkit-deploy.zip
+
+# Snapshots (keep local but don't commit)
+snapshots/
+brand_toolkit_snapshot_*.tar.gz
+
+
+

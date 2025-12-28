@@ -1,0 +1,154 @@
+{
+  "file_name": "Brand Assets",
+  "description": "Template structure for organizing brand assets in Figma",
+  "pages": [
+    {
+      "name": "Typography",
+      "frames": [
+        {
+          "name": "Primary Font",
+          "description": "Display your primary typeface",
+          "sections": [
+            "Font samples (Aa Bb Cc...)",
+            "Different weights (Light, Regular, Bold)",
+            "Size examples (Display, Heading, Body, Caption)",
+            "Character set (0-9, special characters)"
+          ],
+          "figma_text_styles": [
+            "Primary Display",
+            "Primary Heading",
+            "Primary Body",
+            "Primary Button",
+            "Primary Caption"
+          ]
+        },
+        {
+          "name": "Secondary Font",
+          "description": "Display your secondary typeface",
+          "sections": [
+            "Font samples",
+            "Different weights",
+            "Size examples",
+            "Character set"
+          ],
+          "figma_text_styles": [
+            "Secondary Display",
+            "Secondary Heading",
+            "Secondary Body",
+            "Secondary Button",
+            "Secondary Caption"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Colors",
+      "frames": [
+        {
+          "name": "Primary Colors",
+          "description": "Main brand colors",
+          "color_styles": [
+            {
+              "name": "Primary Black",
+              "hex": "#000000",
+              "usage": "Main text, primary elements"
+            },
+            {
+              "name": "Primary White",
+              "hex": "#FFFFFF",
+              "usage": "Backgrounds, light text on dark"
+            }
+          ]
+        },
+        {
+          "name": "Secondary Colors",
+          "description": "Supporting colors",
+          "color_styles": [
+            {
+              "name": "Secondary Gray",
+              "hex": "#666666",
+              "usage": "Secondary text, borders"
+            }
+          ]
+        },
+        {
+          "name": "Accent Colors",
+          "description": "Highlight and CTA colors",
+          "color_styles": [
+            {
+              "name": "Accent Orange",
+              "hex": "#FF8C00",
+              "usage": "CTAs, highlights, active states"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Logos",
+      "frames": [
+        {
+          "name": "Primary Logo - Black",
+          "description": "Main logo on light backgrounds",
+          "variations": [
+            "Full color logo",
+            "Black logo",
+            "Different sizes (small, medium, large)"
+          ],
+          "export_settings": {
+            "formats": ["PNG", "SVG"],
+            "sizes": ["200px", "400px", "800px"]
+          }
+        },
+        {
+          "name": "Primary Logo - White",
+          "description": "Main logo on dark backgrounds",
+          "variations": [
+            "White logo",
+            "Inverted logo",
+            "Different sizes"
+          ]
+        },
+        {
+          "name": "Complementary Logos",
+          "description": "Alternative logo variations",
+          "variations": [
+            "Logo mark only",
+            "Logo with tagline",
+            "Horizontal lockup",
+            "Vertical lockup"
+          ]
+        },
+        {
+          "name": "Logo Usage Guidelines",
+          "description": "How to use logos correctly",
+          "sections": [
+            "Clear space requirements",
+            "Minimum size",
+            "Background requirements",
+            "Do's and Don'ts",
+            "Usage examples"
+          ]
+        }
+      ]
+    }
+  ],
+  "setup_instructions": {
+    "color_styles": "1. Create rectangles for each color\n2. Select rectangle → Fill → Style icon (4 dots)\n3. Click '+' to create new style\n4. Name and save",
+    "text_styles": "1. Create text with your font\n2. Select text → Text style dropdown\n3. Click '+' to create new style\n4. Configure font, size, weight, etc.\n5. Name and save",
+    "logo_organization": "1. Import logo files\n2. Create frames for each variation\n3. Add labels/descriptions\n4. Set up export settings\n5. Group related logos"
+  },
+  "integration_with_toolkit": {
+    "how_to_sync": "Use the Figma sync feature in the admin panel",
+    "what_gets_imported": [
+      "Color Styles (as color palette)",
+      "Text Styles (as typography references)",
+      "Images can be exported and uploaded separately"
+    ],
+    "figma_file_key": "Get from Figma URL: https://www.figma.com/file/[FILE_KEY]/[File-Name]"
+  }
+}
+
+
+
+

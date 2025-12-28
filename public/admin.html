@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Toolkit - Admin</title>
+    
+    <!-- Preconnect to Google Fonts for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload common Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Left Sidebar Navigation - Matching Frontend -->
+        <aside class="admin-sidebar">
+            <div class="brand-name-container">
+                <h1 id="admin-brand-name">Brand Toolkit</h1>
+            </div>
+            
+            <nav class="admin-sidebar-nav">
+                <div class="nav-list">
+                    <li><a href="#section-basic" class="admin-nav-link" data-section="basic">Basic Info</a></li>
+                    <li>
+                        <a href="#section-frame-rebel" class="admin-nav-link" data-section="frame-rebel" id="admin-nav-frame-rebel">00. The Name of the Project</a>
+                        <ul style="list-style: none; margin-left: 0; padding-left: 0; margin-top: 0.25rem;">
+                            <li><a href="#section-frame-rebel-aboutTheProject" class="admin-nav-link subsection-link" data-section="frame-rebel" data-subsection="aboutTheProject">About The Project</a></li>
+                            <li><a href="#section-frame-rebel-fundamentalPillars" class="admin-nav-link subsection-link" data-section="frame-rebel" data-subsection="fundamentalPillars">Fundamental Pillars</a></li>
+                            <li><a href="#section-frame-rebel-toneOfVoice" class="admin-nav-link subsection-link" data-section="frame-rebel" data-subsection="toneOfVoice">Tone of Voice</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#section-logotype" class="admin-nav-link" data-section="logotype">01. Logotype</a>
+                        <ul id="admin-logotype-subsections" style="list-style: none; margin-left: 0; padding-left: 0; margin-top: 0.25rem;">
+                            <!-- Subsections will be populated dynamically -->
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#section-color" class="admin-nav-link" data-section="color">02. Color</a>
+                        <ul style="list-style: none; margin-left: 0; padding-left: 0; margin-top: 0.25rem;">
+                            <li><a href="#section-color-corporateColors" class="admin-nav-link subsection-link" data-section="color" data-subsection="corporateColors">Corporate Colors</a></li>
+                            <li><a href="#section-color-correctApplications" class="admin-nav-link subsection-link" data-section="color" data-subsection="correctApplications">Correct Applications</a></li>
+                            <li><a href="#section-color-monochromatic" class="admin-nav-link subsection-link" data-section="color" data-subsection="monochromatic">Monochromatic</a></li>
+                            <li><a href="#section-color-incorrectApplications" class="admin-nav-link subsection-link" data-section="color" data-subsection="incorrectApplications">Incorrect Applications</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#section-typography" class="admin-nav-link" data-section="typography">03. Typography</a>
+                        <ul style="list-style: none; margin-left: 0; padding-left: 0; margin-top: 0.25rem;">
+                            <li><a href="#section-typography-mainTypography" class="admin-nav-link subsection-link" data-section="typography" data-subsection="mainTypography">Main Typography</a></li>
+                            <li><a href="#section-typography-secondaryTypography" class="admin-nav-link subsection-link" data-section="typography" data-subsection="secondaryTypography">Secondary Typography</a></li>
+                            <li><a href="#section-typography-readingLevels" class="admin-nav-link subsection-link" data-section="typography" data-subsection="readingLevels">Reading Levels</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#section-applications" class="admin-nav-link" data-section="applications">04. Applications</a>
+                        <ul id="admin-applications-subsections" style="list-style: none; margin-left: 0; padding-left: 0; margin-top: 0.25rem;">
+                            <!-- Subsections will be populated dynamically -->
+                        </ul>
+                    </li>
+                    <li><a href="#section-figma-sync" class="admin-nav-link" data-section="figma-sync">Figma Sync</a></li>
+                    <li><a href="#section-assets" class="admin-nav-link" data-section="assets">Assets</a></li>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>Brand Kit app built by Santa Helena. If you need anything else, reach out.</p>
+                <a href="mailto:contact@santahelena.com" class="contact-cta">Contact us</a>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="admin-main-content">
+            <header class="admin-header">
+                <div class="header-actions">
+                    <button id="save-btn" class="btn btn-primary">Save Changes</button>
+                    <a href="/" class="btn btn-secondary">View Public Site</a>
+                    <button id="logout-btn" class="btn btn-secondary" onclick="logout()" style="margin-left: 0.5rem;">Logout</button>
+                </div>
+            </header>
+            
+            <div class="admin-panel">
+                <!-- Basic Info Section -->
+                <div class="admin-section" id="section-basic">
+                    <div class="admin-section-header">
+                        <h2>Basic Info</h2>
+                    </div>
+                    <div class="form-group">
+                        <label for="brand-name">Brand Name</label>
+                        <input type="text" id="brand-name" class="form-control" placeholder="e.g., DIRTT">
+                    </div>
+                    <div class="form-group">
+                        <label for="logo-upload">Logo (SVG - Paste inline SVG code)</label>
+                        <textarea id="logo-upload" class="form-control" rows="8" placeholder="Paste your SVG code here..."></textarea>
+                        <small>Paste the inline SVG code. This will be used in color application examples.</small>
+                        <div id="logo-preview" class="image-preview" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+                
+                <!-- 00. The Name of the Project -->
+                <div class="admin-section" id="section-frame-rebel">
+                    <div class="admin-section-header">
+                        <h2 id="admin-frame-rebel-header">00. The Name of the Project</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-frame-rebel" data-section="frame-rebel">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+                    
+                    <h3 id="section-frame-rebel-aboutTheProject" style="margin-top: 2rem; margin-bottom: 1rem;">About The Project</h3>
+                    <div class="form-group">
+                        <label>Hero Image</label>
+                        <input type="file" class="section-image-input" data-section="frameRebel" data-subsection="aboutTheProject" accept="image/*">
+                        <textarea id="frame-rebel-about-content" class="form-control" rows="6" placeholder="Enter About The Project content..."></textarea>
+                        <div class="image-preview" id="frame-rebel-about-preview"></div>
+                    </div>
+                    
+                    <h3 id="section-frame-rebel-fundamentalPillars" style="margin-top: 2rem; margin-bottom: 1rem;">Fundamental Pillars</h3>
+                    <div class="form-group">
+                        <label>Hero Image</label>
+                        <input type="file" class="section-image-input" data-section="frameRebel" data-subsection="fundamentalPillars" accept="image/*">
+                        <textarea id="frame-rebel-pillars-content" class="form-control" rows="6" placeholder="Enter Fundamental Pillars content..."></textarea>
+                        <div class="image-preview" id="frame-rebel-pillars-preview"></div>
+                    </div>
+                    
+                    <h3 id="section-frame-rebel-toneOfVoice" style="margin-top: 2rem; margin-bottom: 1rem;">Tone of Voice</h3>
+                    <div class="form-group">
+                        <label>Hero Image</label>
+                        <input type="file" class="section-image-input" data-section="frameRebel" data-subsection="toneOfVoice" accept="image/*">
+                        <textarea id="frame-rebel-tone-content" class="form-control" rows="6" placeholder="Enter Tone of Voice content..."></textarea>
+                        <div class="image-preview" id="frame-rebel-tone-preview"></div>
+                    </div>
+                </div>
+                
+                <!-- 01. Logotype -->
+                <div class="admin-section" id="section-logotype">
+                    <div class="admin-section-header">
+                        <h2>01. Logotype</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-logotype" data-section="logotype">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+                    
+                    <div class="logo-section">
+                        <!-- Main Logo Upload -->
+                        <div class="form-group" style="margin-bottom: 3rem;">
+                            <label>Main Logo</label>
+                            <div class="file-upload-wrapper">
+                                <label for="main-logo-upload" class="file-upload-label" id="main-logo-label">
+                                    <span class="upload-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="upload-text">Upload main logo</span>
+                                    <span class="upload-hint">Click to browse, or drag & drop files here</span>
+                                </label>
+                                <input type="file" class="file-upload-input" id="main-logo-upload" accept="image/*">
+                                <div class="file-name-display" id="main-logo-filename"></div>
+                            </div>
+                            <div class="image-preview" id="main-logo-preview" style="margin-top: 1rem;"></div>
+                        </div>
+                        
+                        <!-- Logotype Subsections Repeater -->
+                        <div style="margin-top: 2rem;">
+                            <h3 style="margin: 0 0 1.5rem 0; font-size: 1.125rem; font-weight: normal;">Logotype Subsections</h3>
+                            <div id="logotype-subsections-list"></div>
+                            <div style="margin-top: 2rem;">
+                                <button type="button" class="btn btn-primary" id="add-logotype-subsection-btn">Add Subsection</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 02. Color -->
+                <div class="admin-section" id="section-color">
+                    <div class="admin-section-header">
+                        <h2>02. Color</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-color" data-section="color">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+                    <h3 style="margin-bottom: 1.5rem;">Color Palette</h3>
+                    <div id="colors-list" class="colors-list">
+                        <!-- Colors will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addColorItem()" style="margin-top: 1rem;">
+                        + Add Color
+                    </button>
+                    
+                    <hr style="margin: 3rem 0; border: none; border-top: 1px solid #ddd;">
+                    
+                    <h3 id="section-color-corporateColors" style="margin-bottom: 1.5rem;">Corporate Colors</h3>
+                    <div class="form-group">
+                        <textarea id="color-corporate-content" class="form-control" rows="6" placeholder="Enter Corporate Colors content..."></textarea>
+                    </div>
+                    
+                    <h3 id="section-color-correctApplications" style="margin-top: 2rem; margin-bottom: 1rem;">Correct Applications</h3>
+                    <div class="form-group">
+                        <textarea id="color-correct-content" class="form-control" rows="6" placeholder="Enter Correct Applications content..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <p style="font-size: 0.875rem; color: #666; margin-top: 1rem;">Examples are automatically generated from your brand colors. The logo SVG from Basic Info will be used on each color background.</p>
+                    </div>
+                    
+                    <h3 id="section-color-monochromatic" style="margin-top: 2rem; margin-bottom: 1rem;">Monochromatic (One Ink)</h3>
+                    <div class="form-group">
+                        <textarea id="color-monochromatic-content" class="form-control" rows="6" placeholder="Enter Monochromatic content..."></textarea>
+                    </div>
+                    
+                    <h3 id="section-color-incorrectApplications" style="margin-top: 2rem; margin-bottom: 1rem;">Incorrect Applications</h3>
+                    <div class="form-group">
+                        <textarea id="color-incorrect-content" class="form-control" rows="6" placeholder="Enter Incorrect Applications content..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <p style="font-size: 0.875rem; color: #666; margin-top: 1rem;">Examples are automatically generated with random colors and colors not in your brand palette to demonstrate incorrect usage. The logo SVG from Basic Info will be used.</p>
+                    </div>
+                </div>
+                
+                <!-- 03. Typography Section -->
+                <div class="admin-section" id="section-typography">
+                    <div class="admin-section-header">
+                        <h2>03. Typography</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-typography" data-section="typography">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+                    <!-- Typography Manager Section -->
+                    <h3 style="margin-bottom: 1.5rem;">Font Management</h3>
+                    <div class="form-group">
+                        <label for="font-upload">Upload Font File</label>
+                        <input type="file" id="font-upload" class="form-control" accept=".otf,.ttf,.woff,.woff2,.eot" onchange="handleFontUpload(event)">
+                        <small>Supported formats: OTF, TTF, WOFF, WOFF2, EOT (max 10MB)</small>
+                    </div>
+                    
+                    <div id="fonts-list" class="fonts-list"></div>
+                    
+                    <hr style="margin: 3rem 0; border: none; border-top: 1px solid #ddd;">
+                    
+                    <h3 style="margin-bottom: 1.5rem;">Typography Content</h3>
+                    <p class="section-description" style="margin-bottom: 1.5rem;">Type the font names that match your uploaded fonts. The preview will use Primary font for Display/Headings and Secondary font for Body text. CSS will be automatically generated with responsive breakpoints.</p>
+                    <div class="form-group">
+                        <label for="font-primary">Primary Font</label>
+                        <input type="text" id="font-primary" class="form-control" placeholder="e.g., Favorit">
+                    </div>
+                    <div class="form-group">
+                        <label for="font-secondary">Secondary Font</label>
+                        <input type="text" id="font-secondary" class="form-control" placeholder="e.g., Favorit">
+                    </div>
+                    
+                    <h3 id="section-typography-mainTypography" style="margin-top: 2rem; margin-bottom: 1rem;">Main Typography</h3>
+                    <div class="form-group">
+                        <label>Hero Image</label>
+                        <input type="file" class="section-image-input" data-section="typographySection" data-subsection="mainTypography" accept="image/*">
+                        <textarea id="typography-main-content" class="form-control" rows="6" placeholder="Enter Main Typography content..."></textarea>
+                        <div class="image-preview" id="typography-main-preview"></div>
+                    </div>
+                    
+                    <h3 id="section-typography-secondaryTypography" style="margin-top: 2rem; margin-bottom: 1rem;">Secondary Typography</h3>
+                    <div class="form-group">
+                        <label>Hero Image</label>
+                        <input type="file" class="section-image-input" data-section="typographySection" data-subsection="secondaryTypography" accept="image/*">
+                        <textarea id="typography-secondary-content" class="form-control" rows="6" placeholder="Enter Secondary Typography content..."></textarea>
+                        <div class="image-preview" id="typography-secondary-preview"></div>
+                    </div>
+                    
+                    <h3 id="section-typography-readingLevels" style="margin-top: 2rem; margin-bottom: 1rem;">Reading Levels</h3>
+                    <div class="form-group">
+                        <label>Hero Image</label>
+                        <input type="file" class="section-image-input" data-section="typographySection" data-subsection="readingLevels" accept="image/*">
+                        <textarea id="typography-reading-levels-content" class="form-control" rows="6" placeholder="Enter Reading Levels content..."></textarea>
+                        <div class="image-preview" id="typography-reading-levels-preview"></div>
+                    </div>
+                </div>
+                
+                <!-- 04. Applications Section -->
+                <div class="admin-section" id="section-applications">
+                    <div class="admin-section-header">
+                        <h2>04. Applications</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-applications" data-section="applications">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+                    
+                    <div id="applications-list"></div>
+                    
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <button type="button" id="add-application-btn" class="btn btn-secondary">+ Add Application Subsection</button>
+                    </div>
+                </div>
+                
+                <!-- Figma Import Section -->
+                <div class="admin-section" id="section-figma-sync">
+                    <div class="admin-section-header">
+                        <h2>Figma Sync</h2>
+                    </div>
+                    <h3 style="margin-bottom: 1.5rem;">Import from Figma Export</h3>
+                    <p class="section-description" style="margin-bottom: 1.5rem;">
+                        Upload a JSON file exported from Figma to automatically extract colors, typography, and styles. 
+                        The file should contain style tokens with colors and text styles.
+                    </p>
+                    
+                    <div class="form-group">
+                        <label for="figma-json-upload">Figma Export JSON File</label>
+                        <input type="file" id="figma-json-upload" class="form-control" accept=".json" onchange="handleFigmaFileUpload(event)">
+                        <small>Upload a JSON file exported from Figma containing style tokens</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="figma-auto-apply" checked>
+                            Auto-apply extracted data (update colors and typography automatically)
+                        </label>
+                    </div>
+                    
+                    <div id="figma-sync-results" style="margin-top: 2rem;"></div>
+                </div>
+                
+                <!-- Assets Section -->
+                <div class="admin-section" id="section-assets">
+                    <div class="admin-section-header">
+                        <h2>Assets</h2>
+                    </div>
+                    <div class="form-group">
+                        <label for="asset-upload">Upload New Asset</label>
+                        <input type="file" id="asset-upload" accept="image/*" class="form-control" onchange="handleAssetUpload(event)">
+                        <div id="assets-list" class="assets-list"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="save-status" class="save-status"></div>
+    </div>
+    
+    <script src="admin.js?v=20251226_221800"></script>
+</body>
+</html>

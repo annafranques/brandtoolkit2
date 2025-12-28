@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Toolkit 🔥</title>
+    
+    <!-- Preconnect to Google Fonts for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload common Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="typography-generated.css">
+</head>
+<body>
+    <div class="layout">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand-name-container">
+                <h1 id="sidebar-brand-name">Brand</h1>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-list" id="main-nav-list">
+                    <!-- Navigation will be built dynamically by JavaScript -->
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>Brand Kit app built by Santa Helena. If you need anything else, reach out.</p>
+                <a href="mailto:contact@santahelena.com" class="contact-cta">Contact us</a>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <a href="/admin" class="admin-link">Edit Content</a>
+                
+                <!-- 00. The Name of the Project -->
+                <section id="frame-rebel" class="content-section">
+                    <h2 id="frame-rebel-title">00. The Name of the Project</h2>
+                    <div id="frame-rebel-content" class="section-content"></div>
+                </section>
+                
+                <!-- 01. Logotype -->
+                <section id="logotype" class="content-section">
+                    <h2>01. Logotype</h2>
+                    <div id="logotype-content" class="section-content"></div>
+                </section>
+                
+                <!-- 02. Color -->
+                <section id="color" class="content-section">
+                    <h2>02. Color</h2>
+                    <div id="color-content" class="section-content content-section-content">
+                        <div class="color-grid" id="color-grid"></div>
+                    </div>
+                </section>
+                
+                <!-- 03. Typography -->
+                <section id="typography" class="content-section">
+                    <h2>03. Typography</h2>
+                    <div id="typography-content" class="content-section-content">
+                        <!-- Typography Preview Section -->
+                        <div class="typography-preview-container">
+                            <div class="preview-header">
+                                <div class="device-switcher">
+                                    <button class="device-btn active" data-device="desktop" onclick="switchDevice('desktop')">
+                                        Desktop (1280px+)
+                                    </button>
+                                    <button class="device-btn" data-device="tablet" onclick="switchDevice('tablet')">
+                                        Tablet (601px-1279px)
+                                    </button>
+                                    <button class="device-btn" data-device="mobile" onclick="switchDevice('mobile')">
+                                        Mobile (0px-600px)
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="typography-preview" class="typography-preview-area">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Font Downloads Section -->
+                        <div id="fonts-download-section" class="fonts-download-section">
+                            <h3 class="downloads-section-title">Download Fonts</h3>
+                            <div id="fonts-download-list" class="fonts-download-list">
+                                <!-- Fonts will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 04. Applications -->
+                <section id="applications" class="content-section">
+                    <h2>04. Applications</h2>
+                    <div id="applications-content" class="section-content"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <script src="app.js?v=20251226_233200&b=v2"></script>
+</body>
+</html>

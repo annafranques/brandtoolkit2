@@ -1,0 +1,230 @@
+.typography-display {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 96px;
+    line-height: 100%;
+    letter-spacing: -0.02em;
+}
+
+@media (max-width: 1279px) {
+    .typography-display {
+        font-size: 72px;
+        line-height: 100%;
+        letter-spacing: -0.02em;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-display {
+        font-size: 48px;
+        line-height: 100%;
+        letter-spacing: -0.02em;
+    }
+}
+
+.typography-heading1 {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 60px;
+    line-height: 100%;
+    letter-spacing: -0.01em;
+}
+
+@media (max-width: 1279px) {
+    .typography-heading1 {
+        font-size: 48px;
+        line-height: 100%;
+        letter-spacing: -0.01em;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-heading1 {
+        font-size: 36px;
+        line-height: 100%;
+        letter-spacing: -0.01em;
+    }
+}
+
+.typography-heading2 {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 42px;
+    line-height: 110%;
+    letter-spacing: -0.01em;
+}
+
+@media (max-width: 1279px) {
+    .typography-heading2 {
+        font-size: 36px;
+        line-height: 110%;
+        letter-spacing: -0.01em;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-heading2 {
+        font-size: 28px;
+        line-height: 110%;
+        letter-spacing: -0.01em;
+    }
+}
+
+.typography-heading3 {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 32px;
+    line-height: 120%;
+    letter-spacing: -0.01em;
+}
+
+@media (max-width: 1279px) {
+    .typography-heading3 {
+        font-size: 28px;
+        line-height: 120%;
+        letter-spacing: -0.01em;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-heading3 {
+        font-size: 24px;
+        line-height: 120%;
+        letter-spacing: -0.01em;
+    }
+}
+
+.typography-heading4 {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 24px;
+    line-height: 120%;
+    letter-spacing: 0;
+}
+
+@media (max-width: 1279px) {
+    .typography-heading4 {
+        font-size: 20px;
+        line-height: 120%;
+        letter-spacing: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-heading4 {
+        font-size: 18px;
+        line-height: 120%;
+        letter-spacing: 0;
+    }
+}
+
+.typography-body1 {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 20px;
+    line-height: 124%;
+    letter-spacing: 0;
+}
+
+@media (max-width: 1279px) {
+    .typography-body1 {
+        font-size: 18px;
+        line-height: 124%;
+        letter-spacing: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-body1 {
+        font-size: 16px;
+        line-height: 124%;
+        letter-spacing: 0;
+    }
+}
+
+.typography-body2 {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 16px;
+    line-height: 124%;
+    letter-spacing: 0;
+}
+
+@media (max-width: 1279px) {
+    .typography-body2 {
+        font-size: 15px;
+        line-height: 124%;
+        letter-spacing: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-body2 {
+        font-size: 14px;
+        line-height: 124%;
+        letter-spacing: 0;
+    }
+}
+
+.typography-button {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 16px;
+    line-height: 124%;
+    letter-spacing: 0.01em;
+}
+
+@media (max-width: 1279px) {
+    .typography-button {
+        font-size: 15px;
+        line-height: 124%;
+        letter-spacing: 0.01em;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-button {
+        font-size: 14px;
+        line-height: 124%;
+        letter-spacing: 0.01em;
+    }
+}
+
+.typography-tag {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 16px;
+    line-height: 124%;
+    letter-spacing: 0.01em;
+}
+
+@media (max-width: 1279px) {
+    .typography-tag {
+        font-size: 15px;
+        line-height: 124%;
+        letter-spacing: 0.01em;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-tag {
+        font-size: 14px;
+        line-height: 124%;
+        letter-spacing: 0.01em;
+    }
+}
+
+.typography-caption {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 12px;
+    line-height: 140%;
+    letter-spacing: 0.04em;
+}
+
+@media (max-width: 1279px) {
+    .typography-caption {
+        font-size: 11px;
+        line-height: 140%;
+        letter-spacing: 0.04em;
+    }
+}
+
+@media (max-width: 600px) {
+    .typography-caption {
+        font-size: 10px;
+        line-height: 140%;
+        letter-spacing: 0.04em;
+    }
+}
+
