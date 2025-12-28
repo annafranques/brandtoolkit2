@@ -29,9 +29,13 @@ async function logout() {
             method: 'POST',
             credentials: 'include'
         });
+        // Clear admin authentication session flag
+        sessionStorage.removeItem('adminAuthenticated');
         window.location.href = '/login.html';
     } catch (error) {
         console.error('Logout error:', error);
+        // Clear admin authentication session flag even on error
+        sessionStorage.removeItem('adminAuthenticated');
         window.location.href = '/login.html';
     }
 }
