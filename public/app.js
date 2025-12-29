@@ -173,9 +173,7 @@ async function loadContent() {
             let html = '';
             if (content.frameRebel.aboutTheProject) {
                 html += '<div class="subsection" id="frame-rebel-aboutTheProject"><div class="subsection-title">About The Project</div>';
-                if (content.frameRebel.aboutTheProject.image) {
-                    html += `<div class="hero-image"><img src="${content.frameRebel.aboutTheProject.image}" alt="About The Project"></div>`;
-                }
+                // Image is only used as hero for the section, not shown here
                 html += `<div class="subsection-content">${formatContent(content.frameRebel.aboutTheProject.content || '')}</div></div>`;
             }
             if (content.frameRebel.fundamentalPillars) {
