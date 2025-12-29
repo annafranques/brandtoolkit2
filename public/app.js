@@ -208,14 +208,20 @@ async function loadContent() {
                 const title = subsection.title || '';
                 const contentText = subsection.content || '';
                 const image = subsection.image || '';
+                const downloadUrl = subsection.downloadUrl || '';
                 const hasImage = !!image;
+                const hasDownloadUrl = !!downloadUrl;
                 const contentOnlyClass = !hasImage && contentText ? 'logotype-content-only' : '';
                 const subsectionId = `logotype-subsection-${index}`;
                 
                 console.log(`Rendering subsection ${index}:`, { title, hasContent: !!contentText, hasImage, contentLength: contentText.length });
                 
                 let html = `<div class="subsection ${contentOnlyClass}" id="${subsectionId}">`;
-                html += `<div class="subsection-title">${title}</div>`;
+                html += `<div class="subsection-title">${title}`;
+                if (hasDownloadUrl) {
+                    html += `<a href="${downloadUrl}" target="_blank" rel="noopener noreferrer" class="download-logo-btn" title="Download ${title}">Download</a>`;
+                }
+                html += `</div>`;
                 
                 if (hasImage) {
                     html += `<div class="hero-image"><img src="${image}" alt="${title}"></div>`;
@@ -236,8 +242,13 @@ async function loadContent() {
                         // Render tabbed subsection
                         const tabKeys = Object.keys(subsection.tabs);
                         if (tabKeys.length > 0) {
+                            const usageDownloadUrl = subsection.downloadUrl || '';
                             logoHtml += '<div class="logo-usage-section">';
-                            logoHtml += `<div class="subsection-title">${subsection.title || 'Usage'}</div>`;
+                            logoHtml += `<div class="subsection-title">${subsection.title || 'Usage'}`;
+                            if (usageDownloadUrl) {
+                                logoHtml += `<a href="${usageDownloadUrl}" target="_blank" rel="noopener noreferrer" class="download-logo-btn" title="Download ${subsection.title || 'Usage'}">Download</a>`;
+                            }
+                            logoHtml += `</div>`;
                             logoHtml += '<div class="usage-tabs">';
                             
                             // Render tab buttons
@@ -264,6 +275,75 @@ async function loadContent() {
                                 }
                                 
                                 logoHtml += `<div class="subsection-content">${formatContent(tabContent)}</div>`;
+                                
+                                // Auto-generate logo examples based on tab type (light/dark/color)
+                                if (content.logo) {
+                                    logoHtml += '<div class="color-examples-grid">';
+                                    
+                                    if (tabKey === 'light') {
+                                        // Light backgrounds: white and light brand colors
+                                        const lightBackgrounds = ['#ffffff'];
+                                        if (content.colors && Array.isArray(content.colors)) {
+                                            content.colors.forEach((color) => {
+                                                if (color.hex && color.type === 'secondary') {
+                                                    // Check if it's a light color
+                                                    const rgb = hexToRgb(color.hex);
+                                                    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+                                                    if (luminance > 0.5) {
+                                                        lightBackgrounds.push(color.hex);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        // Use white and up to 3 light colors
+                                        lightBackgrounds.slice(0, 4).forEach((bgColor) => {
+                                            const logoColor = getTextColorForBackground(bgColor);
+                                            const coloredLogo = applyColorToSVG(content.logo, logoColor);
+                                            logoHtml += `<div class="color-example-item" style="background-color: ${bgColor};">
+                                                <div class="color-example-logo" style="color: ${logoColor};">${coloredLogo}</div>
+                                            </div>`;
+                                        });
+                                    } else if (tabKey === 'dark') {
+                                        // Dark backgrounds: black and dark brand colors
+                                        const darkBackgrounds = ['#000000'];
+                                        if (content.colors && Array.isArray(content.colors)) {
+                                            content.colors.forEach((color) => {
+                                                if (color.hex && color.type === 'primary') {
+                                                    // Check if it's a dark color
+                                                    const rgb = hexToRgb(color.hex);
+                                                    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+                                                    if (luminance <= 0.5) {
+                                                        darkBackgrounds.push(color.hex);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        // Use black and up to 3 dark colors
+                                        darkBackgrounds.slice(0, 4).forEach((bgColor) => {
+                                            const logoColor = getTextColorForBackground(bgColor);
+                                            const coloredLogo = applyColorToSVG(content.logo, logoColor);
+                                            logoHtml += `<div class="color-example-item" style="background-color: ${bgColor};">
+                                                <div class="color-example-logo" style="color: ${logoColor};">${coloredLogo}</div>
+                                            </div>`;
+                                        });
+                                    } else if (tabKey === 'color') {
+                                        // Color backgrounds: use all brand colors
+                                        if (content.colors && Array.isArray(content.colors) && content.colors.length > 0) {
+                                            content.colors.forEach((color) => {
+                                                if (color.hex) {
+                                                    const logoColor = getTextColorForBackground(color.hex);
+                                                    const coloredLogo = applyColorToSVG(content.logo, logoColor);
+                                                    logoHtml += `<div class="color-example-item" style="background-color: ${color.hex};">
+                                                        <div class="color-example-logo" style="color: ${logoColor};">${coloredLogo}</div>
+                                                    </div>`;
+                                                }
+                                            });
+                                        }
+                                    }
+                                    
+                                    logoHtml += '</div>';
+                                }
+                                
                                 logoHtml += `</div>`;
                                 logoHtml += `</div>`;
                             });
@@ -364,8 +444,10 @@ async function loadContent() {
             
             typographySection.setAttribute('data-section-index', sectionIndex++);
             
-            // Load fonts for download section
-            loadFontsDownloadList();
+            // Load fonts for download buttons in heading (after hero handling so we have correct h2)
+            setTimeout(() => {
+                loadFontsDownloadButtons();
+            }, 0);
             
             // Render typography subsections (after preview and download sections)
             let typographySubsectionsHtml = '';
@@ -388,14 +470,6 @@ async function loadContent() {
                 typographySubsectionsHtml += `<div class="subsection-content">${formatContent(secondaryContent || '')}</div></div>`;
             }
             
-            if (content.typographySection.readingLevels) {
-                typographySubsectionsHtml += '<div class="subsection" id="typography-readingLevels"><div class="subsection-title">Reading Levels</div>';
-                if (content.typographySection.readingLevels.image) {
-                    typographySubsectionsHtml += `<div class="hero-image"><img src="${content.typographySection.readingLevels.image}" alt="Reading Levels"></div>`;
-                }
-                const readingLevelsContent = typeof content.typographySection.readingLevels === 'object' ? content.typographySection.readingLevels.content : content.typographySection.readingLevels;
-                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(readingLevelsContent || '')}</div></div>`;
-            }
             
             // Append subsections to existing content (after preview and download sections)
             if (typographySubsectionsHtml) {
@@ -625,8 +699,7 @@ async function loadContent() {
                 ],
                 'typography': [
                     { id: 'mainTypography', name: 'Main Typography' },
-                    { id: 'secondaryTypography', name: 'Secondary Typography' },
-                    { id: 'readingLevels', name: 'Reading Levels' }
+                    { id: 'secondaryTypography', name: 'Secondary Typography' }
                 ],
                 'applications': [] // Will be populated dynamically from content.applications array
             };
@@ -1617,8 +1690,8 @@ function downloadFont(fontPath, fontName) {
     document.body.removeChild(link);
 }
 
-// Load fonts download list
-async function loadFontsDownloadList() {
+// Load fonts download buttons next to heading
+async function loadFontsDownloadButtons() {
     try {
         const response = await fetch('/api/typography');
         if (!response.ok) {
@@ -1627,41 +1700,66 @@ async function loadFontsDownloadList() {
         const typographyData = await response.json();
         const fonts = typographyData.fonts || [];
         
-        const fontsDownloadList = document.getElementById('fonts-download-list');
-        if (!fontsDownloadList) return;
+        const typographySection = document.getElementById('typography');
+        if (!typographySection) return;
         
-        if (fonts.length === 0) {
-            fontsDownloadList.innerHTML = '<p>No fonts available for download.</p>';
-            return;
+        // Find the h2 heading (either in hero or in section)
+        // Try hero h2 first, then any h2 in the section
+        let h2 = typographySection.querySelector('.content-section-hero h2');
+        if (!h2) {
+            h2 = typographySection.querySelector('h2');
+        }
+        if (!h2) return;
+        
+        // Filter to only non-Google Fonts for download buttons
+        const downloadFonts = fonts.filter(font => {
+            const fontName = font.fontFamily || font.filename || 'Font';
+            return !GOOGLE_FONTS.includes(fontName);
+        });
+        
+        if (downloadFonts.length === 0) return;
+        
+        // Create a container for buttons if it doesn't exist
+        let buttonsContainer = h2.querySelector('.font-download-buttons-container');
+        if (!buttonsContainer) {
+            buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'font-download-buttons-container';
+            h2.appendChild(buttonsContainer);
         }
         
-        fontsDownloadList.innerHTML = fonts.map(font => {
+        // Generate buttons HTML
+        buttonsContainer.innerHTML = downloadFonts.map(font => {
             const fontName = font.fontFamily || font.filename || 'Font';
             const fontPath = font.path || `/fonts/${font.filename}`;
             const fontFilename = font.filename || fontName;
-            return `
-                <div class="font-download-item">
-                    <div class="font-download-info">
-                        <span class="font-download-name">${fontName}</span>
-                        ${font.filename ? `<span class="font-download-filename">${font.filename}</span>` : ''}
-                    </div>
-                    <button class="download-asset-btn font-download-btn" data-font-path="${fontPath.replace(/"/g, '&quot;')}" data-font-filename="${fontFilename.replace(/"/g, '&quot;')}" title="Download font file">
-                        Download
-                    </button>
-                </div>
-            `;
+            const downloadUrl = font.downloadUrl || fontPath;
+            return `<button class="download-asset-btn font-download-btn" data-font-url="${downloadUrl.replace(/"/g, '&quot;')}" data-font-filename="${fontFilename.replace(/"/g, '&quot;')}" title="Download ${fontName}">${fontName}</button>`;
         }).join('');
         
-        // Setup download button event listeners for fonts
-        fontsDownloadList.querySelectorAll('.font-download-btn').forEach(btn => {
+        // Setup download button event listeners
+        buttonsContainer.querySelectorAll('.font-download-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                const fontPath = this.getAttribute('data-font-path');
+                const fontUrl = this.getAttribute('data-font-url');
                 const fontFilename = this.getAttribute('data-font-filename') || 'font';
-                downloadFont(fontPath, fontFilename);
+                // If it's a full URL, open in new tab, otherwise download
+                if (fontUrl.startsWith('http://') || fontUrl.startsWith('https://')) {
+                    window.open(fontUrl, '_blank');
+                } else {
+                    downloadFont(fontUrl, fontFilename);
+                }
             });
         });
     } catch (error) {
-        console.error('Error loading fonts download list:', error);
+        console.error('Error loading fonts download buttons:', error);
+    }
+}
+
+// Load fonts download list (kept for backwards compatibility but hidden)
+async function loadFontsDownloadList() {
+    // Hide the fonts download section since we're using buttons in heading now
+    const fontsDownloadSection = document.getElementById('fonts-download-section');
+    if (fontsDownloadSection) {
+        fontsDownloadSection.style.display = 'none';
     }
 }
 

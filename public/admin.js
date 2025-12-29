@@ -383,7 +383,7 @@ function populateForm(content) {
     
     // 04. Typography Section
     if (content.typographySection) {
-        ['mainTypography', 'secondaryTypography', 'readingLevels'].forEach(subsection => {
+        ['mainTypography', 'secondaryTypography'].forEach(subsection => {
             const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
             const elId = `typography-${camelToKebab(subsection)}-content`;
             const el = document.getElementById(elId);
@@ -2424,10 +2424,6 @@ async function rebuildContentFromForm() {
                 image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
                 content: getValue('typography-secondary-content')
             },
-            readingLevels: {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="readingLevels"]'), getExistingImage('typographySection.readingLevels.image')),
-                content: getValue('typography-reading-levels-content')
-            }
         },
         applications: await getApplicationsFromForm(),
         hiddenSections: currentContent?.hiddenSections || {},
@@ -2547,10 +2543,6 @@ async function rebuildContentFromForm() {
                 image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
                 content: getValue('typography-secondary-content')
             },
-            readingLevels: {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="readingLevels"]'), getExistingImage('typographySection.readingLevels.image')),
-                content: getValue('typography-reading-levels-content')
-            }
         },
         applications: await getApplicationsFromForm(),
         hiddenSections: currentContent.hiddenSections || {},
@@ -2599,12 +2591,6 @@ async function saveContent() {
             sectionsToSave.push({
                 path: 'typographySection.secondaryTypography',
                 data: currentContent.typographySection?.secondaryTypography
-            });
-        }
-        if (hasSectionChanged('typographySection.readingLevels')) {
-            sectionsToSave.push({
-                path: 'typographySection.readingLevels',
-                data: currentContent.typographySection?.readingLevels
             });
         }
         
@@ -2893,11 +2879,6 @@ async function getSectionDataFromForm(sectionPath) {
             return {
                 image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
                 content: getValue('typography-secondary-content')
-            };
-        } else if (section === 'readingLevels') {
-            return {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="readingLevels"]'), getExistingImage('typographySection.readingLevels.image')),
-                content: getValue('typography-reading-levels-content')
             };
         }
     }
@@ -3643,34 +3624,6 @@ function renderTypographyPreview() {
         </div>
         ` : ''}
         
-        <!-- Tag Section -->
-        ${typography.tag ? `
-        <div class="preview-section">
-            <div class="preview-section-header">
-                <h4 class="preview-section-title">Tag</h4>
-                <div class="preview-section-specs">
-                    <div class="preview-section-spec">
-                        <span>Letter Spacing:</span>
-                        <span>${specs.tag.letterSpacing}</span>
-                    </div>
-                    <div class="preview-section-spec">
-                        <span>Line Height:</span>
-                        <span>${specs.tag.lineHeight}</span>
-                    </div>
-                </div>
-            </div>
-            <span class="preview-tag" style="font-family: ${getFontFamily('tag') ? `'${getFontFamily('tag')}'` : 'inherit'}, sans-serif; font-size: ${specs.tag.fontSize}; line-height: ${specs.tag.lineHeight}; letter-spacing: ${specs.tag.letterSpacing};">
-                Original Box
-            </span>
-            <span class="preview-tag" style="font-family: ${getFontFamily('tag') ? `'${getFontFamily('tag')}'` : 'inherit'}, sans-serif; font-size: ${specs.tag.fontSize}; line-height: ${specs.tag.lineHeight}; letter-spacing: ${specs.tag.letterSpacing};">
-                Cardboard Box
-            </span>
-            <span class="preview-tag" style="font-family: ${getFontFamily('tag') ? `'${getFontFamily('tag')}'` : 'inherit'}, sans-serif; font-size: ${specs.tag.fontSize}; line-height: ${specs.tag.lineHeight}; letter-spacing: ${specs.tag.letterSpacing};">
-                Rolex Booklet
-            </span>
-        </div>
-        ` : ''}
-        
         <!-- Caption Section -->
         ${typography.caption ? `
         <div class="preview-section">
@@ -3849,7 +3802,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Typography subsection changes
             if (input.id.includes('main')) trackSectionChange('typographySection.mainTypography');
             else if (input.id.includes('secondary')) trackSectionChange('typographySection.secondaryTypography');
-            else if (input.id.includes('reading')) trackSectionChange('typographySection.readingLevels');
         } else if (input.id && input.id.includes('frame-rebel-') && input.id.includes('-content')) {
             // FrameRebel subsection changes
             if (input.id.includes('about')) trackSectionChange('frameRebel.aboutTheProject');
@@ -3889,7 +3841,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Typography subsection changes
             if (input.id.includes('main')) trackSectionChange('typographySection.mainTypography');
             else if (input.id.includes('secondary')) trackSectionChange('typographySection.secondaryTypography');
-            else if (input.id.includes('reading')) trackSectionChange('typographySection.readingLevels');
         } else if (input.id && input.id.includes('frame-rebel-') && input.id.includes('-content')) {
             // FrameRebel subsection changes
             if (input.id.includes('about')) trackSectionChange('frameRebel.aboutTheProject');

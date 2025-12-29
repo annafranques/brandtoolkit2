@@ -1143,11 +1143,6 @@ async function generateTypographyCSSFromPrimarySecondary(content) {
       tablet: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
       mobile: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' }
     },
-    tag: {
-      desktop: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0.01em' },
-      tablet: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
-      mobile: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' }
-    },
     caption: {
       desktop: { fontSize: '12px', lineHeight: '140%', letterSpacing: '0.04em' },
       tablet: { fontSize: '11px', lineHeight: '140%', letterSpacing: '0.04em' },
@@ -1162,7 +1157,7 @@ async function generateTypographyCSSFromPrimarySecondary(content) {
   // Generate CSS classes for typography styles
   Object.keys(styleSpecs).forEach(styleName => {
     const specs = styleSpecs[styleName];
-    const fontFamily = (styleName.startsWith('body') || styleName === 'button' || styleName === 'tag' || styleName === 'caption') 
+    const fontFamily = (styleName.startsWith('body') || styleName === 'button' || styleName === 'caption') 
       ? bodyFontFamily 
       : headingFontFamily;
     
@@ -1281,11 +1276,6 @@ async function generateTypographyCSS(content) {
       mobile: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0' }
     },
     button: {
-      desktop: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0.01em' },
-      tablet: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
-      mobile: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' }
-    },
-    tag: {
       desktop: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0.01em' },
       tablet: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
       mobile: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' }
