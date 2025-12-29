@@ -55,9 +55,21 @@ const FONTS_DIR = path.join(__dirname, 'public', 'fonts');
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
 
 // MongoDB connection
+// Note: Railway uses environment variables, not .env files
+// Make sure MONGO_URL is set in Railway dashboard under Variables
 const MONGO_URL = process.env.MONGO_URL;
+
 if (!MONGO_URL) {
-  console.error('MONGO_URL environment variable is not set');
+  console.error('========================================');
+  console.error('ERROR: MONGO_URL environment variable is not set');
+  console.error('========================================');
+  console.error('Please set MONGO_URL in Railway dashboard:');
+  console.error('1. Go to your Railway project');
+  console.error('2. Select your service');
+  console.error('3. Go to Variables tab');
+  console.error('4. Add MONGO_URL with value from your MongoDB service');
+  console.error('   Example: mongodb://mongo:JhgheiRYGxcPGgecarCsIdRPUVTrIaps@${{RAILWAY_PRIVATE_DOMAIN}}:27017');
+  console.error('========================================');
   process.exit(1);
 }
 
@@ -130,13 +142,22 @@ try {
 }
 
 // Connect to MongoDB
+console.log('Attempting to connect to MongoDB...');
+console.log('MONGO_URL format:', MONGO_URL ? `${MONGO_URL.substring(0, 20)}...` : 'NOT SET');
+
 mongoose.connect(MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {
-  console.log('Connected to MongoDB successfully');
+  console.log('✅ Connected to MongoDB successfully');
+  console.log('Database:', mongoose.connection.db.databaseName);
 }).catch((error) => {
-  console.error('MongoDB connection error:', error);
+  console.error('❌ MongoDB connection error:', error.message);
+  console.error('Full error:', error);
+  console.error('Please check:');
+  console.error('1. MONGO_URL is correctly set in Railway Variables');
+  console.error('2. MongoDB service is running and accessible');
+  console.error('3. Connection string format is correct');
   process.exit(1);
 });
 
