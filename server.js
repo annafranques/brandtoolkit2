@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -7,6 +8,7 @@ const multer = require('multer');
 const https = require('https');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -49,28 +51,47 @@ function figmaRequest(endpoint) {
   });
 }
 const DATA_DIR = path.join(__dirname, 'data');
-const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
 const FONTS_DIR = path.join(__dirname, 'public', 'fonts');
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
 
-// JSON file-based storage functions
+// MongoDB connection
+const MONGO_URL = process.env.MONGO_URL;
+if (!MONGO_URL) {
+  console.error('MONGO_URL environment variable is not set');
+  process.exit(1);
+}
+
+// Mongoose Schema for Content
+const contentSchema = new mongoose.Schema({
+  content: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
+  }
+}, {
+  timestamps: true,
+  collection: 'content'
+});
+
+// Create a model that will always use the same document (singleton pattern)
+const ContentModel = mongoose.model('Content', contentSchema);
+
+// MongoDB storage functions
 async function getContent() {
   try {
-    // Ensure data directory exists
-    await fs.ensureDir(DATA_DIR);
-    console.log('Data directory ensured:', DATA_DIR);
+    // Try to find existing content document
+    let contentDoc = await ContentModel.findOne();
     
-    if (await fs.pathExists(CONTENT_FILE)) {
-      const content = await fs.readJson(CONTENT_FILE);
-      console.log('Content loaded from:', CONTENT_FILE);
-      return content;
+    if (!contentDoc) {
+      // If no document exists, create one with default content
+      const defaultContent = getDefaultContent();
+      contentDoc = new ContentModel({ content: defaultContent });
+      await contentDoc.save();
+      console.log('Default content created in MongoDB');
+      return defaultContent;
     }
     
-    // If file doesn't exist, create it with default content
-    const defaultContent = getDefaultContent();
-    await fs.writeJson(CONTENT_FILE, defaultContent, { spaces: 2 });
-    console.log('Default content created at:', CONTENT_FILE);
-    return defaultContent;
+    console.log('Content loaded from MongoDB');
+    return contentDoc.content;
   } catch (error) {
     console.error('Error in getContent:', error);
     throw error;
@@ -79,32 +100,54 @@ async function getContent() {
 
 async function saveContent(content) {
   try {
-    // Ensure data directory exists before saving
-    await fs.ensureDir(DATA_DIR);
+    // Find existing document or create new one
+    let contentDoc = await ContentModel.findOne();
     
-    // Write the content to file
-    await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
+    if (!contentDoc) {
+      contentDoc = new ContentModel({ content: content });
+    } else {
+      contentDoc.content = content;
+    }
     
-    console.log('Content saved successfully to:', CONTENT_FILE);
+    await contentDoc.save();
+    console.log('Content saved successfully to MongoDB');
   } catch (error) {
     console.error('Error saving content:', error);
     console.error('Error details:', {
       message: error.message,
-      code: error.code,
-      path: CONTENT_FILE,
-      dataDir: DATA_DIR
+      code: error.code
     });
     throw error;
   }
 }
 
-// Ensure data directory exists at startup
+// Ensure data directory exists at startup (for auth.json and other files)
 try {
   fs.ensureDirSync(DATA_DIR);
   console.log('Data directory created/verified at startup:', DATA_DIR);
 } catch (error) {
   console.error('Error ensuring data directory at startup:', error);
 }
+
+// Connect to MongoDB
+mongoose.connect(MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  console.log('Connected to MongoDB successfully');
+}).catch((error) => {
+  console.error('MongoDB connection error:', error);
+  process.exit(1);
+});
+
+// Handle MongoDB connection events
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected');
+});
 
 // Ensure fonts directory exists
 fs.ensureDirSync(FONTS_DIR);
@@ -146,14 +189,6 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024 // 10MB limit
   }
 });
-
-// Ensure data directory exists at startup
-try {
-  fs.ensureDirSync(DATA_DIR);
-  console.log('Data directory created/verified at startup:', DATA_DIR);
-} catch (error) {
-  console.error('Error ensuring data directory at startup:', error);
-}
 
 // Middleware
 app.use(cors());
@@ -1727,9 +1762,9 @@ app.post('/api/figma/sync/:fileKey', async (req, res) => {
       traverseNode(file.document);
     }
     
-    // If autoApply is true, update the content.json
+    // If autoApply is true, update the content
     if (autoApply) {
-      const content = await fs.readJson(CONTENT_FILE);
+      const content = await getContent();
       
       // Update colors if we found any
       if (colors.length > 0) {
@@ -1747,7 +1782,7 @@ app.post('/api/figma/sync/:fileKey', async (req, res) => {
         content.typography.secondary = secondaryFont;
       }
       
-      await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
+      await saveContent(content);
       
       // Regenerate CSS if typography was updated
       if (typography.length > 0) {
