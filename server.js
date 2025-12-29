@@ -145,10 +145,7 @@ try {
 console.log('Attempting to connect to MongoDB...');
 console.log('MONGO_URL format:', MONGO_URL ? `${MONGO_URL.substring(0, 20)}...` : 'NOT SET');
 
-mongoose.connect(MONGO_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
+mongoose.connect(MONGO_URL).then(() => {
   console.log('✅ Connected to MongoDB successfully');
   console.log('Database:', mongoose.connection.db.databaseName);
 }).catch((error) => {
