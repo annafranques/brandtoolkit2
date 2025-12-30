@@ -183,21 +183,23 @@ function populateForm(content) {
         // Hero image for frameRebel section
         const frameRebelHeroInput = document.querySelector('[data-section="frameRebel"].section-hero-image-input');
         const frameRebelHeroPreview = document.getElementById('frame-rebel-hero-preview');
-        if (content.frameRebel.image && frameRebelHeroPreview) {
-            frameRebelHeroPreview.innerHTML = `
-                <div style="position: relative; display: inline-block; margin-top: 1rem;">
-                    <img src="${content.frameRebel.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <button type="button" class="remove-image-btn" data-input-id="frame-rebel-hero-input" data-preview-id="frame-rebel-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
-                </div>
-            `;
-            if (frameRebelHeroInput) {
-                frameRebelHeroInput.setAttribute('data-image-url', content.frameRebel.image);
-                const removeBtn = frameRebelHeroPreview.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                    removeBtn.addEventListener('click', function() {
-                        removeImage(frameRebelHeroInput, 'frame-rebel-hero-preview');
-                    });
-                }
+        if (content.frameRebel.image && frameRebelHeroPreview && frameRebelHeroInput) {
+            // Ensure input has an ID
+            if (!frameRebelHeroInput.id) frameRebelHeroInput.id = 'frame-rebel-hero-input';
+            // Wrap with styled upload UI if not already wrapped
+            wrapFileInputWithStyledUpload(frameRebelHeroInput);
+            // Set the preview
+            frameRebelHeroPreview.innerHTML = renderImagePreview(content.frameRebel.image, 'frame-rebel-hero-preview', frameRebelHeroInput);
+            // Set data attribute
+            frameRebelHeroInput.setAttribute('data-base64', content.frameRebel.image || '');
+            // Update styled upload label
+            updateStyledUploadLabel(frameRebelHeroInput);
+            // Attach remove handler
+            const removeBtn = frameRebelHeroPreview.querySelector('.remove-image-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    removeImage(frameRebelHeroInput, 'frame-rebel-hero-preview');
+                });
             }
         }
         // About The Project - merge any existing introduction content
@@ -311,15 +313,23 @@ function populateForm(content) {
         // Hero image for logotype section
         const logotypeHeroInput = document.getElementById('logotype-hero-input') || document.querySelector('[data-section="logotype"].section-hero-image-input');
         const logotypeHeroPreview = document.getElementById('logotype-hero-preview');
-        if (content.logotype.image && logotypeHeroPreview) {
-            logotypeHeroPreview.innerHTML = `
-                <div style="position: relative; display: inline-block; margin-top: 1rem;">
-                    <img src="${content.logotype.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <button type="button" class="remove-image-btn" data-input-id="logotype-hero-input" data-preview-id="logotype-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
-                </div>
-            `;
-            if (logotypeHeroInput) {
-                logotypeHeroInput.setAttribute('data-image-url', content.logotype.image);
+        if (content.logotype.image && logotypeHeroPreview && logotypeHeroInput) {
+            // Ensure input has an ID
+            if (!logotypeHeroInput.id) logotypeHeroInput.id = 'logotype-hero-input';
+            // Wrap with styled upload UI if not already wrapped
+            wrapFileInputWithStyledUpload(logotypeHeroInput);
+            // Set the preview
+            logotypeHeroPreview.innerHTML = renderImagePreview(content.logotype.image, 'logotype-hero-preview', logotypeHeroInput);
+            // Set data attribute
+            logotypeHeroInput.setAttribute('data-base64', content.logotype.image || '');
+            // Update styled upload label
+            updateStyledUploadLabel(logotypeHeroInput);
+            // Attach remove handler
+            const removeBtn = logotypeHeroPreview.querySelector('.remove-image-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    removeImage(logotypeHeroInput, 'logotype-hero-preview');
+                });
             }
         }
         // Load main logo image
@@ -371,6 +381,31 @@ function populateForm(content) {
         renderLogotypeSubsectionsList([]);
     }
     
+    // 02. Color - Hero Image
+    if (content.color) {
+        const colorHeroInput = document.getElementById('color-hero-input') || document.querySelector('[data-section="color"].section-hero-image-input');
+        const colorHeroPreview = document.getElementById('color-hero-preview');
+        if (content.color.image && colorHeroPreview && colorHeroInput) {
+            // Ensure input has an ID
+            if (!colorHeroInput.id) colorHeroInput.id = 'color-hero-input';
+            // Wrap with styled upload UI if not already wrapped
+            wrapFileInputWithStyledUpload(colorHeroInput);
+            // Set the preview
+            colorHeroPreview.innerHTML = renderImagePreview(content.color.image, 'color-hero-preview', colorHeroInput);
+            // Set data attribute
+            colorHeroInput.setAttribute('data-base64', content.color.image || '');
+            // Update styled upload label
+            updateStyledUploadLabel(colorHeroInput);
+            // Attach remove handler
+            const removeBtn = colorHeroPreview.querySelector('.remove-image-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    removeImage(colorHeroInput, 'color-hero-preview');
+                });
+            }
+        }
+    }
+    
     // 03. Color subsections (images are auto-generated, no image uploads)
     if (content.color) {
         if (content.color.corporateColors) {
@@ -417,6 +452,29 @@ function populateForm(content) {
     
     // 04. Typography Section
     if (content.typographySection) {
+        // Hero image for typographySection
+        const typographyHeroInput = document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input');
+        const typographyHeroPreview = document.getElementById('typography-hero-preview');
+        if (content.typographySection.image && typographyHeroPreview && typographyHeroInput) {
+            // Ensure input has an ID
+            if (!typographyHeroInput.id) typographyHeroInput.id = 'typography-hero-input';
+            // Wrap with styled upload UI if not already wrapped
+            wrapFileInputWithStyledUpload(typographyHeroInput);
+            // Set the preview
+            typographyHeroPreview.innerHTML = renderImagePreview(content.typographySection.image, 'typography-hero-preview', typographyHeroInput);
+            // Set data attribute
+            typographyHeroInput.setAttribute('data-base64', content.typographySection.image || '');
+            // Update styled upload label
+            updateStyledUploadLabel(typographyHeroInput);
+            // Attach remove handler
+            const removeBtn = typographyHeroPreview.querySelector('.remove-image-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    removeImage(typographyHeroInput, 'typography-hero-preview');
+                });
+            }
+        }
+        
         ['mainTypography', 'secondaryTypography'].forEach(subsection => {
             const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
             const elId = `typography-${camelToKebab(subsection)}-content`;
@@ -443,8 +501,34 @@ function populateForm(content) {
         });
     }
     
-    // 05. Applications - render as array
+    // 05. Applications - Hero Image
     if (content.applications) {
+        // Hero image for applications section (check if it's an object with image property)
+        if (!Array.isArray(content.applications) && content.applications.image) {
+            const applicationsHeroInput = document.getElementById('applications-hero-input') || document.querySelector('[data-section="applications"].section-hero-image-input');
+            const applicationsHeroPreview = document.getElementById('applications-hero-preview');
+            if (applicationsHeroPreview && applicationsHeroInput) {
+                // Ensure input has an ID
+                if (!applicationsHeroInput.id) applicationsHeroInput.id = 'applications-hero-input';
+                // Wrap with styled upload UI if not already wrapped
+                wrapFileInputWithStyledUpload(applicationsHeroInput);
+                // Set the preview
+                applicationsHeroPreview.innerHTML = renderImagePreview(content.applications.image, 'applications-hero-preview', applicationsHeroInput);
+                // Set data attribute
+                applicationsHeroInput.setAttribute('data-base64', content.applications.image || '');
+                // Update styled upload label
+                updateStyledUploadLabel(applicationsHeroInput);
+                // Attach remove handler
+                const removeBtn = applicationsHeroPreview.querySelector('.remove-image-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        removeImage(applicationsHeroInput, 'applications-hero-preview');
+                    });
+                }
+            }
+        }
+        
+        // Render as array
         // Check if it's the new array format or old object format
         if (Array.isArray(content.applications)) {
             renderApplicationsList(content.applications);
@@ -2305,28 +2389,17 @@ async function deleteAsset(id) {
 
 // Logo preview is now handled inline in populateForm
 
-// Helper to upload image and get URL
-async function uploadImageFile(file) {
-    const formData = new FormData();
-    formData.append('image', file);
-    
-    const response = await fetch('/api/assets', {
-        method: 'POST',
-        body: formData
+// Helper to convert file to base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     });
-    
-    if (!response.ok) {
-        throw new Error('Failed to upload image');
-    }
-    
-    const result = await response.json();
-    if (result.success && result.asset && result.asset.url) {
-        return result.asset.url;
-    }
-    throw new Error('Invalid response from server');
 }
 
-// Helper to get image from file input (returns URL, supports both base64 and URLs for backward compatibility)
+// Helper to get image from file input (returns base64 string)
 function getImageFromInput(input, existingValue = '') {
     return new Promise(async (resolve) => {
         try {
@@ -2335,45 +2408,33 @@ function getImageFromInput(input, existingValue = '') {
                 return;
             }
             
-            // Check if there's a URL stored on the input (from previous upload)
-            const imageUrl = input.getAttribute('data-image-url');
-            if (imageUrl && imageUrl.trim().length > 0) {
-                console.log('Using stored image URL from input');
-                resolve(imageUrl);
+            // Check if image was explicitly cleared (empty string in data-base64)
+            if (input.hasAttribute('data-base64')) {
+                const base64Data = input.getAttribute('data-base64');
+                resolve(base64Data || ''); // Return empty string if explicitly cleared
                 return;
             }
             
-            // Check for legacy base64 data (backward compatibility)
-            const base64Data = input.getAttribute('data-base64');
-            if (base64Data && base64Data.trim().length > 0 && base64Data.startsWith('data:')) {
-                console.log('Using stored base64 data from input (legacy)');
-                resolve(base64Data);
-                return;
-            }
-            
-            // Check if there's a file currently selected - upload it
+            // Check if there's a file currently selected - convert to base64
             if (input.files && input.files[0]) {
-                console.log('Uploading file from input:', input.files[0].name);
                 try {
-                    const url = await uploadImageFile(input.files[0]);
-                    // Store the URL on the input for future saves
-                    input.setAttribute('data-image-url', url);
-                    console.log('File uploaded successfully, URL:', url);
-                    resolve(url);
+                    const base64Data = await fileToBase64(input.files[0]);
+                    // Store base64 data on input for future saves
+                    input.setAttribute('data-base64', base64Data);
+                    resolve(base64Data);
                     return;
                 } catch (err) {
-                    console.warn('Error uploading file, preserving existing image:', err);
+                    console.warn('Error converting file to base64, preserving existing image:', err);
                     resolve(existingValue);
                     return;
                 }
             }
             
-            // Otherwise use existing value (preserve existing image - supports both URLs and base64)
-            console.log('No new file, using existing value');
-            resolve(existingValue);
+            // Otherwise use existing value (preserve existing image)
+            resolve(existingValue || '');
         } catch (error) {
             console.error('Error in getImageFromInput, preserving existing value:', error);
-            resolve(existingValue); // Always preserve existing on error
+            resolve(existingValue || ''); // Always preserve existing on error
         }
     });
 }
@@ -2406,14 +2467,14 @@ async function rebuildContentFromForm() {
         return el.value !== null && el.value !== undefined ? el.value : defaultValue;
     }
     
-    // Helper to get hero image from input (synchronous for URL-based images)
+    // Helper to get hero image from input (synchronous for base64 images)
     function getHeroImageFromInput(input, existingImage) {
         if (!input) return existingImage || '';
-        // Check if data-image-url attribute exists (even if empty string)
-        // This allows us to explicitly clear images by setting data-image-url to empty string
-        if (input.hasAttribute('data-image-url')) {
-            const imageUrl = input.getAttribute('data-image-url');
-            return imageUrl || ''; // Return empty string if explicitly cleared
+        // Check if data-base64 attribute exists (even if empty string)
+        // This allows us to explicitly clear images by setting data-base64 to empty string
+        if (input.hasAttribute('data-base64')) {
+            const base64Data = input.getAttribute('data-base64');
+            return base64Data || ''; // Return empty string if explicitly cleared
         }
         // If attribute doesn't exist, return existing image (initial state, hasn't been changed)
         return existingImage || '';
@@ -2653,10 +2714,13 @@ async function saveContentFull() {
         // Helper to get hero image from input (synchronous for URL-based images)
         function getHeroImageFromInput(input, existingImage) {
             if (!input) return existingImage || '';
-            // Check if there's a data-image-url attribute (from upload)
-            const imageUrl = input.getAttribute('data-image-url');
-            if (imageUrl) return imageUrl;
-            // Otherwise return existing image
+            // Check if data-base64 attribute exists (even if empty string)
+            // This allows us to explicitly clear images by setting data-base64 to empty string
+            if (input.hasAttribute('data-base64')) {
+                const base64Data = input.getAttribute('data-base64');
+                return base64Data || ''; // Return empty string if explicitly cleared
+            }
+            // If attribute doesn't exist, return existing image (initial state, hasn't been changed)
             return existingImage || '';
         }
         
@@ -3073,19 +3137,27 @@ function wrapFileInputWithStyledUpload(input) {
     const section = input.dataset.section;
     let previewId = '';
     
-    // Skip hero image inputs - they don't use the styled upload wrapper
-    if (input.classList.contains('section-hero-image-input')) {
-        return;
-    }
-    
-    if (section === 'typographySection' && subsection) {
-        const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+    // Handle hero image inputs
+    if (input.classList.contains('section-hero-image-input') && section) {
+        if (section === 'frameRebel') {
+            previewId = 'frame-rebel-hero-preview';
+        } else if (section === 'logotype') {
+            previewId = 'logotype-hero-preview';
+        } else if (section === 'color') {
+            previewId = 'color-hero-preview';
+        } else if (section === 'typographySection') {
+            previewId = 'typography-hero-preview';
+        } else if (section === 'applications') {
+            previewId = 'applications-hero-preview';
+        }
+    } else if (section === 'typographySection' && subsection) {
+        const camelToKebab = (str) => str ? str.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
         previewId = `typography-${camelToKebab(subsection)}-preview`;
     } else if (section === 'frameRebel' && subsection) {
-        const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+        const camelToKebab = (str) => str ? str.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
         previewId = `frame-rebel-${camelToKebab(subsection)}-preview`;
     } else if (section === 'color' && subsection) {
-        const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+        const camelToKebab = (str) => str ? str.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
         previewId = `color-${camelToKebab(subsection)}-preview`;
     } else if (input.classList.contains('logo-image-input') && subsection) {
         previewId = `logo-${subsection}-preview`;
@@ -3118,7 +3190,7 @@ function wrapFileInputWithStyledUpload(input) {
     input.classList.remove('form-control');
     input.classList.add('file-upload-input');
     originalClasses.forEach(cls => {
-        if (cls.includes('section-image-input') || cls.includes('logo-image-input')) {
+        if (cls.includes('section-image-input') || cls.includes('logo-image-input') || cls.includes('section-hero-image-input')) {
             input.classList.add(cls);
         }
     });
@@ -3158,18 +3230,29 @@ function renderImagePreview(imageSrc, previewId, input) {
     `;
 }
 
+// Helper function to update styled upload label when an image exists
+function updateStyledUploadLabel(input) {
+    if (!input) return;
+    const wrapper = input.closest('.file-upload-wrapper');
+    if (wrapper) {
+        const label = wrapper.querySelector('.file-upload-label');
+        if (label) {
+            label.classList.add('has-file');
+            const uploadText = label.querySelector('.upload-text');
+            if (uploadText) {
+                uploadText.textContent = 'Change Image';
+            }
+        }
+    }
+}
+
 // Remove image function
 function removeImage(input, previewId) {
     // Clear the file input
     if (input) {
         input.value = '';
-        input.removeAttribute('data-base64');
-        // For hero images, set data-image-url to empty string to explicitly clear it
-        if (input.classList && input.classList.contains('section-hero-image-input')) {
-            input.setAttribute('data-image-url', '');
-        } else {
-            input.removeAttribute('data-image-url');
-        }
+        // Set data-base64 to empty string to explicitly clear the image
+        input.setAttribute('data-base64', '');
         
         // Reset styled upload UI
         const wrapper = input.closest('.file-upload-wrapper');
@@ -3189,9 +3272,12 @@ function removeImage(input, previewId) {
             }
         }
         
-        // Track section change when image is removed (for hero images)
-        if (input.classList.contains('section-hero-image-input') && input.hasAttribute('data-section')) {
-            const section = input.getAttribute('data-section');
+        // Track section change when image is removed
+        const section = input.getAttribute('data-section');
+        const subsection = input.getAttribute('data-subsection');
+        
+        if (input.classList.contains('section-hero-image-input') && section) {
+            // Hero images - track the parent section
             if (section === 'frameRebel') {
                 trackSectionChange('frameRebel');
             } else if (section === 'logotype') {
@@ -3203,6 +3289,12 @@ function removeImage(input, previewId) {
             } else if (section === 'applications') {
                 trackSectionChange('applications');
             }
+        } else if (section && subsection) {
+            // Subsection images - track the specific subsection
+            trackSectionChange(`${section}.${subsection}`);
+        } else if (input.id === 'main-logo-upload') {
+            // Main logo - track logotype section
+            trackSectionChange('logotype');
         }
     }
     
@@ -3210,6 +3302,7 @@ function removeImage(input, previewId) {
     const preview = document.getElementById(previewId);
     if (preview) {
         preview.innerHTML = '';
+        preview.style.display = 'none'; // Hide preview container when empty
     }
 }
 
@@ -3273,75 +3366,30 @@ function setupRemoveImageButtons() {
     });
 }
 
-// Setup hero image upload handlers for main sections
+// Setup hero image upload handlers for main sections (now handled by setupImageUploadHandlers)
+// This function is kept for backwards compatibility but hero images are now handled via setupImageUploadHandlers
 function setupHeroImageUploadHandlers() {
-    document.querySelectorAll('.section-hero-image-input').forEach(input => {
-        if (!input.hasAttribute('data-handler-added')) {
-            input.setAttribute('data-handler-added', 'true');
-            input.addEventListener('change', async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const section = input.dataset.section;
-                let previewId = '';
-                
-                // Determine preview ID based on section
-                if (section === 'frameRebel') {
-                    previewId = 'frame-rebel-hero-preview';
-                } else if (section === 'logotype') {
-                    previewId = 'logotype-hero-preview';
-                } else if (section === 'color') {
-                    previewId = 'color-hero-preview';
-                } else if (section === 'typographySection') {
-                    previewId = 'typography-hero-preview';
-                } else if (section === 'applications') {
-                    previewId = 'applications-hero-preview';
-                }
-                
-                // Upload file to server using the same method as subsection images
-                try {
-                    const url = await uploadImageFile(file);
-                    
-                    // Store URL on input for later use
-                    input.setAttribute('data-image-url', url);
-                    
-                    // Update preview
-                    const preview = document.getElementById(previewId);
-                    if (preview) {
-                        const inputId = input.id || (section === 'frameRebel' ? 'frame-rebel-hero-input' : section === 'logotype' ? 'logotype-hero-input' : section === 'color' ? 'color-hero-input' : section === 'typographySection' ? 'typography-hero-input' : 'applications-hero-input');
-                        preview.innerHTML = `
-                            <div style="position: relative; display: inline-block; margin-top: 1rem;">
-                                <img src="${url}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="${previewId}" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
-                            </div>
-                        `;
-                    }
-                    
-                    // Track section change - use the section name directly for hero images
-                    if (section === 'frameRebel') {
-                        trackSectionChange('frameRebel');
-                    } else if (section === 'logotype') {
-                        trackSectionChange('logotype');
-                    } else if (section === 'color') {
-                        trackSectionChange('color');
-                    } else if (section === 'typographySection') {
-                        trackSectionChange('typographySection');
-                    } else if (section === 'applications') {
-                        trackSectionChange('applications');
-                    }
-                    showStatus('Hero image uploaded successfully', 'success');
-                } catch (error) {
-                    console.error('Error uploading hero image:', error);
-                    showStatus(`Error uploading hero image: ${error.message}`, 'error');
-                }
-            });
-        }
-    });
+    // Hero images are now handled by setupImageUploadHandlers along with other image inputs
+    // This function is kept to avoid breaking any calls to it
 }
 
 // Setup image upload handlers
 function setupImageUploadHandlers() {
-    document.querySelectorAll('.section-image-input, .logo-image-input, .file-upload-input').forEach(input => {
+    // Find all file inputs, including those that haven't been wrapped yet
+    const selectors = [
+        'input[type="file"][data-section]',
+        'input[type="file"].section-image-input',
+        'input[type="file"].logo-image-input',
+        'input[type="file"].file-upload-input',
+        'input[type="file"].section-hero-image-input'
+    ];
+    
+    const allInputs = new Set();
+    selectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(input => allInputs.add(input));
+    });
+    
+    allInputs.forEach(input => {
         if (!input.hasAttribute('data-handler-added')) {
             input.setAttribute('data-handler-added', 'true');
             input.addEventListener('change', function(e) {
@@ -3376,40 +3424,58 @@ function setupImageUploadHandlers() {
                     const section = input.dataset.section;
                     let previewId = '';
                     
-                    if (section === 'typographySection') {
-                        const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    // Handle hero image inputs first
+                    if (input.classList.contains('section-hero-image-input') && section) {
+                        if (section === 'frameRebel') {
+                            previewId = 'frame-rebel-hero-preview';
+                        } else if (section === 'logotype') {
+                            previewId = 'logotype-hero-preview';
+                        } else if (section === 'color') {
+                            previewId = 'color-hero-preview';
+                        } else if (section === 'typographySection') {
+                            previewId = 'typography-hero-preview';
+                        } else if (section === 'applications') {
+                            previewId = 'applications-hero-preview';
+                        }
+                    } else if (section === 'typographySection' && subsection) {
+                        const camelToKebab = (str) => str ? str.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
                         previewId = `typography-${camelToKebab(subsection)}-preview`;
-                    } else if (section === 'frameRebel') {
-                        const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    } else if (section === 'frameRebel' && subsection) {
+                        const camelToKebab = (str) => str ? str.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
                         previewId = `frame-rebel-${camelToKebab(subsection)}-preview`;
-                    } else if (section === 'color') {
-                        const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    } else if (section === 'color' && subsection) {
+                        const camelToKebab = (str) => str ? str.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
                         previewId = `color-${camelToKebab(subsection)}-preview`;
-                    } else if (section === 'applications') {
-                        const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+                    } else if (section === 'applications' && subsection) {
+                        const camelToKebab = (str) => str ? str.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
                         previewId = `applications-${camelToKebab(subsection)}-preview`;
                     } else if (section === 'explanation') {
                         previewId = `explanation-${subsection}-preview`;
-                    } else if (!section) {
-                        // Logo subsections
-                        previewId = `logo-${subsection}-preview`;
-                    } else if (input.classList.contains('logo-image-input')) {
-                        // Logo image inputs (no section attribute)
-                        previewId = `logo-${subsection}-preview`;
+                    } else if (!section || input.classList.contains('logo-image-input')) {
+                        // Logo subsections or main logo
+                        previewId = `logo-${subsection || 'main'}-preview`;
                     }
                     
                     const preview = document.getElementById(previewId);
                     if (preview) {
                         preview.innerHTML = renderImagePreview(base64, previewId, input);
+                        preview.style.display = 'block'; // Ensure preview is visible
+                        preview.style.visibility = 'visible'; // Ensure preview is visible
                         
-                        // Attach remove handler
+                        // Attach remove handler - use event delegation instead of direct attachment
                         const removeBtn = preview.querySelector('.remove-image-btn');
                         if (removeBtn) {
-                            removeBtn.addEventListener('click', function() {
-                                removeImage(input, previewId);
-                            });
+                            removeBtn.setAttribute('data-input-id', input.id || previewId + '-input');
+                            removeBtn.setAttribute('data-preview-id', previewId);
                         }
+                    } else {
+                        console.error('Preview element not found for ID:', previewId, 'Section:', section, 'Subsection:', subsection, 'Input:', input);
+                        showStatus(`Preview container not found for ${previewId}. Please refresh the page.`, 'error');
                     }
+                };
+                reader.onerror = function(error) {
+                    console.error('Error reading file:', error);
+                    showStatus('Error reading image file', 'error');
                 };
                 reader.readAsDataURL(file);
             });
