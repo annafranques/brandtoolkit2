@@ -187,7 +187,7 @@ function populateForm(content) {
             frameRebelHeroPreview.innerHTML = `
                 <div style="position: relative; display: inline-block; margin-top: 1rem;">
                     <img src="${content.frameRebel.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <button type="button" class="remove-image-btn" data-preview-id="frame-rebel-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                    <button type="button" class="remove-image-btn" data-input-id="frame-rebel-hero-input" data-preview-id="frame-rebel-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
                 </div>
             `;
             if (frameRebelHeroInput) {
@@ -309,23 +309,17 @@ function populateForm(content) {
     // 01. Logotype - Hero Image
     if (content.logotype) {
         // Hero image for logotype section
-        const logotypeHeroInput = document.querySelector('[data-section="logotype"].section-hero-image-input');
+        const logotypeHeroInput = document.getElementById('logotype-hero-input') || document.querySelector('[data-section="logotype"].section-hero-image-input');
         const logotypeHeroPreview = document.getElementById('logotype-hero-preview');
         if (content.logotype.image && logotypeHeroPreview) {
             logotypeHeroPreview.innerHTML = `
                 <div style="position: relative; display: inline-block; margin-top: 1rem;">
                     <img src="${content.logotype.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <button type="button" class="remove-image-btn" data-preview-id="logotype-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                    <button type="button" class="remove-image-btn" data-input-id="logotype-hero-input" data-preview-id="logotype-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
                 </div>
             `;
             if (logotypeHeroInput) {
                 logotypeHeroInput.setAttribute('data-image-url', content.logotype.image);
-                const removeBtn = logotypeHeroPreview.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                    removeBtn.addEventListener('click', function() {
-                        removeImage(logotypeHeroInput, 'logotype-hero-preview');
-                    });
-                }
             }
         }
         // Load main logo image
@@ -2415,10 +2409,13 @@ async function rebuildContentFromForm() {
     // Helper to get hero image from input (synchronous for URL-based images)
     function getHeroImageFromInput(input, existingImage) {
         if (!input) return existingImage || '';
-        // Check if there's a data-image-url attribute (from upload)
-        const imageUrl = input.getAttribute('data-image-url');
-        if (imageUrl) return imageUrl;
-        // Otherwise return existing image
+        // Check if data-image-url attribute exists (even if empty string)
+        // This allows us to explicitly clear images by setting data-image-url to empty string
+        if (input.hasAttribute('data-image-url')) {
+            const imageUrl = input.getAttribute('data-image-url');
+            return imageUrl || ''; // Return empty string if explicitly cleared
+        }
+        // If attribute doesn't exist, return existing image (initial state, hasn't been changed)
         return existingImage || '';
     }
     
@@ -2449,12 +2446,12 @@ async function rebuildContentFromForm() {
             }
         },
         logotype: {
-            image: getHeroImageFromInput(document.querySelector('[data-section="logotype"].section-hero-image-input'), getExistingImage('logotype.image')),
+            image: getHeroImageFromInput(document.getElementById('logotype-hero-input') || document.querySelector('[data-section="logotype"].section-hero-image-input'), getExistingImage('logotype.image')),
             mainLogo: await getImageFromInput(document.getElementById('main-logo-upload'), getExistingImage('logotype.mainLogo')),
             subsections: await getLogotypeSubsectionsFromForm()
         },
         color: {
-            image: getHeroImageFromInput(document.querySelector('[data-section="color"].section-hero-image-input'), getExistingImage('color.image')),
+            image: getHeroImageFromInput(document.getElementById('color-hero-input') || document.querySelector('[data-section="color"].section-hero-image-input'), getExistingImage('color.image')),
             corporateColors: {
                 content: getValue('color-corporate-content')
             },
@@ -2469,7 +2466,7 @@ async function rebuildContentFromForm() {
             }
         },
         typographySection: {
-            image: getHeroImageFromInput(document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
+            image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
             mainTypography: {
                 image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
                 content: getValue('typography-main-content')
@@ -2691,12 +2688,12 @@ async function saveContentFull() {
                 }
             },
             logotype: {
-                image: getHeroImageFromInput(document.querySelector('[data-section="logotype"].section-hero-image-input'), getExistingImage('logotype.image')),
+                image: getHeroImageFromInput(document.getElementById('logotype-hero-input') || document.querySelector('[data-section="logotype"].section-hero-image-input'), getExistingImage('logotype.image')),
                 mainLogo: await getImageFromInput(document.getElementById('main-logo-upload'), getExistingImage('logotype.mainLogo')),
                 subsections: await getLogotypeSubsectionsFromForm()
             },
             color: {
-                image: getHeroImageFromInput(document.querySelector('[data-section="color"].section-hero-image-input'), getExistingImage('color.image')),
+                image: getHeroImageFromInput(document.getElementById('color-hero-input') || document.querySelector('[data-section="color"].section-hero-image-input'), getExistingImage('color.image')),
                 corporateColors: {
                     content: getValue('color-corporate-content')
                 },
@@ -2711,7 +2708,7 @@ async function saveContentFull() {
                 }
             },
             typographySection: {
-                image: getHeroImageFromInput(document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
+                image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
                 mainTypography: {
                     image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
                     content: getValue('typography-main-content')
@@ -3162,6 +3159,12 @@ function removeImage(input, previewId) {
     if (input) {
         input.value = '';
         input.removeAttribute('data-base64');
+        // For hero images, set data-image-url to empty string to explicitly clear it
+        if (input.classList && input.classList.contains('section-hero-image-input')) {
+            input.setAttribute('data-image-url', '');
+        } else {
+            input.removeAttribute('data-image-url');
+        }
         
         // Reset styled upload UI
         const wrapper = input.closest('.file-upload-wrapper');
@@ -3178,6 +3181,22 @@ function removeImage(input, previewId) {
             if (filenameDisplay) {
                 filenameDisplay.textContent = '';
                 filenameDisplay.style.display = 'none';
+            }
+        }
+        
+        // Track section change when image is removed (for hero images)
+        if (input.classList.contains('section-hero-image-input') && input.hasAttribute('data-section')) {
+            const section = input.getAttribute('data-section');
+            if (section === 'frameRebel') {
+                trackSectionChange('frameRebel');
+            } else if (section === 'logotype') {
+                trackSectionChange('logotype');
+            } else if (section === 'color') {
+                trackSectionChange('color');
+            } else if (section === 'typographySection') {
+                trackSectionChange('typographySection');
+            } else if (section === 'applications') {
+                trackSectionChange('applications');
             }
         }
     }
@@ -3284,20 +3303,13 @@ function setupHeroImageUploadHandlers() {
                     // Update preview
                     const preview = document.getElementById(previewId);
                     if (preview) {
+                        const inputId = input.id || (section === 'frameRebel' ? 'frame-rebel-hero-input' : section === 'logotype' ? 'logotype-hero-input' : section === 'color' ? 'color-hero-input' : section === 'typographySection' ? 'typography-hero-input' : 'applications-hero-input');
                         preview.innerHTML = `
                             <div style="position: relative; display: inline-block; margin-top: 1rem;">
                                 <img src="${url}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <button type="button" class="remove-image-btn" data-input-id="${input.id}" data-preview-id="${previewId}" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                                <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="${previewId}" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
                             </div>
                         `;
-                        
-                        // Attach remove handler
-                        const removeBtn = preview.querySelector('.remove-image-btn');
-                        if (removeBtn) {
-                            removeBtn.addEventListener('click', function() {
-                                removeImage(input, previewId);
-                            });
-                        }
                     }
                     
                     // Track section change - use the section name directly for hero images
