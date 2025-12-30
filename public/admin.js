@@ -3073,16 +3073,21 @@ function wrapFileInputWithStyledUpload(input) {
     const section = input.dataset.section;
     let previewId = '';
     
-    if (section === 'typographySection') {
+    // Skip hero image inputs - they don't use the styled upload wrapper
+    if (input.classList.contains('section-hero-image-input')) {
+        return;
+    }
+    
+    if (section === 'typographySection' && subsection) {
         const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
         previewId = `typography-${camelToKebab(subsection)}-preview`;
-    } else if (section === 'frameRebel') {
+    } else if (section === 'frameRebel' && subsection) {
         const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
         previewId = `frame-rebel-${camelToKebab(subsection)}-preview`;
-    } else if (section === 'color') {
+    } else if (section === 'color' && subsection) {
         const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
         previewId = `color-${camelToKebab(subsection)}-preview`;
-    } else if (input.classList.contains('logo-image-input')) {
+    } else if (input.classList.contains('logo-image-input') && subsection) {
         previewId = `logo-${subsection}-preview`;
     }
     
