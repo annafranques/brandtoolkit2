@@ -373,19 +373,6 @@ body {
     margin-bottom: 0.75rem;
 }
 
-/* Hero Image - for subsections (logo, etc) */
-.hero-image {
-    width: 100%;
-    margin: 2rem 0 3rem 0;
-    border-radius: 0;
-    position: relative;
-}
-
-.hero-image img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
 
 /* Download button for assets */
 .download-asset-btn {
@@ -618,21 +605,50 @@ body {
     padding-top: 0;
 }
 
-/* Hero images should span full width in subsections with grid layout */
-.subsection:not(.logo-usage-section):not(:has(.usage-tabs)) .hero-image {
+/* Subsection images grid (max 3 columns) */
+.subsection-images {
+    display: grid;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+    width: 100%;
+}
+
+/* Responsive grid: max 3 columns on large screens */
+@media (min-width: 900px) {
+    .subsection-images {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    /* Allow fewer columns if there are fewer images */
+    .subsection-images:has(.subsection-image:only-child) {
+        grid-template-columns: 1fr;
+    }
+    
+    .subsection-images:has(.subsection-image:nth-child(2):last-child) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 899px) {
+    .subsection-images {
+        grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+    }
+}
+
+/* Images should span full width in subsections with grid layout */
+.subsection:not(.logo-usage-section):not(:has(.usage-tabs)) .subsection-images {
     grid-column: 1 / -1;
-    width: 100%;
-    margin: 1.5rem 0;
 }
 
-/* Regular hero images in non-grid subsections */
-.subsection .hero-image {
+.subsection-image {
     width: 100%;
-    margin: 1.5rem 0;
+    position: relative;
 }
 
-.subsection .hero-image img {
+.subsection-image img {
     width: 100%;
+    height: auto;
+    display: block;
 }
 
 .subsection-content p {
@@ -1264,7 +1280,7 @@ body {
         padding: 2rem 1.5rem;
     }
     
-    .subsection .hero-image {
+    .subsection .subsection-images {
         grid-column: 1;
     }
     

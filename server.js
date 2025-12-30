@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs-extra');
+const fsSync = require('fs');
 const path = require('path');
 const multer = require('multer');
 const https = require('https');
@@ -54,82 +55,115 @@ const DATA_DIR = path.join(__dirname, 'data');
 const FONTS_DIR = path.join(__dirname, 'public', 'fonts');
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
 
-// MongoDB connection
-// Note: Railway uses environment variables, not .env files
-// Make sure MONGO_URL is set in Railway dashboard under Variables
+// Storage configuration - MongoDB if MONGO_URL is set, otherwise file-based
 const MONGO_URL = process.env.MONGO_URL;
+const USE_MONGODB = !!MONGO_URL;
+const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
 
-if (!MONGO_URL) {
-  console.error('========================================');
-  console.error('ERROR: MONGO_URL environment variable is not set');
-  console.error('========================================');
-  console.error('Please set MONGO_URL in Railway dashboard:');
-  console.error('1. Go to your Railway project');
-  console.error('2. Select your service');
-  console.error('3. Go to Variables tab');
-  console.error('4. Add MONGO_URL with value from your MongoDB service');
-  console.error('   Example: mongodb://mongo:JhgheiRYGxcPGgecarCsIdRPUVTrIaps@${{RAILWAY_PRIVATE_DOMAIN}}:27017');
-  console.error('========================================');
-  process.exit(1);
+// MongoDB Schema (only used if MONGO_URL is set)
+let ContentModel = null;
+if (USE_MONGODB) {
+  const contentSchema = new mongoose.Schema({
+    content: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true
+    }
+  }, {
+    timestamps: true,
+    collection: 'content'
+  });
+  ContentModel = mongoose.model('Content', contentSchema);
 }
 
-// Mongoose Schema for Content
-const contentSchema = new mongoose.Schema({
-  content: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true
-  }
-}, {
-  timestamps: true,
-  collection: 'content'
-});
-
-// Create a model that will always use the same document (singleton pattern)
-const ContentModel = mongoose.model('Content', contentSchema);
-
-// MongoDB storage functions
+// Storage functions - MongoDB or file-based
 async function getContent() {
-  try {
-    // Try to find existing content document
-    let contentDoc = await ContentModel.findOne();
-    
-    if (!contentDoc) {
-      // If no document exists, create one with default content
-      const defaultContent = getDefaultContent();
-      contentDoc = new ContentModel({ content: defaultContent });
-      await contentDoc.save();
-      console.log('Default content created in MongoDB');
-      return defaultContent;
+  if (USE_MONGODB) {
+    // MongoDB storage
+    try {
+      let contentDoc = await ContentModel.findOne();
+      
+      if (!contentDoc) {
+        const defaultContent = getDefaultContent();
+        contentDoc = new ContentModel({ content: defaultContent });
+        await contentDoc.save();
+        console.log('Default content created in MongoDB');
+        return defaultContent;
+      }
+      
+      console.log('Content loaded from MongoDB');
+      return contentDoc.content;
+    } catch (error) {
+      console.error('Error in getContent (MongoDB):', error);
+      throw error;
     }
-    
-    console.log('Content loaded from MongoDB');
-    return contentDoc.content;
-  } catch (error) {
-    console.error('Error in getContent:', error);
-    throw error;
+  } else {
+    // File-based storage
+    try {
+      await fs.ensureDir(DATA_DIR);
+      
+      if (await fs.pathExists(CONTENT_FILE)) {
+        const content = await fs.readJson(CONTENT_FILE);
+        return content;
+      } else {
+        const defaultContent = getDefaultContent();
+        await fs.writeJson(CONTENT_FILE, defaultContent, { spaces: 2 });
+        try {
+          fsSync.chmodSync(CONTENT_FILE, 0o644);
+        } catch (permError) {
+          console.warn('Could not set content.json permissions:', permError.message);
+        }
+        console.log('Default content.json created');
+        return defaultContent;
+      }
+    } catch (error) {
+      console.error('Error in getContent (file-based):', error);
+      throw error;
+    }
   }
 }
 
 async function saveContent(content) {
-  try {
-    // Find existing document or create new one
-    let contentDoc = await ContentModel.findOne();
-    
-    if (!contentDoc) {
-      contentDoc = new ContentModel({ content: content });
-    } else {
-      contentDoc.content = content;
+  if (USE_MONGODB) {
+    // MongoDB storage
+    try {
+      let contentDoc = await ContentModel.findOne();
+      
+      if (!contentDoc) {
+        contentDoc = new ContentModel({ content: content });
+      } else {
+        contentDoc.content = content;
+      }
+      
+      await contentDoc.save();
+      console.log('Content saved successfully to MongoDB');
+    } catch (error) {
+      console.error('Error saving content (MongoDB):', error);
+      throw error;
     }
-    
-    await contentDoc.save();
-    console.log('Content saved successfully to MongoDB');
-  } catch (error) {
-    console.error('Error saving content:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code
-    });
-    throw error;
+  } else {
+    // File-based storage
+    try {
+      await fs.ensureDir(DATA_DIR);
+      
+      try {
+        fsSync.chmodSync(DATA_DIR, 0o755);
+      } catch (dirError) {
+        console.warn('Could not set data directory permissions:', dirError.message);
+      }
+      
+      await fs.writeJson(CONTENT_FILE, content, { spaces: 2 });
+      
+      try {
+        fsSync.chmodSync(CONTENT_FILE, 0o644);
+      } catch (permError) {
+        console.warn('Could not set content.json permissions:', permError.message);
+      }
+      
+      console.log('Content saved successfully to content.json');
+    } catch (error) {
+      console.error('Error saving content (file-based):', error);
+      throw error;
+    }
   }
 }
 
@@ -141,31 +175,29 @@ try {
   console.error('Error ensuring data directory at startup:', error);
 }
 
-// Connect to MongoDB
-console.log('Attempting to connect to MongoDB...');
-console.log('MONGO_URL format:', MONGO_URL ? `${MONGO_URL.substring(0, 20)}...` : 'NOT SET');
+// Connect to MongoDB if MONGO_URL is set, otherwise use file-based storage
+if (USE_MONGODB) {
+  console.log('Attempting to connect to MongoDB...');
+  mongoose.connect(MONGO_URL).then(() => {
+    console.log('✅ Connected to MongoDB successfully');
+    console.log('Database:', mongoose.connection.db.databaseName);
+  }).catch((error) => {
+    console.error('❌ MongoDB connection error:', error.message);
+    console.error('Please check MONGO_URL is correctly set');
+    process.exit(1);
+  });
 
-mongoose.connect(MONGO_URL).then(() => {
-  console.log('✅ Connected to MongoDB successfully');
-  console.log('Database:', mongoose.connection.db.databaseName);
-}).catch((error) => {
-  console.error('❌ MongoDB connection error:', error.message);
-  console.error('Full error:', error);
-  console.error('Please check:');
-  console.error('1. MONGO_URL is correctly set in Railway Variables');
-  console.error('2. MongoDB service is running and accessible');
-  console.error('3. Connection string format is correct');
-  process.exit(1);
-});
+  mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
+  });
 
-// Handle MongoDB connection events
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected');
-});
+  mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected');
+  });
+} else {
+  console.log('✅ Using file-based storage (data/content.json)');
+  console.log('💡 To use MongoDB, set MONGO_URL environment variable');
+}
 
 // Ensure fonts directory exists
 fs.ensureDirSync(FONTS_DIR);

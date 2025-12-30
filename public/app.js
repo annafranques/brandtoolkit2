@@ -86,6 +86,30 @@ async function loadContent() {
         const defaultLightColors = ['#ffffff', '#f5f5f5'];
         const sectionColors = lightColors.length > 0 ? lightColors : defaultLightColors;
         
+        // Helper function to add hero image to a section
+        function addSectionHero(section, heroImage, sectionTitle) {
+            if (!section || !heroImage) return;
+            
+            const h2 = section.querySelector('h2');
+            if (!h2) return;
+            
+            section.classList.add('has-hero');
+            const existingHero = section.querySelector('.content-section-hero');
+            if (!existingHero) {
+                const heroDiv = document.createElement('div');
+                heroDiv.className = 'content-section-hero';
+                const img = document.createElement('img');
+                img.src = heroImage;
+                img.alt = sectionTitle || '';
+                img.className = 'content-section-hero-image';
+                heroDiv.appendChild(img);
+                const h2Clone = h2.cloneNode(true);
+                heroDiv.appendChild(h2Clone);
+                section.insertBefore(heroDiv, section.firstChild);
+                h2.remove();
+            }
+        }
+        
         // Helper function to render section with hero image
         function renderSectionWithHero(sectionId, sectionData, sectionTitle, sectionIndex = 0) {
             const section = document.getElementById(sectionId);
@@ -178,17 +202,31 @@ async function loadContent() {
             }
             if (content.frameRebel.fundamentalPillars) {
                 html += '<div class="subsection" id="frame-rebel-fundamentalPillars"><div class="subsection-title">Fundamental Pillars</div>';
-                if (content.frameRebel.fundamentalPillars.image) {
-                    html += `<div class="hero-image"><img src="${content.frameRebel.fundamentalPillars.image}" alt="Fundamental Pillars"></div>`;
+                html += `<div class="subsection-content">${formatContent(content.frameRebel.fundamentalPillars.content || '')}</div>`;
+                const fpImages = content.frameRebel.fundamentalPillars.image || content.frameRebel.fundamentalPillars.images;
+                if (fpImages) {
+                    const fpImagesArray = Array.isArray(fpImages) ? fpImages : [fpImages];
+                    html += '<div class="subsection-images">';
+                    fpImagesArray.forEach((img, idx) => {
+                        html += `<div class="subsection-image"><img src="${img}" alt="Fundamental Pillars${fpImagesArray.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                    });
+                    html += '</div>';
                 }
-                html += `<div class="subsection-content">${formatContent(content.frameRebel.fundamentalPillars.content || '')}</div></div>`;
+                html += `</div>`;
             }
             if (content.frameRebel.toneOfVoice) {
                 html += '<div class="subsection" id="frame-rebel-toneOfVoice"><div class="subsection-title">Tone of Voice</div>';
-                if (content.frameRebel.toneOfVoice.image) {
-                    html += `<div class="hero-image"><img src="${content.frameRebel.toneOfVoice.image}" alt="Tone of Voice"></div>`;
+                html += `<div class="subsection-content">${formatContent(content.frameRebel.toneOfVoice.content || '')}</div>`;
+                const tovImages = content.frameRebel.toneOfVoice.image || content.frameRebel.toneOfVoice.images;
+                if (tovImages) {
+                    const tovImagesArray = Array.isArray(tovImages) ? tovImages : [tovImages];
+                    html += '<div class="subsection-images">';
+                    tovImagesArray.forEach((img, idx) => {
+                        html += `<div class="subsection-image"><img src="${img}" alt="Tone of Voice${tovImagesArray.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                    });
+                    html += '</div>';
                 }
-                html += `<div class="subsection-content">${formatContent(content.frameRebel.toneOfVoice.content || '')}</div></div>`;
+                html += `</div>`;
             }
             frameRebelContent.className = 'content-section-content';
             frameRebelContent.innerHTML = html;
@@ -201,20 +239,68 @@ async function loadContent() {
         
         // Use add/remove approach - only render if not hidden and data exists
         if (logotypeSection && logotypeContent && !hiddenSections['logotype'] && content.logotype) {
+            // Check for hero image (use content.logotype.image if available, otherwise first subsection image)
+            let logotypeHeroImage = null;
+            if (content.logotype.image) {
+                logotypeHeroImage = content.logotype.image;
+            } else if (content.logotype.subsections && Array.isArray(content.logotype.subsections)) {
+                const firstSubsectionWithImage = content.logotype.subsections.find(sub => {
+                    // Handle both single image string and array of images
+                    const subImage = sub.image;
+                    if (!subImage) return false;
+                    if (Array.isArray(subImage) && subImage.length > 0) return true;
+                    if (typeof subImage === 'string' && subImage.trim()) return true;
+                    return false;
+                });
+                if (firstSubsectionWithImage) {
+                    const subImage = firstSubsectionWithImage.image;
+                    logotypeHeroImage = Array.isArray(subImage) ? subImage[0] : subImage;
+                }
+            }
+            
+            const h2Logotype = logotypeSection.querySelector('h2');
+            if (logotypeHeroImage && h2Logotype) {
+                addSectionHero(logotypeSection, logotypeHeroImage, 'Logotype');
+            } else if (h2Logotype) {
+                logotypeSection.classList.remove('has-hero');
+            }
+            
             let logoHtml = '';
+            
+            // Helper function to render images in a grid (max 3 columns)
+            function renderSubsectionImages(images, title, heroImage) {
+                if (!images || (Array.isArray(images) && images.length === 0) || (typeof images === 'string' && !images.trim())) {
+                    return '';
+                }
+                
+                // Convert single image to array for consistent handling
+                const imageArray = Array.isArray(images) ? images : [images];
+                // Filter out hero image if it's being used as section hero
+                const filteredImages = imageArray.filter(img => img !== heroImage);
+                
+                if (filteredImages.length === 0) return '';
+                
+                let html = '<div class="subsection-images">';
+                filteredImages.forEach((img, idx) => {
+                    html += `<div class="subsection-image"><img src="${img}" alt="${title}${filteredImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                });
+                html += '</div>';
+                
+                return html;
+            }
             
             // Helper function to render a single subsection
             function renderLogotypeSubsection(subsection, index) {
                 const title = subsection.title || '';
                 const contentText = subsection.content || '';
-                const image = subsection.image || '';
+                const images = subsection.image || subsection.images || '';
                 const downloadUrl = subsection.downloadUrl || '';
-                const hasImage = !!image;
+                const hasImages = !!(Array.isArray(images) ? images.length > 0 : images);
                 const hasDownloadUrl = !!downloadUrl;
-                const contentOnlyClass = !hasImage && contentText ? 'logotype-content-only' : '';
+                const contentOnlyClass = !hasImages && contentText ? 'logotype-content-only' : '';
                 const subsectionId = `logotype-subsection-${index}`;
                 
-                console.log(`Rendering subsection ${index}:`, { title, hasContent: !!contentText, hasImage, contentLength: contentText.length });
+                console.log(`Rendering subsection ${index}:`, { title, hasContent: !!contentText, hasImages, contentLength: contentText.length });
                 
                 let html = `<div class="subsection ${contentOnlyClass}" id="${subsectionId}">`;
                 html += `<div class="subsection-title">${title}`;
@@ -223,12 +309,12 @@ async function loadContent() {
                 }
                 html += `</div>`;
                 
-                if (hasImage) {
-                    html += `<div class="hero-image"><img src="${image}" alt="${title}"></div>`;
-                }
-                
-                // Always render content div, even if empty
+                // Content first, then images
                 html += `<div class="subsection-content">${formatContent(contentText)}</div>`;
+                
+                // Images after content (excluding hero image)
+                html += renderSubsectionImages(images, title, logotypeHeroImage);
+                
                 html += `</div>`;
                 
                 return html;
@@ -270,11 +356,18 @@ async function loadContent() {
                                 logoHtml += `<div class="usage-tab-content ${tabIndex === 0 ? 'active' : ''}" data-content="${tabKey}">`;
                                 logoHtml += `<div class="subsection ${tabContentOnlyClass}" id="logotype-usage-${tabKey}">`;
                                 
-                                if (hasTabImage) {
-                                    logoHtml += `<div class="hero-image"><img src="${tabImage}" alt="${subsection.title} - ${tabKey}"></div>`;
-                                }
-                                
+                                // Content first, then images
                                 logoHtml += `<div class="subsection-content">${formatContent(tabContent)}</div>`;
+                                
+                                // Render images (handle both single and array)
+                                const tabImages = hasTabImage ? (Array.isArray(tabImage) ? tabImage : [tabImage]) : [];
+                                if (tabImages.length > 0) {
+                                    logoHtml += '<div class="subsection-images">';
+                                    tabImages.forEach((img, idx) => {
+                                        logoHtml += `<div class="subsection-image"><img src="${img}" alt="${subsection.title} - ${tabKey}${tabImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                                    });
+                                    logoHtml += '</div>';
+                                }
                                 
                                 // Auto-generate logo examples based on tab type (light/dark/color)
                                 if (content.logo) {
@@ -419,26 +512,21 @@ async function loadContent() {
         const typographyContent = document.getElementById('typography-content');
         if (typographySection && typographyContent && !hiddenSections['typography'] && content.typographySection) {
             const h2 = typographySection.querySelector('h2');
-            const typographyData = typeof content.typographySection.mainTypography === 'object' ? content.typographySection.mainTypography : { content: content.typographySection.mainTypography?.content || '' };
             
-            // Handle hero image if exists
-            if (typographyData.image && h2) {
-                typographySection.classList.add('has-hero');
-                const existingHero = typographySection.querySelector('.content-section-hero');
-                if (!existingHero) {
-                    const heroDiv = document.createElement('div');
-                    heroDiv.className = 'content-section-hero';
-                    const img = document.createElement('img');
-                    img.src = typographyData.image;
-                    img.alt = 'Typography';
-                    img.className = 'content-section-hero-image';
-                    heroDiv.appendChild(img);
-                    const h2Clone = h2.cloneNode(true);
-                    heroDiv.appendChild(h2Clone);
-                    typographySection.insertBefore(heroDiv, typographySection.firstChild);
-                    h2.remove();
-                }
+            // Check for hero image (use content.typographySection.image if available, otherwise mainTypography.image)
+            let typographyHeroImage = null;
+            if (content.typographySection.image) {
+                typographyHeroImage = content.typographySection.image;
             } else {
+                const typographyData = typeof content.typographySection.mainTypography === 'object' ? content.typographySection.mainTypography : { content: content.typographySection.mainTypography?.content || '' };
+                if (typographyData.image) {
+                    typographyHeroImage = typographyData.image;
+                }
+            }
+            
+            if (typographyHeroImage && h2) {
+                addSectionHero(typographySection, typographyHeroImage, 'Typography');
+            } else if (h2) {
                 typographySection.classList.remove('has-hero');
             }
             
@@ -454,20 +542,42 @@ async function loadContent() {
             
             if (content.typographySection.mainTypography) {
                 typographySubsectionsHtml += '<div class="subsection" id="typography-mainTypography"><div class="subsection-title">Main Typography</div>';
-                if (content.typographySection.mainTypography.image) {
-                    typographySubsectionsHtml += `<div class="hero-image"><img src="${content.typographySection.mainTypography.image}" alt="Main Typography"></div>`;
-                }
                 const mainContent = typeof content.typographySection.mainTypography === 'object' ? content.typographySection.mainTypography.content : content.typographySection.mainTypography;
-                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(mainContent || '')}</div></div>`;
+                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(mainContent || '')}</div>`;
+                const mainImages = content.typographySection.mainTypography.image || content.typographySection.mainTypography.images;
+                if (mainImages) {
+                    const mainImagesArray = Array.isArray(mainImages) ? mainImages : [mainImages];
+                    // Filter out hero image
+                    const filteredMainImages = mainImagesArray.filter(img => img !== typographyHeroImage);
+                    if (filteredMainImages.length > 0) {
+                        typographySubsectionsHtml += '<div class="subsection-images">';
+                        filteredMainImages.forEach((img, idx) => {
+                            typographySubsectionsHtml += `<div class="subsection-image"><img src="${img}" alt="Main Typography${filteredMainImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                        });
+                        typographySubsectionsHtml += '</div>';
+                    }
+                }
+                typographySubsectionsHtml += `</div>`;
             }
             
             if (content.typographySection.secondaryTypography) {
                 typographySubsectionsHtml += '<div class="subsection" id="typography-secondaryTypography"><div class="subsection-title">Secondary Typography</div>';
-                if (content.typographySection.secondaryTypography.image) {
-                    typographySubsectionsHtml += `<div class="hero-image"><img src="${content.typographySection.secondaryTypography.image}" alt="Secondary Typography"></div>`;
-                }
                 const secondaryContent = typeof content.typographySection.secondaryTypography === 'object' ? content.typographySection.secondaryTypography.content : content.typographySection.secondaryTypography;
-                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(secondaryContent || '')}</div></div>`;
+                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(secondaryContent || '')}</div>`;
+                const secondaryImages = content.typographySection.secondaryTypography.image || content.typographySection.secondaryTypography.images;
+                if (secondaryImages) {
+                    const secondaryImagesArray = Array.isArray(secondaryImages) ? secondaryImages : [secondaryImages];
+                    // Filter out hero image
+                    const filteredSecondaryImages = secondaryImagesArray.filter(img => img !== typographyHeroImage);
+                    if (filteredSecondaryImages.length > 0) {
+                        typographySubsectionsHtml += '<div class="subsection-images">';
+                        filteredSecondaryImages.forEach((img, idx) => {
+                            typographySubsectionsHtml += `<div class="subsection-image"><img src="${img}" alt="Secondary Typography${filteredSecondaryImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                        });
+                        typographySubsectionsHtml += '</div>';
+                    }
+                }
+                typographySubsectionsHtml += `</div>`;
             }
             
             
@@ -484,24 +594,17 @@ async function loadContent() {
         if (colorSection && colorContent && !hiddenSections['color']) {
             const h2 = colorSection.querySelector('h2');
             
-            // Check if there's a color hero image
-            if (content.color && content.color.corporateColors && content.color.corporateColors.image && h2) {
-                colorSection.classList.add('has-hero');
-                const existingHero = colorSection.querySelector('.content-section-hero');
-                if (!existingHero) {
-                    const heroDiv = document.createElement('div');
-                    heroDiv.className = 'content-section-hero';
-                    const img = document.createElement('img');
-                    img.src = content.color.corporateColors.image;
-                    img.alt = 'Color';
-                    img.className = 'content-section-hero-image';
-                    heroDiv.appendChild(img);
-                    const h2Clone = h2.cloneNode(true);
-                    heroDiv.appendChild(h2Clone);
-                    colorSection.insertBefore(heroDiv, colorSection.firstChild);
-                    h2.remove();
-                }
-            } else {
+            // Check for hero image (use content.color.image if available, otherwise corporateColors.image)
+            let colorHeroImage = null;
+            if (content.color && content.color.image) {
+                colorHeroImage = content.color.image;
+            } else if (content.color && content.color.corporateColors && content.color.corporateColors.image) {
+                colorHeroImage = content.color.corporateColors.image;
+            }
+            
+            if (colorHeroImage && h2) {
+                addSectionHero(colorSection, colorHeroImage, 'Color');
+            } else if (h2) {
                 colorSection.classList.remove('has-hero');
             }
             
@@ -643,8 +746,21 @@ async function loadContent() {
                 });
             }
             
-            // Check if any application has an image (for hero)
-            const hasApplicationImage = applicationsArray.some(app => app.image);
+            // Check for hero image (use content.applications.image if available, otherwise first application image)
+            let applicationsHeroImage = null;
+            if (content.applications && content.applications.image) {
+                applicationsHeroImage = content.applications.image;
+            } else if (applicationsArray.length > 0 && applicationsArray[0].image) {
+                const firstAppImage = applicationsArray[0].image;
+                applicationsHeroImage = Array.isArray(firstAppImage) ? firstAppImage[0] : firstAppImage;
+            }
+            
+            const h2Applications = applicationsSection.querySelector('h2');
+            if (applicationsHeroImage && h2Applications) {
+                addSectionHero(applicationsSection, applicationsHeroImage, 'Applications');
+            } else if (h2Applications) {
+                applicationsSection.classList.remove('has-hero');
+            }
             
             // Background will be handled by CSS :not(.has-hero) selector
             let html = '';
@@ -652,10 +768,23 @@ async function loadContent() {
                 if (!app.title) return; // Skip if no title
                 const subsectionId = `applications-${index}`;
                 html += `<div class="subsection" id="${subsectionId}"><div class="subsection-title">${app.title}</div>`;
-                if (app.image) {
-                    html += `<div class="hero-image"><img src="${app.image}" alt="${app.title}"></div>`;
+                html += `<div class="subsection-content">${formatContent(app.content || '')}</div>`;
+                
+                // Render images (handle both single and array, excluding hero image)
+                const appImages = app.image || app.images;
+                if (appImages) {
+                    const appImagesArray = Array.isArray(appImages) ? appImages : [appImages];
+                    const filteredImages = appImagesArray.filter(img => img !== applicationsHeroImage);
+                    if (filteredImages.length > 0) {
+                        html += '<div class="subsection-images">';
+                        filteredImages.forEach((img, idx) => {
+                            html += `<div class="subsection-image"><img src="${img}" alt="${app.title}${filteredImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                        });
+                        html += '</div>';
+                    }
                 }
-                html += `<div class="subsection-content">${formatContent(app.content || '')}</div></div>`;
+                
+                html += `</div>`;
             });
             
             applicationsContent.className = 'content-section-content';

@@ -178,8 +178,28 @@ function populateForm(content) {
         });
     }
     
-    // 00. The Name of the Project (introduction content is now merged here)
+    // 00. The Name of the Project - Hero Image
     if (content.frameRebel) {
+        // Hero image for frameRebel section
+        const frameRebelHeroInput = document.querySelector('[data-section="frameRebel"].section-hero-image-input');
+        const frameRebelHeroPreview = document.getElementById('frame-rebel-hero-preview');
+        if (content.frameRebel.image && frameRebelHeroPreview) {
+            frameRebelHeroPreview.innerHTML = `
+                <div style="position: relative; display: inline-block; margin-top: 1rem;">
+                    <img src="${content.frameRebel.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <button type="button" class="remove-image-btn" data-preview-id="frame-rebel-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                </div>
+            `;
+            if (frameRebelHeroInput) {
+                frameRebelHeroInput.setAttribute('data-image-url', content.frameRebel.image);
+                const removeBtn = frameRebelHeroPreview.querySelector('.remove-image-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        removeImage(frameRebelHeroInput, 'frame-rebel-hero-preview');
+                    });
+                }
+            }
+        }
         // About The Project - merge any existing introduction content
         const aboutEl = document.getElementById('frame-rebel-about-content');
         if (aboutEl && content.frameRebel.aboutTheProject) {
@@ -286,8 +306,28 @@ function populateForm(content) {
         }
     }
     
-    // 02. Logotype - New structure with main logo and subsections array
+    // 01. Logotype - Hero Image
     if (content.logotype) {
+        // Hero image for logotype section
+        const logotypeHeroInput = document.querySelector('[data-section="logotype"].section-hero-image-input');
+        const logotypeHeroPreview = document.getElementById('logotype-hero-preview');
+        if (content.logotype.image && logotypeHeroPreview) {
+            logotypeHeroPreview.innerHTML = `
+                <div style="position: relative; display: inline-block; margin-top: 1rem;">
+                    <img src="${content.logotype.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <button type="button" class="remove-image-btn" data-preview-id="logotype-hero-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                </div>
+            `;
+            if (logotypeHeroInput) {
+                logotypeHeroInput.setAttribute('data-image-url', content.logotype.image);
+                const removeBtn = logotypeHeroPreview.querySelector('.remove-image-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        removeImage(logotypeHeroInput, 'logotype-hero-preview');
+                    });
+                }
+            }
+        }
         // Load main logo image
         const mainLogoPreview = document.getElementById('main-logo-preview');
         const mainLogoInput = document.getElementById('main-logo-upload');
@@ -862,7 +902,7 @@ function renderApplicationsList(applications) {
                     <input type="text" class="form-control application-title-input" id="${titleId}" value="${(app.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Business Cards">
                 </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
-                    <label>Hero Image</label>
+                    <label>Image</label>
                     <div class="file-upload-wrapper">
                         <label for="${imageInputId}" class="file-upload-label ${app.image ? 'has-file' : ''}">
                             <span class="upload-icon">
@@ -1336,7 +1376,7 @@ function renderLogotypeSubsectionsList(subsections) {
                     <input type="text" class="form-control logotype-subsection-title-input" id="${titleId}" value="${(subsection.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Iconography">
                 </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
-                    <label>Hero Image</label>
+                    <label>Image</label>
                     <div class="file-upload-wrapper">
                         <label for="${imageInputId}" class="file-upload-label ${subsection.image ? 'has-file' : ''}">
                             <span class="upload-icon">
@@ -2372,6 +2412,16 @@ async function rebuildContentFromForm() {
         return el.value !== null && el.value !== undefined ? el.value : defaultValue;
     }
     
+    // Helper to get hero image from input (synchronous for URL-based images)
+    function getHeroImageFromInput(input, existingImage) {
+        if (!input) return existingImage || '';
+        // Check if there's a data-image-url attribute (from upload)
+        const imageUrl = input.getAttribute('data-image-url');
+        if (imageUrl) return imageUrl;
+        // Otherwise return existing image
+        return existingImage || '';
+    }
+    
     // Get logo SVG from textarea
     const logoValue = getValue('logo-upload', '');
     
@@ -2384,6 +2434,7 @@ async function rebuildContentFromForm() {
             secondary: getValue('font-secondary')
         },
         frameRebel: {
+            image: getHeroImageFromInput(document.querySelector('[data-section="frameRebel"].section-hero-image-input'), getExistingImage('frameRebel.image')),
             aboutTheProject: {
                 image: await getImageFromInput(document.querySelector('[data-section="frameRebel"][data-subsection="aboutTheProject"]'), getExistingImage('frameRebel.aboutTheProject.image')),
                 content: getValue('frame-rebel-about-content')
@@ -2398,10 +2449,12 @@ async function rebuildContentFromForm() {
             }
         },
         logotype: {
+            image: getHeroImageFromInput(document.querySelector('[data-section="logotype"].section-hero-image-input'), getExistingImage('logotype.image')),
             mainLogo: await getImageFromInput(document.getElementById('main-logo-upload'), getExistingImage('logotype.mainLogo')),
             subsections: await getLogotypeSubsectionsFromForm()
         },
         color: {
+            image: getHeroImageFromInput(document.querySelector('[data-section="color"].section-hero-image-input'), getExistingImage('color.image')),
             corporateColors: {
                 content: getValue('color-corporate-content')
             },
@@ -2416,6 +2469,7 @@ async function rebuildContentFromForm() {
             }
         },
         typographySection: {
+            image: getHeroImageFromInput(document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
             mainTypography: {
                 image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
                 content: getValue('typography-main-content')
@@ -2463,92 +2517,7 @@ async function saveSection(sectionPath, sectionData) {
     }
 }
 
-// Rebuild currentContent from form (helper for change tracking)
-async function rebuildContentFromForm() {
-    // This is the same logic as saveContentFull but just rebuilds currentContent
-    // Helper to get existing image value
-    function getExistingImage(path) {
-        try {
-            if (!currentContent) return '';
-            const keys = path.split('.');
-            let value = currentContent;
-            for (const key of keys) {
-                value = value?.[key];
-            }
-            return value || '';
-        } catch {
-            return '';
-        }
-    }
-    
-    // Helper to safely get element value
-    function getValue(id, defaultValue = '') {
-        const el = document.getElementById(id);
-        if (!el) {
-            console.warn(`Element not found: ${id}`);
-            return defaultValue;
-        }
-        return el.value !== null && el.value !== undefined ? el.value : defaultValue;
-    }
-    
-    // Get logo SVG from textarea
-    const logoValue = getValue('logo-upload', '');
-    
-    currentContent = {
-        brandName: getValue('brand-name'),
-        logo: logoValue,
-        colors: getColorsFromForm(),
-        typography: {
-            primary: getValue('font-primary'),
-            secondary: getValue('font-secondary')
-        },
-        frameRebel: {
-            aboutTheProject: {
-                image: await getImageFromInput(document.querySelector('[data-section="frameRebel"][data-subsection="aboutTheProject"]'), getExistingImage('frameRebel.aboutTheProject.image')),
-                content: getValue('frame-rebel-about-content')
-            },
-            fundamentalPillars: {
-                image: await getImageFromInput(document.querySelector('[data-section="frameRebel"][data-subsection="fundamentalPillars"]'), getExistingImage('frameRebel.fundamentalPillars.image')),
-                content: getValue('frame-rebel-pillars-content')
-            },
-            toneOfVoice: {
-                image: await getImageFromInput(document.querySelector('[data-section="frameRebel"][data-subsection="toneOfVoice"]'), getExistingImage('frameRebel.toneOfVoice.image')),
-                content: getValue('frame-rebel-tone-content')
-            }
-        },
-        logotype: {
-            mainLogo: await getImageFromInput(document.getElementById('main-logo-upload'), getExistingImage('logotype.mainLogo')),
-            subsections: await getLogotypeSubsectionsFromForm()
-        },
-        color: {
-            corporateColors: {
-                content: getValue('color-corporate-content')
-            },
-            correctApplications: {
-                content: getValue('color-correct-content')
-            },
-            monochromatic: {
-                content: getValue('color-monochromatic-content')
-            },
-            incorrectApplications: {
-                content: getValue('color-incorrect-content')
-            }
-        },
-        typographySection: {
-            mainTypography: {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
-                content: getValue('typography-main-content')
-            },
-            secondaryTypography: {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
-                content: getValue('typography-secondary-content')
-            },
-        },
-        applications: await getApplicationsFromForm(),
-        hiddenSections: currentContent.hiddenSections || {},
-        assets: currentContent.assets || []
-    };
-}
+// Removed duplicate rebuildContentFromForm - using the one above (line 2388)
 
 // Save content - UPDATED FOR NEW STRUCTURE - Now only saves changed sections
 async function saveContent() {
@@ -2560,78 +2529,35 @@ async function saveContent() {
         // Collect only changed sections
         const sectionsToSave = [];
         
-        // Check frameRebel subsections
-        if (hasSectionChanged('frameRebel.aboutTheProject')) {
+        // Check frameRebel (includes hero image and all subsections)
+        if (hasSectionChanged('frameRebel')) {
             sectionsToSave.push({
-                path: 'frameRebel.aboutTheProject',
-                data: currentContent.frameRebel?.aboutTheProject
-            });
-        }
-        if (hasSectionChanged('frameRebel.fundamentalPillars')) {
-            sectionsToSave.push({
-                path: 'frameRebel.fundamentalPillars',
-                data: currentContent.frameRebel?.fundamentalPillars
-            });
-        }
-        if (hasSectionChanged('frameRebel.toneOfVoice')) {
-            sectionsToSave.push({
-                path: 'frameRebel.toneOfVoice',
-                data: currentContent.frameRebel?.toneOfVoice
+                path: 'frameRebel',
+                data: currentContent.frameRebel
             });
         }
         
-        // Check typographySection subsections
-        if (hasSectionChanged('typographySection.mainTypography')) {
+        // Check logotype (includes hero image, mainLogo, and subsections)
+        if (hasSectionChanged('logotype')) {
             sectionsToSave.push({
-                path: 'typographySection.mainTypography',
-                data: currentContent.typographySection?.mainTypography
-            });
-        }
-        if (hasSectionChanged('typographySection.secondaryTypography')) {
-            sectionsToSave.push({
-                path: 'typographySection.secondaryTypography',
-                data: currentContent.typographySection?.secondaryTypography
+                path: 'logotype',
+                data: currentContent.logotype
             });
         }
         
-        // Check color subsections
-        if (hasSectionChanged('color.corporateColors')) {
+        // Check color (includes hero image and all subsections)
+        if (hasSectionChanged('color')) {
             sectionsToSave.push({
-                path: 'color.corporateColors',
-                data: currentContent.color?.corporateColors
-            });
-        }
-        if (hasSectionChanged('color.correctApplications')) {
-            sectionsToSave.push({
-                path: 'color.correctApplications',
-                data: currentContent.color?.correctApplications
-            });
-        }
-        if (hasSectionChanged('color.monochromatic')) {
-            sectionsToSave.push({
-                path: 'color.monochromatic',
-                data: currentContent.color?.monochromatic
-            });
-        }
-        if (hasSectionChanged('color.incorrectApplications')) {
-            sectionsToSave.push({
-                path: 'color.incorrectApplications',
-                data: currentContent.color?.incorrectApplications
+                path: 'color',
+                data: currentContent.color
             });
         }
         
-        // Check logotype subsections
-        if (hasSectionChanged('logotype.subsections')) {
+        // Check typographySection (includes hero image and all subsections)
+        if (hasSectionChanged('typographySection')) {
             sectionsToSave.push({
-                path: 'logotype.subsections',
-                data: currentContent.logotype?.subsections || []
-            });
-        }
-        // Check logotype mainLogo separately
-        if (hasSectionChanged('logotype.mainLogo')) {
-            sectionsToSave.push({
-                path: 'logotype.mainLogo',
-                data: currentContent.logotype?.mainLogo || ''
+                path: 'typographySection',
+                data: currentContent.typographySection
             });
         }
         
@@ -2727,6 +2653,16 @@ async function saveContentFull() {
             return el.value !== null && el.value !== undefined ? el.value : defaultValue;
         }
         
+        // Helper to get hero image from input (synchronous for URL-based images)
+        function getHeroImageFromInput(input, existingImage) {
+            if (!input) return existingImage || '';
+            // Check if there's a data-image-url attribute (from upload)
+            const imageUrl = input.getAttribute('data-image-url');
+            if (imageUrl) return imageUrl;
+            // Otherwise return existing image
+            return existingImage || '';
+        }
+        
         // Get logo SVG from textarea
         const logoValue = getValue('logo-upload', '');
         
@@ -2740,6 +2676,7 @@ async function saveContentFull() {
             },
             // 00. The Name of the Project (introduction content is now merged into aboutTheProject)
             frameRebel: {
+                image: getHeroImageFromInput(document.querySelector('[data-section="frameRebel"].section-hero-image-input'), getExistingImage('frameRebel.image')),
                 aboutTheProject: {
                     image: await getImageFromInput(document.querySelector('[data-section="frameRebel"][data-subsection="aboutTheProject"]'), getExistingImage('frameRebel.aboutTheProject.image')),
                     content: getValue('frame-rebel-about-content')
@@ -2753,13 +2690,13 @@ async function saveContentFull() {
                     content: getValue('frame-rebel-tone-content')
                 }
             },
-            // 02. Logotype - New structure with main logo and subsections array
             logotype: {
+                image: getHeroImageFromInput(document.querySelector('[data-section="logotype"].section-hero-image-input'), getExistingImage('logotype.image')),
                 mainLogo: await getImageFromInput(document.getElementById('main-logo-upload'), getExistingImage('logotype.mainLogo')),
                 subsections: await getLogotypeSubsectionsFromForm()
             },
-            // 03. Color (images are auto-generated, no image uploads)
             color: {
+                image: getHeroImageFromInput(document.querySelector('[data-section="color"].section-hero-image-input'), getExistingImage('color.image')),
                 corporateColors: {
                     content: getValue('color-corporate-content')
                 },
@@ -2773,8 +2710,8 @@ async function saveContentFull() {
                     content: getValue('color-incorrect-content')
                 }
             },
-            // 04. Typography
             typographySection: {
+                image: getHeroImageFromInput(document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
                 mainTypography: {
                     image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
                     content: getValue('typography-main-content')
@@ -2783,17 +2720,12 @@ async function saveContentFull() {
                     image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
                     content: getValue('typography-secondary-content')
                 },
-                readingLevels: {
-                    image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="readingLevels"]'), getExistingImage('typographySection.readingLevels.image')),
-                    content: getValue('typography-reading-levels-content')
-                }
             },
-            // 05. Applications - save as array
             applications: await getApplicationsFromForm(),
-            hiddenSections: currentContent.hiddenSections || {},
-            assets: currentContent.assets || []
+            hiddenSections: currentContent?.hiddenSections || {},
+            assets: currentContent?.assets || []
         };
-    
+        
         const response = await fetch('/api/content', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -3313,6 +3245,79 @@ function setupRemoveImageButtons() {
             }
             
             removeImage(input, previewId);
+        }
+    });
+}
+
+// Setup hero image upload handlers for main sections
+function setupHeroImageUploadHandlers() {
+    document.querySelectorAll('.section-hero-image-input').forEach(input => {
+        if (!input.hasAttribute('data-handler-added')) {
+            input.setAttribute('data-handler-added', 'true');
+            input.addEventListener('change', async function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const section = input.dataset.section;
+                let previewId = '';
+                
+                // Determine preview ID based on section
+                if (section === 'frameRebel') {
+                    previewId = 'frame-rebel-hero-preview';
+                } else if (section === 'logotype') {
+                    previewId = 'logotype-hero-preview';
+                } else if (section === 'color') {
+                    previewId = 'color-hero-preview';
+                } else if (section === 'typographySection') {
+                    previewId = 'typography-hero-preview';
+                } else if (section === 'applications') {
+                    previewId = 'applications-hero-preview';
+                }
+                
+                // Upload file to server using the same method as subsection images
+                try {
+                    const url = await uploadImageFile(file);
+                    
+                    // Store URL on input for later use
+                    input.setAttribute('data-image-url', url);
+                    
+                    // Update preview
+                    const preview = document.getElementById(previewId);
+                    if (preview) {
+                        preview.innerHTML = `
+                            <div style="position: relative; display: inline-block; margin-top: 1rem;">
+                                <img src="${url}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <button type="button" class="remove-image-btn" data-input-id="${input.id}" data-preview-id="${previewId}" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                            </div>
+                        `;
+                        
+                        // Attach remove handler
+                        const removeBtn = preview.querySelector('.remove-image-btn');
+                        if (removeBtn) {
+                            removeBtn.addEventListener('click', function() {
+                                removeImage(input, previewId);
+                            });
+                        }
+                    }
+                    
+                    // Track section change - use the section name directly for hero images
+                    if (section === 'frameRebel') {
+                        trackSectionChange('frameRebel');
+                    } else if (section === 'logotype') {
+                        trackSectionChange('logotype');
+                    } else if (section === 'color') {
+                        trackSectionChange('color');
+                    } else if (section === 'typographySection') {
+                        trackSectionChange('typographySection');
+                    } else if (section === 'applications') {
+                        trackSectionChange('applications');
+                    }
+                    showStatus('Hero image uploaded successfully', 'success');
+                } catch (error) {
+                    console.error('Error uploading hero image:', error);
+                    showStatus(`Error uploading hero image: ${error.message}`, 'error');
+                }
+            });
         }
     });
 }
@@ -3862,6 +3867,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadContent().then(() => {
         setTimeout(() => {
             initializeStyledFileUploads();
+            setupHeroImageUploadHandlers(); // Setup hero image handlers for main sections
             setupImageUploadHandlers();
             setupRemoveImageButtons(); // Setup event delegation for remove buttons
             setupLogotypeHandlers(); // Setup logotype handlers (also called in populateForm but ensure it's here too)
