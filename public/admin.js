@@ -586,6 +586,17 @@ function populateForm(content) {
     initializeStyledFileUploads();
     setupImageUploadHandlers();
     
+    // Add fade-in animations to admin sections
+    setTimeout(() => {
+        const sections = document.querySelectorAll('.admin-section');
+        sections.forEach((section, index) => {
+            section.classList.add('fade-in');
+            if (index > 0) {
+                section.classList.add(`fade-in-delay-${Math.min(index, 4)}`);
+            }
+        });
+    }, 100);
+    
     // Initial renumbering based on current visibility
     setTimeout(() => {
         renumberSections();
