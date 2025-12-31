@@ -1417,6 +1417,34 @@ function renderLogotypeSubsectionsList(subsections) {
             `;
         }
         
+        // Handle images array (support both single image and array)
+        const images = subsection.image || subsection.images || [];
+        const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
+        const hasImages = imagesArray.length > 0;
+        
+        // Generate HTML for single multiple file input
+        const imagesHtml = `
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Images (up to 3)</label>
+                <div class="file-upload-wrapper">
+                    <label for="${imageInputId}" class="file-upload-label ${hasImages ? 'has-file' : ''}">
+                        <span class="upload-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        <span class="upload-text">${hasImages ? 'Change Images' : 'Upload images/videos (select multiple)'}</span>
+                        <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
+                    </label>
+                    <input type="file" class="file-upload-input logotype-subsection-image-input" id="${imageInputId}" data-logotype-subsection-index="${index}" accept="image/*" multiple>
+                    <div class="file-name-display" id="${imageInputId}-filename"></div>
+                </div>
+                <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                    ${imagesArray.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('')}
+                </div>
+            </div>
+        `;
+        
         return `
             <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -1427,23 +1455,7 @@ function renderLogotypeSubsectionsList(subsections) {
                     <label>Subsection Title</label>
                     <input type="text" class="form-control logotype-subsection-title-input" id="${titleId}" value="${(subsection.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Iconography">
                 </div>
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <label>Image</label>
-                    <div class="file-upload-wrapper">
-                        <label for="${imageInputId}" class="file-upload-label ${subsection.image ? 'has-file' : ''}">
-                            <span class="upload-icon">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="upload-text">${subsection.image ? 'Change Image' : 'Upload images/videos'}</span>
-                            <span class="upload-hint">Click to browse, or drag & drop files here</span>
-                        </label>
-                        <input type="file" class="file-upload-input logotype-subsection-image-input" id="${imageInputId}" data-logotype-subsection-index="${index}" accept="image/*">
-                        <div class="file-name-display" id="${imageInputId}-filename"></div>
-                    </div>
-                    <div class="image-preview" id="${previewId}" style="margin-top: 1rem;">${subsection.image ? renderImagePreview(subsection.image, previewId, null) : ''}</div>
-                </div>
+                ${imagesHtml}
                 ${contentSection}
             </div>
         `;
@@ -1456,36 +1468,47 @@ function renderLogotypeSubsectionsList(subsections) {
     // Store base64 data on inputs and attach remove button handlers
     setTimeout(() => {
         subsectionsArray.forEach((subsection, index) => {
+            // Handle images array (support both single image and array)
+            const images = subsection.image || subsection.images || [];
+            const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
+            
             const imageInputId = `logotype-subsection-image-${index}`;
             const imageInput = document.getElementById(imageInputId);
             const previewId = `logotype-subsection-preview-${index}`;
             const preview = document.getElementById(previewId);
             
-            // Store base64 data on input if image exists
-            if (imageInput && subsection.image) {
-                imageInput.setAttribute('data-base64', subsection.image);
+            // Store images array as JSON on input
+            if (imageInput && imagesArray.length > 0) {
+                imageInput.setAttribute('data-images', JSON.stringify(imagesArray));
                 // Update label state
                 const label = document.querySelector(`label[for="${imageInputId}"]`);
                 if (label) {
                     label.classList.add('has-file');
                     const uploadText = label.querySelector('.upload-text');
                     if (uploadText) {
-                        uploadText.textContent = 'Change Image';
+                        uploadText.textContent = imagesArray.length === 1 ? 'Change Image' : `Change Images (${imagesArray.length})`;
                     }
                 }
             }
             
-            if (preview && subsection.image) {
-                const removeBtn = preview.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                    removeBtn.setAttribute('data-input-id', imageInputId);
-                    removeBtn.setAttribute('data-preview-id', previewId);
-                    removeBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        removeImage(imageInput, previewId);
-                    });
-                }
+            // Attach remove handlers to all preview images
+            if (preview) {
+                imagesArray.forEach((img, imgIndex) => {
+                    const imgPreviewId = `${previewId}-${imgIndex}`;
+                    const imgPreview = document.getElementById(imgPreviewId);
+                    if (imgPreview) {
+                        const removeBtn = imgPreview.querySelector('.remove-image-btn');
+                        if (removeBtn) {
+                            removeBtn.setAttribute('data-input-id', imageInputId);
+                            removeBtn.setAttribute('data-image-index', imgIndex);
+                            removeBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeImageFromArray(imageInput, previewId, imgIndex);
+                            });
+                        }
+                    }
+                });
             }
             
             // Setup tabs if this subsection has tabs
@@ -1719,7 +1742,7 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
                 <input type="text" class="form-control logotype-subsection-title-input" id="${titleId}" value="${(template.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Iconography">
             </div>
             <div class="form-group" style="margin-top: 1.5rem;">
-                <label>Hero Image</label>
+                <label>Images (up to 3)</label>
                 <div class="file-upload-wrapper">
                     <label for="${imageInputId}" class="file-upload-label">
                         <span class="upload-icon">
@@ -1727,13 +1750,13 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
                                 <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
-                        <span class="upload-text">Upload images/videos</span>
-                        <span class="upload-hint">Click to browse, or drag & drop files here</span>
+                        <span class="upload-text">Upload images/videos (select multiple)</span>
+                        <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
                     </label>
-                    <input type="file" class="file-upload-input logotype-subsection-image-input" id="${imageInputId}" data-logotype-subsection-index="${logotypeCounter}" accept="image/*">
+                    <input type="file" class="file-upload-input logotype-subsection-image-input" id="${imageInputId}" data-logotype-subsection-index="${logotypeCounter}" accept="image/*" multiple>
                     <div class="file-name-display" id="${imageInputId}-filename"></div>
                 </div>
-                <div class="image-preview" id="${previewId}" style="margin-top: 1rem;"></div>
+                <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
             </div>
             ${contentSection}
         </div>
@@ -1778,8 +1801,6 @@ function removeLogotypeSubsectionItem(index) {
             item.setAttribute('data-logotype-subsection-index', newIndex);
             const titleInput = item.querySelector('.logotype-subsection-title-input');
             const contentInput = item.querySelector('.logotype-subsection-content-input');
-            const imageInput = item.querySelector('.logotype-subsection-image-input');
-            const preview = item.querySelector('.image-preview');
             const removeBtn = item.querySelector('button');
             const heading = item.querySelector('h3');
             
@@ -1789,13 +1810,36 @@ function removeLogotypeSubsectionItem(index) {
             if (contentInput) {
                 contentInput.id = `logotype-subsection-content-${newIndex}`;
             }
-            if (imageInput) {
-                imageInput.id = `logotype-subsection-image-${newIndex}`;
+            
+            // Reindex image input (single multiple file input)
+            const imageInput = item.querySelector('.logotype-subsection-image-input');
+            if (imageInput && !imageInput.classList.contains('logotype-subsection-tab-image-input')) {
+                const oldId = imageInput.id;
+                const newId = `logotype-subsection-image-${newIndex}`;
+                imageInput.id = newId;
                 imageInput.setAttribute('data-logotype-subsection-index', newIndex);
+                
+                // Find preview in the same form-group
+                const formGroup = imageInput.closest('.form-group');
+                const preview = formGroup ? formGroup.querySelector('.image-preview') : null;
+                if (preview) {
+                    preview.id = `logotype-subsection-preview-${newIndex}`;
+                }
+                
+                // Update label
+                const label = item.querySelector(`label[for="${oldId}"]`);
+                if (label) {
+                    label.setAttribute('for', newId);
+                }
+                
+                // Update filename display (within the same file-upload-wrapper)
+                const wrapper = imageInput.closest('.file-upload-wrapper');
+                const filenameDisplay = wrapper ? wrapper.querySelector('.file-name-display') : null;
+                if (filenameDisplay) {
+                    filenameDisplay.id = `${newId}-filename`;
+                }
             }
-            if (preview) {
-                preview.id = `logotype-subsection-preview-${newIndex}`;
-            }
+            
             if (removeBtn) {
                 removeBtn.setAttribute('onclick', `removeLogotypeSubsectionItem(${newIndex})`);
             }
@@ -1829,20 +1873,20 @@ async function getLogotypeSubsectionsFromForm() {
         const item = subsectionItems[index];
         const titleInput = item.querySelector('.logotype-subsection-title-input');
         const contentInput = item.querySelector('.logotype-subsection-content-input');
-        const imageInput = item.querySelector('.logotype-subsection-image-input');
         
         const title = titleInput ? titleInput.value.trim() : '';
         
         // Get existing subsection data to preserve images and content
         const existingSubsection = existingSubsections[index] || {};
-        const existingImage = existingSubsection.image || '';
+        const existingImages = existingSubsection.image || existingSubsection.images || [];
+        const existingImagesArray = Array.isArray(existingImages) ? existingImages : (existingImages ? [existingImages] : []);
         
         // Check if this is a tabbed subsection (has tab content inputs)
         const tabContentInputs = item.querySelectorAll('.logotype-subsection-tab-content-input');
         const tabImageInputs = item.querySelectorAll('.logotype-subsection-tab-image-input');
         
         let content = '';
-        let image = '';
+        let images = [];
         let tabs = null;
         
         if (tabContentInputs.length > 0) {
@@ -1866,16 +1910,34 @@ async function getLogotypeSubsectionsFromForm() {
                 };
             }
         } else {
-            // Regular subsection - preserve existing content and image
+            // Regular subsection - collect images from multiple file input
             content = contentInput ? contentInput.value.trim() : '';
-            // Use existing image as fallback to preserve it if no new image is uploaded
-            image = imageInput ? await getImageFromInput(imageInput, existingImage) : existingImage;
+            
+            // Get images from multiple file input (stored as JSON array in data-images attribute)
+            const imageInput = document.getElementById(`logotype-subsection-image-${index}`);
+            if (imageInput) {
+                const imagesAttr = imageInput.getAttribute('data-images');
+                if (imagesAttr) {
+                    try {
+                        images = JSON.parse(imagesAttr);
+                        if (!Array.isArray(images)) images = [images];
+                    } catch (error) {
+                        console.error('Error parsing images array:', error);
+                        images = existingImagesArray;
+                    }
+                } else {
+                    // No new images, use existing
+                    images = existingImagesArray;
+                }
+            } else {
+                images = existingImagesArray;
+            }
         }
         
         if (title) {
             const subsection = {
                 title: title,
-                image: image,
+                images: images, // Store as array (frontend handles both array and single value)
                 content: content
             };
             
@@ -1894,6 +1956,11 @@ async function getLogotypeSubsectionsFromForm() {
 function setupLogotypeSubsectionImageHandlers() {
     const imageInputs = document.querySelectorAll('.logotype-subsection-image-input');
     imageInputs.forEach(input => {
+        // Skip tab image inputs (they're handled separately)
+        if (input.classList.contains('logotype-subsection-tab-image-input')) {
+            return;
+        }
+        
         if (!input.hasAttribute('data-handler-added')) {
             input.setAttribute('data-handler-added', 'true');
             input.addEventListener('change', async function(e) {
@@ -1911,10 +1978,11 @@ function setupLogotypeSubsectionImageHandlers() {
                     return;
                 }
                 
-                const index = this.getAttribute('data-logotype-subsection-index');
+                const subsectionIndex = this.getAttribute('data-logotype-subsection-index');
+                const imageIndex = this.getAttribute('data-image-index') || '0';
                 const label = document.querySelector(`label[for="${this.id}"]`);
                 const filenameDisplay = document.getElementById(`${this.id}-filename`);
-                const preview = document.getElementById(`logotype-subsection-preview-${index}`);
+                const preview = document.getElementById(`logotype-subsection-preview-${subsectionIndex}-${imageIndex}`);
                 
                 // Update label
                 if (label) {
