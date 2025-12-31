@@ -116,11 +116,13 @@ async function loadContent() {
             const contentDiv = document.getElementById(`${sectionId}-content`);
             if (!section || !contentDiv) return;
             
-            // Add fade-in animation class
-            section.classList.add('fade-in');
-            if (sectionIndex > 0) {
-                section.classList.add(`fade-in-delay-${Math.min(sectionIndex, 4)}`);
-            }
+            // Add fade-in animation class with a small delay to ensure it triggers
+            setTimeout(() => {
+                section.classList.add('fade-in');
+                if (sectionIndex > 0) {
+                    section.classList.add(`fade-in-delay-${Math.min(sectionIndex, 4)}`);
+                }
+            }, 50);
             
             // Remove existing hero if any
             const existingHero = section.querySelector('.content-section-hero');
