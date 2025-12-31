@@ -1271,6 +1271,11 @@ Guidelines:
 • No decorative elements crossing the boundary`,
         hasTabs: false
     },
+    'blank': {
+        title: 'Blank',
+        content: '',
+        hasTabs: false
+    },
     'usage': {
         title: 'Usage',
         content: '',
