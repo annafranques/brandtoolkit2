@@ -1355,7 +1355,22 @@ body {
     }
     
     .content-section-content {
-        padding: 1rem 3rem;
+        padding: 0;
+    }
+    
+    .content-section-content > p,
+    .content-section-content > h3,
+    .content-section-content > h4,
+    .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+        padding: 0 3rem;
+    }
+    
+    .content-section-content > *:first-child {
+        padding-top: 1rem;
+    }
+    
+    .content-section-content > *:last-child {
+        padding-bottom: 1rem;
     }
     
     .content-section:not(.has-hero) h2 {
@@ -1368,13 +1383,6 @@ body {
     }
     
     .subsection-content {
-        padding: 0 3rem;
-    }
-    
-    .content-section-content > p,
-    .content-section-content > h3,
-    .content-section-content > h4,
-    .content-section-content > div:not(.subsection-images):not(.subsection-image) {
         padding: 0 3rem;
     }
 }
