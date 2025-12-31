@@ -60,10 +60,11 @@ async function loadContent() {
         }
         console.log('=== END CONTENT DEBUG ===');
         
-        // Set brand name
+        // Set brand name (but keep "Brand Toolkit" in sidebar)
         const brandName = content.brandName || 'Brand';
-        const sidebarBrandName = document.getElementById('sidebar-brand-name');
-        if (sidebarBrandName) sidebarBrandName.textContent = brandName;
+        // Don't change sidebar - it should always say "Brand Toolkit"
+        // const sidebarBrandName = document.getElementById('sidebar-brand-name');
+        // if (sidebarBrandName) sidebarBrandName.textContent = brandName;
         
         // Get brand colors for section separations - use light secondary colors
         const brandColors = content.colors || [];

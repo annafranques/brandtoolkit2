@@ -299,26 +299,6 @@ body {
     min-height: 100vh;
     padding: 0;
     position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-.frontend-header {
-    background: #fff;
-    color: #000;
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid #e0e0e0;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
-
-.frontend-header-title {
-    font-family: 'Favorit', sans-serif;
-    font-size: 1.5rem;
-    font-weight: normal;
-    color: #000;
-    margin: 0;
 }
 
 .content-wrapper {
