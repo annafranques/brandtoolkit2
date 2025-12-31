@@ -180,7 +180,7 @@ async function loadContent() {
         const frameRebelContent = document.getElementById('frame-rebel-content');
         if (frameRebelSection && frameRebelContent && !hiddenSections['frame-rebel'] && content.frameRebel) {
             const h2 = frameRebelSection.querySelector('h2');
-            const hasFrameRebelHero = content.frameRebel.aboutTheProject && content.frameRebel.aboutTheProject.image && h2;
+            const hasFrameRebelHero = content.frameRebel && content.frameRebel.image && h2;
             if (hasFrameRebelHero) {
                 frameRebelSection.classList.add('has-hero');
                 const existingHero = frameRebelSection.querySelector('.content-section-hero');
@@ -188,7 +188,7 @@ async function loadContent() {
                     const heroDiv = document.createElement('div');
                     heroDiv.className = 'content-section-hero';
                     const img = document.createElement('img');
-                    img.src = content.frameRebel.aboutTheProject.image;
+                    img.src = content.frameRebel.image;
                     img.alt = brandName;
                     img.className = 'content-section-hero-image';
                     heroDiv.appendChild(img);
