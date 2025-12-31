@@ -3483,6 +3483,99 @@ function removeImage(input, previewId) {
     }
 }
 
+// Remove image from array (for multiple image inputs)
+function removeImageFromArray(input, previewId, imageIndex) {
+    if (!input) return;
+    
+    // Get current images array
+    const imagesAttr = input.getAttribute('data-images');
+    if (!imagesAttr) return;
+    
+    try {
+        let images = JSON.parse(imagesAttr);
+        if (!Array.isArray(images)) images = [images];
+        
+        // Remove the image at the specified index
+        images.splice(imageIndex, 1);
+        
+        // Update the data attribute
+        if (images.length > 0) {
+            input.setAttribute('data-images', JSON.stringify(images));
+            // Update label
+            const wrapper = input.closest('.file-upload-wrapper');
+            if (wrapper) {
+                const label = wrapper.querySelector('.file-upload-label');
+                if (label) {
+                    const uploadText = label.querySelector('.upload-text');
+                    if (uploadText) {
+                        uploadText.textContent = images.length === 1 ? 'Change Image' : `Change Images (${images.length})`;
+                    }
+                }
+            }
+            
+            // Re-render preview
+            const preview = document.getElementById(previewId);
+            if (preview) {
+                preview.innerHTML = images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
+                
+                // Re-attach remove handlers
+                images.forEach((img, idx) => {
+                    const imgPreviewId = `${previewId}-${idx}`;
+                    const imgPreview = document.getElementById(imgPreviewId);
+                    if (imgPreview) {
+                        const removeBtn = imgPreview.querySelector('.remove-image-btn');
+                        if (removeBtn) {
+                            removeBtn.setAttribute('data-input-id', input.id);
+                            removeBtn.setAttribute('data-image-index', idx);
+                            removeBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeImageFromArray(input, previewId, idx);
+                            });
+                        }
+                    }
+                });
+            }
+        } else {
+            // No images left, clear everything
+            input.value = '';
+            input.removeAttribute('data-images');
+            
+            // Reset styled upload UI
+            const wrapper = input.closest('.file-upload-wrapper');
+            if (wrapper) {
+                const label = wrapper.querySelector('.file-upload-label');
+                const filenameDisplay = wrapper.querySelector('.file-name-display');
+                if (label) {
+                    label.classList.remove('has-file');
+                    const uploadText = label.querySelector('.upload-text');
+                    if (uploadText) {
+                        uploadText.textContent = 'Upload images/videos (select multiple)';
+                    }
+                }
+                if (filenameDisplay) {
+                    filenameDisplay.textContent = '';
+                    filenameDisplay.style.display = 'none';
+                }
+            }
+            
+            // Clear preview
+            const preview = document.getElementById(previewId);
+            if (preview) {
+                preview.innerHTML = '';
+            }
+        }
+        
+        // Track section change
+        const subsectionIndex = input.getAttribute('data-logotype-subsection-index');
+        if (subsectionIndex !== null) {
+            trackSectionChange('logotype');
+        }
+    } catch (error) {
+        console.error('Error removing image from array:', error);
+    }
+}
+
 // Setup event delegation for all remove image buttons
 let removeImageButtonsSetup = false;
 function setupRemoveImageButtons() {
