@@ -250,11 +250,28 @@ async function loadContent() {
                 if (!existingHero) {
                     const heroDiv = document.createElement('div');
                     heroDiv.className = 'content-section-hero';
-                    const img = document.createElement('img');
-                    img.src = content.frameRebel.image;
-                    img.alt = brandName;
-                    img.className = 'content-section-hero-image';
-                    heroDiv.appendChild(img);
+                    
+                    // Check if it's a Vimeo URL
+                    if (isVimeoUrl(content.frameRebel.image)) {
+                        const embedUrl = getVimeoEmbedUrl(content.frameRebel.image);
+                        if (embedUrl) {
+                            const iframe = document.createElement('iframe');
+                            iframe.src = embedUrl;
+                            iframe.className = 'content-section-hero-video';
+                            iframe.setAttribute('frameborder', '0');
+                            iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                            iframe.setAttribute('allowfullscreen', '');
+                            heroDiv.appendChild(iframe);
+                        }
+                    } else {
+                        // Regular image
+                        const img = document.createElement('img');
+                        img.src = content.frameRebel.image;
+                        img.alt = brandName;
+                        img.className = 'content-section-hero-image';
+                        heroDiv.appendChild(img);
+                    }
+                    
                     const h2Clone = h2.cloneNode(true);
                     heroDiv.appendChild(h2Clone);
                     frameRebelSection.insertBefore(heroDiv, frameRebelSection.firstChild);
