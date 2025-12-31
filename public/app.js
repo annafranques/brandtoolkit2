@@ -461,8 +461,8 @@ async function loadContent() {
                             tabKeys.forEach((tabKey, tabIndex) => {
                                 const tab = subsection.tabs[tabKey];
                                 const tabContent = tab.content || '';
-                                const tabImage = tab.image || '';
-                                const hasTabImage = !!tabImage;
+                                const tabImage = tab.image || tab.images || '';
+                                const hasTabImage = !!(tabImage || (Array.isArray(tab.images) && tab.images.length > 0));
                                 const tabContentOnlyClass = !hasTabImage && tabContent ? 'logotype-content-only' : '';
                                 
                                 logoHtml += `<div class="usage-tab-content ${tabIndex === 0 ? 'active' : ''}" data-content="${tabKey}">`;
@@ -471,8 +471,8 @@ async function loadContent() {
                                 // Content first, then images
                                 logoHtml += `<div class="subsection-content">${formatContent(tabContent)}</div>`;
                                 
-                                // Render images (handle both single and array)
-                                const tabImages = hasTabImage ? (Array.isArray(tabImage) ? tabImage : [tabImage]) : [];
+                                // Render images (handle both single and array, support both image and images properties)
+                                const tabImages = tab.images ? (Array.isArray(tab.images) ? tab.images : [tab.images]) : (tabImage ? (Array.isArray(tabImage) ? tabImage : [tabImage]) : []);
                                 if (tabImages.length > 0) {
                                     logoHtml += '<div class="subsection-images">';
                                     tabImages.forEach((img, idx) => {
