@@ -683,7 +683,7 @@ body {
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    padding: 3rem 5rem 0 5rem;
+    padding: 3rem 5rem 3rem 5rem;
 }
 
 .download-logo-btn {
@@ -709,7 +709,7 @@ body {
     font-size: 0.875rem;
     line-height: 1.5;
     color: #000;
-    padding: 0 5rem;
+    padding: 3rem 5rem;
 }
 
 /* Subsection images grid (max 3 columns) - full width, no padding */
@@ -777,6 +777,10 @@ body {
 .subsection-content-two-columns p {
     break-inside: avoid;
     margin-bottom: 0.75rem;
+}
+
+.subsection {
+    padding: 0 !important;
 }
 
 .subsection-content-two-columns p:last-child {
