@@ -1544,6 +1544,10 @@ body {
         padding: 2rem 1.5rem;
     }
     
+    #typography-content .typography-item {
+        padding: 1.5rem 1.5rem;
+    }
+    
     .subsection .subsection-images {
         grid-column: 1;
     }
