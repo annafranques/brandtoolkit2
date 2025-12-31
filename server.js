@@ -1193,8 +1193,14 @@ async function generateTypographyCSSFromPrimarySecondary(content) {
       ? bodyFontFamily 
       : headingFontFamily;
     
+    // Check for uppercase setting in typographyStyles if available
+    const styleConfig = content.typographyStyles?.[styleName];
+    
     css += `.typography-${styleName} {\n`;
     css += `    font-family: '${fontFamily}', sans-serif;\n`;
+    if (styleConfig && styleConfig.uppercase) {
+      css += `    text-transform: uppercase;\n`;
+    }
     
     // Desktop (1280px+)
     css += `    font-size: ${specs.desktop.fontSize};\n`;
@@ -1346,6 +1352,9 @@ async function generateTypographyCSS(content) {
     
     css += `.typography-${styleName} {\n`;
     css += `    font-family: '${fontFamily}', sans-serif;\n`;
+    if (styleConfig.uppercase) {
+      css += `    text-transform: uppercase;\n`;
+    }
     
     // Desktop (1280px+)
     css += `    font-size: ${specs.desktop.fontSize};\n`;
