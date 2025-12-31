@@ -4018,5 +4018,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize smooth scrolling (uses delegation, so only needs to be called once)
     initAdminSmoothScrolling();
+    
+    // Initialize scroll animations (same as frontend)
+    initScrollAnimations();
 });
+
+// Initialize scroll animations (matching frontend behavior)
+function initScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                const element = entry.target;
+                
+                // Add fade-in animation
+                element.classList.add('fade-in');
+                
+                // Add staggered delay for subsections
+                const delayIndex = Array.from(element.parentElement?.children || []).indexOf(element) % 5;
+                if (delayIndex > 0) {
+                    element.classList.add(`fade-in-delay-${Math.min(delayIndex, 4)}`);
+                }
+                
+                // Stop observing once animated
+                observer.unobserve(element);
+            }
+        });
+    }, observerOptions);
+
+    // Observe admin sections
+    const sections = document.querySelectorAll('.admin-section');
+    sections.forEach((section) => {
+        section.style.opacity = '0';
+        section.setAttribute('data-animate-on-scroll', 'true');
+        observer.observe(section);
+    });
+
+    // Observe text elements with very subtle fade-in
+    const textElements = document.querySelectorAll('.form-group, .admin-section-header, h2, h3, label, .section-description');
+    textElements.forEach((element) => {
+        element.style.opacity = '0';
+        element.setAttribute('data-animate-on-scroll', 'true');
+        observer.observe(element);
+    });
+
+    // Observe images separately (they'll get mask-up animation)
+    const imageElements = document.querySelectorAll('.image-preview img, .content-section-hero, .content-section-hero-image');
+    imageElements.forEach((element) => {
+        element.style.opacity = '0';
+        element.style.backgroundColor = '#fff'; // White background for mask effect
+        element.setAttribute('data-animate-on-scroll', 'true');
+        observer.observe(element);
+    });
+}
 

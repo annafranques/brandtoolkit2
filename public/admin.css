@@ -83,12 +83,13 @@ body {
     animation: fadeInSubtle 0.4s ease-out forwards;
 }
 
-/* Mask-up for images */
+/* Mask-up for images with white background */
 .fade-in img,
 .fade-in .content-section-hero,
 .fade-in .content-section-hero-image,
 .fade-in .subsection img,
 .fade-in .subsection-content img {
+    background-color: #fff;
     animation: maskUp 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
