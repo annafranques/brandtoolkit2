@@ -2044,9 +2044,17 @@ function initScrollAnimations() {
         observer.observe(section);
     });
 
-    // Also observe subsections, images, and content elements
-    const subsections = document.querySelectorAll('.subsection, .subsection-content, .content-section-content img, .content-section-content p, .content-section-hero');
-    subsections.forEach((element, index) => {
+    // Observe text elements (paragraphs, titles, content)
+    const textElements = document.querySelectorAll('.subsection, .subsection-content, .subsection-title, .content-section-content p, .content-section-content h3, .content-section-content h4, .content-section-content div:not(:has(img))');
+    textElements.forEach((element) => {
+        element.style.opacity = '0';
+        element.setAttribute('data-animate-on-scroll', 'true');
+        observer.observe(element);
+    });
+
+    // Observe images separately (they'll get mask-up animation)
+    const imageElements = document.querySelectorAll('.content-section-content img, .content-section-hero, .content-section-hero-image, .subsection img');
+    imageElements.forEach((element) => {
         element.style.opacity = '0';
         element.setAttribute('data-animate-on-scroll', 'true');
         observer.observe(element);
