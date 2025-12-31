@@ -435,27 +435,33 @@ async function loadContent() {
             // Render subsections array (new structure)
             if (content.logotype && content.logotype.subsections && Array.isArray(content.logotype.subsections) && content.logotype.subsections.length > 0) {
                 content.logotype.subsections.forEach((subsection, index) => {
-                    // Check if this subsection has tabs (for Usage section)
+                    // Check if this subsection has tabs (for Main logotype section)
                     if (subsection.tabs && subsection.hasTabs) {
-                        // Render tabbed subsection
+                        // Render tabbed subsection with grid layout
                         const tabKeys = Object.keys(subsection.tabs);
                         if (tabKeys.length > 0) {
                             const usageDownloadUrl = subsection.downloadUrl || '';
                             logoHtml += '<div class="logo-usage-section">';
-                            logoHtml += `<div class="subsection-title">${subsection.title || 'Usage'}`;
+                            
+                            // Left column: heading, download button, and tabs
+                            logoHtml += '<div class="logo-usage-left">';
+                            logoHtml += `<div class="subsection-title">${subsection.title || 'Main'}</div>`;
                             if (usageDownloadUrl) {
-                                logoHtml += `<a href="${usageDownloadUrl}" target="_blank" rel="noopener noreferrer" class="download-logo-btn" title="Download ${subsection.title || 'Usage'}">Download</a>`;
+                                logoHtml += `<a href="${usageDownloadUrl}" target="_blank" rel="noopener noreferrer" class="download-logo-btn" title="Download ${subsection.title || 'Main'}">Download</a>`;
                             }
-                            logoHtml += `</div>`;
                             logoHtml += '<div class="usage-tabs">';
                             
                             // Render tab buttons
                             tabKeys.forEach((tabKey, tabIndex) => {
-                                const tabLabel = tabKey === 'light' ? 'Light' : tabKey === 'dark' ? 'Dark' : tabKey === 'color' ? 'Color' : tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+                                const tabLabel = subsection.tabs[tabKey].label || (tabKey === 'light' ? 'Light' : tabKey === 'dark' ? 'Dark' : tabKey === 'color' ? 'Color' : tabKey === 'positive' ? 'Positive' : tabKey === 'negative' ? 'Negative' : tabKey.charAt(0).toUpperCase() + tabKey.slice(1));
                                 logoHtml += `<button class="usage-tab ${tabIndex === 0 ? 'active' : ''}" data-tab="${tabKey}">${tabLabel}</button>`;
                             });
                             
-                            logoHtml += '</div>';
+                            logoHtml += '</div>'; // Close usage-tabs
+                            logoHtml += '</div>'; // Close logo-usage-left
+                            
+                            // Right column: tab content
+                            logoHtml += '<div class="logo-usage-right">';
                             
                             // Render tab content
                             tabKeys.forEach((tabKey, tabIndex) => {
