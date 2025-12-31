@@ -131,19 +131,24 @@ async function loadContent() {
                 const heroDiv = document.createElement('div');
                 heroDiv.className = 'content-section-hero';
                 
-                // Check if it's a Vimeo URL
-                if (isVimeoUrl(heroMedia)) {
-                    const embedUrl = getVimeoEmbedUrl(heroMedia);
-                    if (embedUrl) {
-                        const iframe = document.createElement('iframe');
-                        iframe.src = embedUrl;
-                        iframe.className = 'content-section-hero-video';
-                        iframe.setAttribute('frameborder', '0');
-                        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-                        iframe.setAttribute('allowfullscreen', '');
-                        heroDiv.appendChild(iframe);
-                    }
-                } else {
+                    // Check if it's a Vimeo URL
+                    if (isVimeoUrl(heroMedia)) {
+                        const embedUrl = getVimeoEmbedUrl(heroMedia);
+                        if (embedUrl) {
+                            const iframe = document.createElement('iframe');
+                            iframe.src = embedUrl;
+                            iframe.className = 'content-section-hero-video';
+                            iframe.setAttribute('frameborder', '0');
+                            iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                            iframe.setAttribute('allowfullscreen', '');
+                            iframe.style.width = '100%';
+                            iframe.style.height = '100%';
+                            iframe.style.position = 'absolute';
+                            iframe.style.top = '0';
+                            iframe.style.left = '0';
+                            heroDiv.appendChild(iframe);
+                        }
+                    } else {
                     // Regular image
                     const img = document.createElement('img');
                     img.src = heroMedia;
@@ -185,19 +190,24 @@ async function loadContent() {
                 const heroDiv = document.createElement('div');
                 heroDiv.className = 'content-section-hero';
                 
-                // Check if it's a Vimeo URL
-                if (isVimeoUrl(sectionData.image)) {
-                    const embedUrl = getVimeoEmbedUrl(sectionData.image);
-                    if (embedUrl) {
-                        const iframe = document.createElement('iframe');
-                        iframe.src = embedUrl;
-                        iframe.className = 'content-section-hero-video';
-                        iframe.setAttribute('frameborder', '0');
-                        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
-                        iframe.setAttribute('allowfullscreen', '');
-                        heroDiv.appendChild(iframe);
-                    }
-                } else {
+                    // Check if it's a Vimeo URL
+                    if (isVimeoUrl(sectionData.image)) {
+                        const embedUrl = getVimeoEmbedUrl(sectionData.image);
+                        if (embedUrl) {
+                            const iframe = document.createElement('iframe');
+                            iframe.src = embedUrl;
+                            iframe.className = 'content-section-hero-video';
+                            iframe.setAttribute('frameborder', '0');
+                            iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                            iframe.setAttribute('allowfullscreen', '');
+                            iframe.style.width = '100%';
+                            iframe.style.height = '100%';
+                            iframe.style.position = 'absolute';
+                            iframe.style.top = '0';
+                            iframe.style.left = '0';
+                            heroDiv.appendChild(iframe);
+                        }
+                    } else {
                     // Regular image
                     const img = document.createElement('img');
                     img.src = sectionData.image;
@@ -261,6 +271,11 @@ async function loadContent() {
                             iframe.setAttribute('frameborder', '0');
                             iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
                             iframe.setAttribute('allowfullscreen', '');
+                            iframe.style.width = '100%';
+                            iframe.style.height = '100%';
+                            iframe.style.position = 'absolute';
+                            iframe.style.top = '0';
+                            iframe.style.left = '0';
                             heroDiv.appendChild(iframe);
                         }
                     } else {
