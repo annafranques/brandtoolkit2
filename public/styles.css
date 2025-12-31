@@ -1414,7 +1414,22 @@ body {
     }
     
     .content-section-content {
-        padding: 1rem 1.5rem;
+        padding: 0;
+    }
+    
+    .content-section-content > p,
+    .content-section-content > h3,
+    .content-section-content > h4,
+    .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+        padding: 0 1.5rem;
+    }
+    
+    .content-section-content > *:first-child {
+        padding-top: 1rem;
+    }
+    
+    .content-section-content > *:last-child {
+        padding-bottom: 1rem;
     }
     
     .content-section:not(.has-hero) h2 {
@@ -1426,7 +1441,15 @@ body {
     .subsection {
         grid-template-columns: 1fr;
         gap: 1.5rem;
-        padding: 2rem 1.5rem;
+        padding: 0;
+    }
+    
+    .subsection-title {
+        padding: 2rem 1.5rem 0 1.5rem;
+    }
+    
+    .subsection-content {
+        padding: 0 1.5rem;
     }
     
     .subsection .subsection-images {
