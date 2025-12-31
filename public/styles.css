@@ -49,20 +49,22 @@ body {
     overflow-x: hidden;
 }
 
-/* Fade-in animation for elements */
-@keyframes fadeInUp {
+/* Mask up animation for elements */
+@keyframes maskUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        clip-path: inset(100% 0 0 0);
+        transform: translateY(40px);
     }
     to {
         opacity: 1;
+        clip-path: inset(0 0 0 0);
         transform: translateY(0);
     }
 }
 
 .fade-in {
-    animation: fadeInUp 0.8s ease-out forwards;
+    animation: maskUp 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .fade-in-delay-1 {
