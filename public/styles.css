@@ -833,7 +833,7 @@ body {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     margin: 0;
-    padding: 0 5rem;
+    padding: 0;
 }
 
 .color-item-wrapper {
