@@ -1313,7 +1313,19 @@ async function loadTypographyPreview() {
             throw new Error('Failed to load typography data');
         }
         const typographyData = await response.json();
-        await renderTypographyPreview(typographyData);
+        cachedTypographyData = typographyData;
+        
+        // Also cache content data
+        try {
+            const contentResponse = await fetch('/api/content');
+            if (contentResponse.ok) {
+                cachedContentData = await contentResponse.json();
+            }
+        } catch (error) {
+            console.error('Error loading content for typography preview:', error);
+        }
+        
+        await renderTypographyPreview(typographyData, cachedContentData);
     } catch (error) {
         console.error('Error loading typography preview:', error);
     }
