@@ -1964,73 +1964,99 @@ function setupLogotypeSubsectionImageHandlers() {
         if (!input.hasAttribute('data-handler-added')) {
             input.setAttribute('data-handler-added', 'true');
             input.addEventListener('change', async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
                 
-                // Check file size before processing
-                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
-                if (file.size > MAX_FILE_SIZE) {
-                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                    const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-                    showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
+                // Limit to 3 images
+                if (files.length > 3) {
+                    showStatus('You can only select up to 3 images. Please select 3 or fewer images.', 'error');
                     input.value = '';
-                    input.removeAttribute('data-base64');
                     return;
                 }
                 
                 const subsectionIndex = this.getAttribute('data-logotype-subsection-index');
-                const imageIndex = this.getAttribute('data-image-index') || '0';
                 const label = document.querySelector(`label[for="${this.id}"]`);
                 const filenameDisplay = document.getElementById(`${this.id}-filename`);
-                const preview = document.getElementById(`logotype-subsection-preview-${subsectionIndex}-${imageIndex}`);
+                const preview = document.getElementById(`logotype-subsection-preview-${subsectionIndex}`);
                 
-                // Update label
-                if (label) {
-                    label.classList.add('has-file');
-                    const uploadText = label.querySelector('.upload-text');
-                    if (uploadText) {
-                        uploadText.textContent = 'Change Image';
-                    }
-                }
-                
-                // Update filename display
-                if (filenameDisplay) {
-                    filenameDisplay.textContent = file.name;
-                    filenameDisplay.style.display = 'block';
-                }
-                
-                // Update preview and store base64 data on input (for getImageFromInput)
-                if (preview) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const base64Data = e.target.result;
-                        // Double-check the base64 string size
-                        const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
-                        if (base64Data.length > MAX_BASE64_SIZE) {
-                            showStatus('File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.', 'error');
-                            input.value = '';
-                            input.removeAttribute('data-base64');
+                // Check file sizes and convert to base64
+                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+                const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                const imagePromises = files.map(file => {
+                    return new Promise((resolve, reject) => {
+                        // Check file size
+                        if (file.size > MAX_FILE_SIZE) {
+                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                            const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                            reject(new Error(`File "${file.name}" (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB.`));
                             return;
                         }
-                        // Store base64 data on input so getImageFromInput can retrieve it
-                        input.setAttribute('data-base64', base64Data);
                         
-                        const previewId = preview.id;
-                        preview.innerHTML = renderImagePreview(base64Data, previewId, input);
-                        
-                        // Attach remove handler
-                        const removeBtn = preview.querySelector('.remove-image-btn');
-                        if (removeBtn) {
-                            removeBtn.setAttribute('data-input-id', input.id);
-                            removeBtn.setAttribute('data-preview-id', previewId);
-                            removeBtn.addEventListener('click', function(ev) {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                removeImage(input, previewId);
-                            });
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const base64Data = e.target.result;
+                            // Check base64 size
+                            if (base64Data.length > MAX_BASE64_SIZE) {
+                                reject(new Error(`File "${file.name}" is too large after encoding. Maximum size is approximately 12MB.`));
+                                return;
+                            }
+                            resolve(base64Data);
+                        };
+                        reader.onerror = () => reject(new Error(`Failed to read file "${file.name}"`));
+                        reader.readAsDataURL(file);
+                    });
+                });
+                
+                try {
+                    const base64Images = await Promise.all(imagePromises);
+                    
+                    // Store images array on input
+                    input.setAttribute('data-images', JSON.stringify(base64Images));
+                    
+                    // Update label
+                    if (label) {
+                        label.classList.add('has-file');
+                        const uploadText = label.querySelector('.upload-text');
+                        if (uploadText) {
+                            uploadText.textContent = base64Images.length === 1 ? 'Change Image' : `Change Images (${base64Images.length})`;
                         }
-                    };
-                    reader.readAsDataURL(file);
+                    }
+                    
+                    // Update filename display
+                    if (filenameDisplay) {
+                        filenameDisplay.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
+                        filenameDisplay.style.display = 'block';
+                    }
+                    
+                    // Update preview
+                    if (preview) {
+                        const previewId = preview.id;
+                        preview.innerHTML = base64Images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
+                        
+                        // Attach remove handlers
+                        base64Images.forEach((img, idx) => {
+                            const imgPreviewId = `${previewId}-${idx}`;
+                            const imgPreview = document.getElementById(imgPreviewId);
+                            if (imgPreview) {
+                                const removeBtn = imgPreview.querySelector('.remove-image-btn');
+                                if (removeBtn) {
+                                    removeBtn.setAttribute('data-input-id', input.id);
+                                    removeBtn.setAttribute('data-image-index', idx);
+                                    removeBtn.addEventListener('click', function(ev) {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
+                                        removeImageFromArray(input, previewId, idx);
+                                    });
+                                }
+                            }
+                        });
+                    }
+                    
+                    trackSectionChange('logotype');
+                } catch (error) {
+                    showStatus(error.message, 'error');
+                    input.value = '';
+                    input.removeAttribute('data-images');
                 }
             });
         }
