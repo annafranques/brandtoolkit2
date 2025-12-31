@@ -107,6 +107,56 @@ function populateForm(content) {
     }
     
     try {
+        // Helper to populate hero image/video (handles both images and Vimeo URLs)
+        function populateHeroMedia(heroImage, fileInputId, urlInputId, previewId, section) {
+            if (!heroImage) return;
+            
+            const fileInput = document.getElementById(fileInputId) || document.querySelector(`[data-section="${section}"].section-hero-image-input`);
+            const urlInput = document.getElementById(urlInputId);
+            const preview = document.getElementById(previewId);
+            
+            if (!fileInput || !preview) return;
+            
+            // Ensure input has an ID
+            if (!fileInput.id) fileInput.id = fileInputId;
+            // Wrap with styled upload UI if not already wrapped
+            wrapFileInputWithStyledUpload(fileInput);
+            
+            // Check if it's a Vimeo URL
+            if (isVimeoUrl(heroImage)) {
+                // Set URL input
+                if (urlInput) {
+                    urlInput.value = heroImage;
+                }
+                // Set preview for Vimeo
+                const embedUrl = getVimeoEmbedUrl(heroImage);
+                if (embedUrl) {
+                    preview.innerHTML = `
+                        <div style="position: relative; display: inline-block; margin-top: 1rem;">
+                            <iframe src="${embedUrl}" width="560" height="315" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></iframe>
+                            <button type="button" class="remove-image-btn" data-input-id="${fileInputId}" data-preview-id="${previewId}" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove video">×</button>
+                        </div>
+                    `;
+                }
+            } else {
+                // Regular image
+                preview.innerHTML = renderImagePreview(heroImage, previewId, fileInput);
+                // Set data attribute
+                fileInput.setAttribute('data-base64', heroImage || '');
+                // Update styled upload label
+                updateStyledUploadLabel(fileInput);
+            }
+            
+            // Attach remove handler
+            const removeBtn = preview.querySelector('.remove-image-btn');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    removeImage(fileInput, previewId);
+                    if (urlInput) urlInput.value = '';
+                });
+            }
+        }
+        
         // Helper to safely set value - skip file inputs
         function setValueSafely(id, value) {
             try {
@@ -180,28 +230,8 @@ function populateForm(content) {
     
     // 00. The Name of the Project - Hero Image
     if (content.frameRebel) {
-        // Hero image for frameRebel section
-        const frameRebelHeroInput = document.querySelector('[data-section="frameRebel"].section-hero-image-input');
-        const frameRebelHeroPreview = document.getElementById('frame-rebel-hero-preview');
-        if (content.frameRebel.image && frameRebelHeroPreview && frameRebelHeroInput) {
-            // Ensure input has an ID
-            if (!frameRebelHeroInput.id) frameRebelHeroInput.id = 'frame-rebel-hero-input';
-            // Wrap with styled upload UI if not already wrapped
-            wrapFileInputWithStyledUpload(frameRebelHeroInput);
-            // Set the preview
-            frameRebelHeroPreview.innerHTML = renderImagePreview(content.frameRebel.image, 'frame-rebel-hero-preview', frameRebelHeroInput);
-            // Set data attribute
-            frameRebelHeroInput.setAttribute('data-base64', content.frameRebel.image || '');
-            // Update styled upload label
-            updateStyledUploadLabel(frameRebelHeroInput);
-            // Attach remove handler
-            const removeBtn = frameRebelHeroPreview.querySelector('.remove-image-btn');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', function() {
-                    removeImage(frameRebelHeroInput, 'frame-rebel-hero-preview');
-                });
-            }
-        }
+        // Hero image/video for frameRebel section
+        populateHeroMedia(content.frameRebel.image, 'frame-rebel-hero-input', 'frame-rebel-hero-url', 'frame-rebel-hero-preview', 'frameRebel');
         // About The Project - merge any existing introduction content
         const aboutEl = document.getElementById('frame-rebel-about-content');
         if (aboutEl && content.frameRebel.aboutTheProject) {
@@ -310,28 +340,8 @@ function populateForm(content) {
     
     // 01. Logotype - Hero Image
     if (content.logotype) {
-        // Hero image for logotype section
-        const logotypeHeroInput = document.getElementById('logotype-hero-input') || document.querySelector('[data-section="logotype"].section-hero-image-input');
-        const logotypeHeroPreview = document.getElementById('logotype-hero-preview');
-        if (content.logotype.image && logotypeHeroPreview && logotypeHeroInput) {
-            // Ensure input has an ID
-            if (!logotypeHeroInput.id) logotypeHeroInput.id = 'logotype-hero-input';
-            // Wrap with styled upload UI if not already wrapped
-            wrapFileInputWithStyledUpload(logotypeHeroInput);
-            // Set the preview
-            logotypeHeroPreview.innerHTML = renderImagePreview(content.logotype.image, 'logotype-hero-preview', logotypeHeroInput);
-            // Set data attribute
-            logotypeHeroInput.setAttribute('data-base64', content.logotype.image || '');
-            // Update styled upload label
-            updateStyledUploadLabel(logotypeHeroInput);
-            // Attach remove handler
-            const removeBtn = logotypeHeroPreview.querySelector('.remove-image-btn');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', function() {
-                    removeImage(logotypeHeroInput, 'logotype-hero-preview');
-                });
-            }
-        }
+        // Hero image/video for logotype section
+        populateHeroMedia(content.logotype.image, 'logotype-hero-input', 'logotype-hero-url', 'logotype-hero-preview', 'logotype');
         // Load main logo image
         const mainLogoPreview = document.getElementById('main-logo-preview');
         const mainLogoInput = document.getElementById('main-logo-upload');
@@ -388,27 +398,8 @@ function populateForm(content) {
     
     // 02. Color - Hero Image
     if (content.color) {
-        const colorHeroInput = document.getElementById('color-hero-input') || document.querySelector('[data-section="color"].section-hero-image-input');
-        const colorHeroPreview = document.getElementById('color-hero-preview');
-        if (content.color.image && colorHeroPreview && colorHeroInput) {
-            // Ensure input has an ID
-            if (!colorHeroInput.id) colorHeroInput.id = 'color-hero-input';
-            // Wrap with styled upload UI if not already wrapped
-            wrapFileInputWithStyledUpload(colorHeroInput);
-            // Set the preview
-            colorHeroPreview.innerHTML = renderImagePreview(content.color.image, 'color-hero-preview', colorHeroInput);
-            // Set data attribute
-            colorHeroInput.setAttribute('data-base64', content.color.image || '');
-            // Update styled upload label
-            updateStyledUploadLabel(colorHeroInput);
-            // Attach remove handler
-            const removeBtn = colorHeroPreview.querySelector('.remove-image-btn');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', function() {
-                    removeImage(colorHeroInput, 'color-hero-preview');
-                });
-            }
-        }
+        // Hero image/video for color section
+        populateHeroMedia(content.color.image, 'color-hero-input', 'color-hero-url', 'color-hero-preview', 'color');
     }
     
     // 03. Color subsections (images are auto-generated, no image uploads)
@@ -458,27 +449,8 @@ function populateForm(content) {
     // 04. Typography Section
     if (content.typographySection) {
         // Hero image for typographySection
-        const typographyHeroInput = document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input');
-        const typographyHeroPreview = document.getElementById('typography-hero-preview');
-        if (content.typographySection.image && typographyHeroPreview && typographyHeroInput) {
-            // Ensure input has an ID
-            if (!typographyHeroInput.id) typographyHeroInput.id = 'typography-hero-input';
-            // Wrap with styled upload UI if not already wrapped
-            wrapFileInputWithStyledUpload(typographyHeroInput);
-            // Set the preview
-            typographyHeroPreview.innerHTML = renderImagePreview(content.typographySection.image, 'typography-hero-preview', typographyHeroInput);
-            // Set data attribute
-            typographyHeroInput.setAttribute('data-base64', content.typographySection.image || '');
-            // Update styled upload label
-            updateStyledUploadLabel(typographyHeroInput);
-            // Attach remove handler
-            const removeBtn = typographyHeroPreview.querySelector('.remove-image-btn');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', function() {
-                    removeImage(typographyHeroInput, 'typography-hero-preview');
-                });
-            }
-        }
+        // Hero image/video for typography section
+        populateHeroMedia(content.typographySection.image, 'typography-hero-input', 'typography-hero-url', 'typography-hero-preview', 'typographySection');
         
         // Load download URL
         if (content.typographySection.downloadUrl) {
@@ -515,6 +487,11 @@ function populateForm(content) {
     if (content.applications) {
         // Hero image for applications section (check if it's an object with image property)
         if (!Array.isArray(content.applications) && content.applications.image) {
+            // Hero image/video for applications section
+            populateHeroMedia(content.applications.image, 'applications-hero-input', 'applications-hero-url', 'applications-hero-preview', 'applications');
+            
+            // Old code below is replaced by populateHeroMedia, keeping for reference:
+            /*
             const applicationsHeroInput = document.getElementById('applications-hero-input') || document.querySelector('[data-section="applications"].section-hero-image-input');
             const applicationsHeroPreview = document.getElementById('applications-hero-preview');
             if (applicationsHeroPreview && applicationsHeroInput) {
@@ -2498,6 +2475,34 @@ function fileToBase64(file) {
     });
 }
 
+// Helper function to check if URL is a Vimeo link
+function isVimeoUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    return /vimeo\.com/.test(url);
+}
+
+// Helper function to convert Vimeo URL to embed URL
+function getVimeoEmbedUrl(url) {
+    if (!isVimeoUrl(url)) return null;
+    
+    // Extract video ID from various Vimeo URL formats
+    let videoId = null;
+    
+    const playerMatch = url.match(/player\.vimeo\.com\/video\/(\d+)/);
+    if (playerMatch) {
+        videoId = playerMatch[1];
+    } else {
+        const standardMatch = url.match(/vimeo\.com\/(\d+)/);
+        if (standardMatch) {
+            videoId = standardMatch[1];
+        }
+    }
+    
+    if (!videoId) return null;
+    
+    return `https://player.vimeo.com/video/${videoId}?background=1&autoplay=1&loop=1&muted=1&controls=0`;
+}
+
 // Helper to get image from file input (returns base64 string)
 function getImageFromInput(input, existingValue = '') {
     return new Promise(async (resolve) => {
@@ -2509,20 +2514,20 @@ function getImageFromInput(input, existingValue = '') {
             
             // Check if image was explicitly cleared (empty string in data-base64)
             if (input.hasAttribute('data-base64')) {
-                const base64Data = input.getAttribute('data-base64');
+            const base64Data = input.getAttribute('data-base64');
                 resolve(base64Data || ''); // Return empty string if explicitly cleared
                 return;
             }
             
                         // Check if there's a file currently selected - convert to base64
-                        if (input.files && input.files[0]) {
+            if (input.files && input.files[0]) {
                             try {
                                 const base64Data = await fileToBase64(input.files[0]);
                                 // Store base64 data on input for future saves
                                 input.setAttribute('data-base64', base64Data);
                                 resolve(base64Data);
-                                return;
-                            } catch (err) {
+                    return;
+                } catch (err) {
                                 console.error('Error converting file to base64:', err);
                                 // Show user-friendly error message
                                 if (err.message && err.message.includes('exceeds')) {
@@ -2534,9 +2539,9 @@ function getImageFromInput(input, existingValue = '') {
                                 input.value = '';
                                 input.removeAttribute('data-base64');
                                 resolve(existingValue); // Keep existing image
-                                return;
-                            }
-                        }
+                    return;
+                }
+            }
             
             // Otherwise use existing value (preserve existing image)
             resolve(existingValue || '');
@@ -2575,9 +2580,22 @@ async function rebuildContentFromForm() {
         return el.value !== null && el.value !== undefined ? el.value : defaultValue;
     }
     
-    // Helper to get hero image from input (synchronous for base64 images)
+    // Helper to get hero image from input (checks URL input first, then file input)
     function getHeroImageFromInput(input, existingImage) {
         if (!input) return existingImage || '';
+        
+        const section = input.getAttribute('data-section');
+        if (section) {
+            // Check if there's a URL input for this section
+            const urlInputId = input.id ? input.id.replace('-input', '-url') : null;
+            const urlInput = urlInputId ? document.getElementById(urlInputId) : null;
+            
+            if (urlInput && urlInput.value.trim()) {
+                // URL input has value - use it (for Vimeo URLs)
+                return urlInput.value.trim();
+            }
+        }
+        
         // Check if data-base64 attribute exists (even if empty string)
         // This allows us to explicitly clear images by setting data-base64 to empty string
         if (input.hasAttribute('data-base64')) {
@@ -3388,7 +3406,7 @@ function removeImage(input, previewId) {
         }
         
         // Track section change when image is removed
-        const section = input.getAttribute('data-section');
+            const section = input.getAttribute('data-section');
         const subsection = input.getAttribute('data-subsection');
         
         if (input.classList.contains('section-hero-image-input') && section) {
@@ -3484,8 +3502,84 @@ function setupRemoveImageButtons() {
 // Setup hero image upload handlers for main sections (now handled by setupImageUploadHandlers)
 // This function is kept for backwards compatibility but hero images are now handled via setupImageUploadHandlers
 function setupHeroImageUploadHandlers() {
-    // Hero images are now handled by setupImageUploadHandlers along with other image inputs
-    // This function is kept to avoid breaking any calls to it
+    // Setup URL input handlers for hero images (Vimeo support)
+    document.querySelectorAll('.section-hero-url-input').forEach(urlInput => {
+        if (!urlInput.hasAttribute('data-url-handler-added')) {
+            urlInput.setAttribute('data-url-handler-added', 'true');
+            
+            urlInput.addEventListener('input', function() {
+                const url = this.value.trim();
+                const section = this.getAttribute('data-section');
+                if (!section) return;
+                
+                // Find corresponding file input and preview
+                const fileInputId = this.id.replace('-url', '-input');
+                const fileInput = document.getElementById(fileInputId) || document.querySelector(`[data-section="${section}"].section-hero-image-input`);
+                const previewId = this.id.replace('-url', '-preview');
+                const preview = document.getElementById(previewId);
+                
+                if (!preview) return;
+                
+                // Clear file input when URL is entered
+                if (url && fileInput) {
+                    fileInput.value = '';
+                    fileInput.removeAttribute('data-base64');
+                    // Reset styled upload label
+                    const wrapper = fileInput.closest('.file-upload-wrapper');
+                    if (wrapper) {
+                        const label = wrapper.querySelector('.file-upload-label');
+                        const filenameDisplay = wrapper.querySelector('.file-name-display');
+                        if (label) {
+                            label.classList.remove('has-file');
+                            const uploadText = label.querySelector('.upload-text');
+                            if (uploadText) {
+                                uploadText.textContent = 'Upload images/videos';
+                            }
+                        }
+                        if (filenameDisplay) {
+                            filenameDisplay.textContent = '';
+                            filenameDisplay.style.display = 'none';
+                        }
+                    }
+                }
+                
+                // Update preview if it's a Vimeo URL
+                if (url && isVimeoUrl(url)) {
+                    const embedUrl = getVimeoEmbedUrl(url);
+                    if (embedUrl) {
+                        preview.innerHTML = `
+                            <div style="position: relative; display: inline-block; margin-top: 1rem;">
+                                <iframe src="${embedUrl}" width="560" height="315" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></iframe>
+                                <button type="button" class="remove-image-btn" data-input-id="${fileInputId}" data-preview-id="${previewId}" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove video">×</button>
+                            </div>
+                        `;
+                        // Attach remove handler
+                        const removeBtn = preview.querySelector('.remove-image-btn');
+                        if (removeBtn) {
+                            removeBtn.addEventListener('click', function() {
+                                urlInput.value = '';
+                                preview.innerHTML = '';
+                                if (fileInput) {
+                                    fileInput.value = '';
+                                    fileInput.removeAttribute('data-base64');
+                                }
+                            });
+                        }
+                    }
+                } else if (!url) {
+                    // Clear preview if URL is empty
+                    preview.innerHTML = '';
+                }
+                
+                // Track section change
+                if (section) {
+                    trackSectionChange(section === 'typographySection' ? 'typographySection.image' : `${section}.image`);
+                }
+            });
+        }
+    });
+    
+    // Hero images are also handled by setupImageUploadHandlers for file uploads
 }
 
 // Setup image upload handlers

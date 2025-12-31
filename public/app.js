@@ -14,6 +14,37 @@ function rgbToHex(rgb) {
 }
 window.rgbToHex = rgbToHex;
 
+// Helper function to check if URL is a Vimeo link
+function isVimeoUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    return /vimeo\.com/.test(url);
+}
+
+// Helper function to convert Vimeo URL to embed URL
+function getVimeoEmbedUrl(url) {
+    if (!isVimeoUrl(url)) return null;
+    
+    // Extract video ID from various Vimeo URL formats:
+    // https://vimeo.com/123456789
+    // https://vimeo.com/123456789?share=copy
+    // https://player.vimeo.com/video/123456789
+    let videoId = null;
+    
+    const playerMatch = url.match(/player\.vimeo\.com\/video\/(\d+)/);
+    if (playerMatch) {
+        videoId = playerMatch[1];
+    } else {
+        const standardMatch = url.match(/vimeo\.com\/(\d+)/);
+        if (standardMatch) {
+            videoId = standardMatch[1];
+        }
+    }
+    
+    if (!videoId) return null;
+    
+    return `https://player.vimeo.com/video/${videoId}?background=1&autoplay=1&loop=1&muted=1&controls=0`;
+}
+
 // Helper function to convert markdown bold (**text**) to HTML bold
 function parseMarkdownBold(text) {
     if (!text) return '';
@@ -87,9 +118,9 @@ async function loadContent() {
         const defaultLightColors = ['#ffffff', '#f5f5f5'];
         const sectionColors = lightColors.length > 0 ? lightColors : defaultLightColors;
         
-        // Helper function to add hero image to a section
-        function addSectionHero(section, heroImage, sectionTitle) {
-            if (!section || !heroImage) return;
+        // Helper function to add hero image or video to a section
+        function addSectionHero(section, heroMedia, sectionTitle) {
+            if (!section || !heroMedia) return;
             
             const h2 = section.querySelector('h2');
             if (!h2) return;
@@ -99,11 +130,28 @@ async function loadContent() {
             if (!existingHero) {
                 const heroDiv = document.createElement('div');
                 heroDiv.className = 'content-section-hero';
-                const img = document.createElement('img');
-                img.src = heroImage;
-                img.alt = sectionTitle || '';
-                img.className = 'content-section-hero-image';
-                heroDiv.appendChild(img);
+                
+                // Check if it's a Vimeo URL
+                if (isVimeoUrl(heroMedia)) {
+                    const embedUrl = getVimeoEmbedUrl(heroMedia);
+                    if (embedUrl) {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = embedUrl;
+                        iframe.className = 'content-section-hero-video';
+                        iframe.setAttribute('frameborder', '0');
+                        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                        iframe.setAttribute('allowfullscreen', '');
+                        heroDiv.appendChild(iframe);
+                    }
+                } else {
+                    // Regular image
+                    const img = document.createElement('img');
+                    img.src = heroMedia;
+                    img.alt = sectionTitle || '';
+                    img.className = 'content-section-hero-image';
+                    heroDiv.appendChild(img);
+                }
+                
                 const h2Clone = h2.cloneNode(true);
                 heroDiv.appendChild(h2Clone);
                 section.insertBefore(heroDiv, section.firstChild);
@@ -128,21 +176,35 @@ async function loadContent() {
             const h2 = section.querySelector('h2');
             if (!h2) return;
             
-            let hasImage = false;
+            let hasMedia = false;
             if (sectionData && typeof sectionData === 'object' && sectionData.image) {
-                hasImage = true;
+                hasMedia = true;
                 section.classList.add('has-hero');
                 
                 // Create hero div
                 const heroDiv = document.createElement('div');
                 heroDiv.className = 'content-section-hero';
                 
-                // Create and add image
-                const img = document.createElement('img');
-                img.src = sectionData.image;
-                img.alt = sectionTitle || '';
-                img.className = 'content-section-hero-image';
-                heroDiv.appendChild(img);
+                // Check if it's a Vimeo URL
+                if (isVimeoUrl(sectionData.image)) {
+                    const embedUrl = getVimeoEmbedUrl(sectionData.image);
+                    if (embedUrl) {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = embedUrl;
+                        iframe.className = 'content-section-hero-video';
+                        iframe.setAttribute('frameborder', '0');
+                        iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                        iframe.setAttribute('allowfullscreen', '');
+                        heroDiv.appendChild(iframe);
+                    }
+                } else {
+                    // Regular image
+                    const img = document.createElement('img');
+                    img.src = sectionData.image;
+                    img.alt = sectionTitle || '';
+                    img.className = 'content-section-hero-image';
+                    heroDiv.appendChild(img);
+                }
                 
                 // Move h2 into hero
                 const h2Clone = h2.cloneNode(true);
