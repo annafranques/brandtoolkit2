@@ -2665,9 +2665,11 @@ async function saveContent() {
             const result = await response.json();
             if (result.success || result.content) {
                 currentContent = result.content || currentContent;
+                // Update originalContent to match currentContent to reset change tracking
+                originalContent = JSON.parse(JSON.stringify(currentContent));
+                changedSections.clear(); // Reset changed sections
                 showStatus(`Saved ${sectionsToSave.length} section(s) successfully!`, 'success');
-                // Reload to sync and reset tracking
-                await loadContent();
+                // Don't reload content - just sync the tracking to avoid blank page flash
             } else {
                 throw new Error('Save returned unsuccessful result');
             }
@@ -2801,8 +2803,11 @@ async function saveContentFull() {
         const result = await response.json();
         if (result.success || result.content) {
             currentContent = result.content || content;
+            // Update originalContent to match currentContent to reset change tracking
+            originalContent = JSON.parse(JSON.stringify(currentContent));
+            changedSections.clear(); // Reset changed sections
             showStatus('Content saved successfully!', 'success');
-            await loadContent();
+            // Don't reload content - just sync the tracking to avoid blank page flash
         } else {
             throw new Error('Save returned unsuccessful result');
         }
