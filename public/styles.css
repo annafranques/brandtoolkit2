@@ -1312,7 +1312,7 @@ body {
     }
     
     .content-section-hero-image {
-        left: -28%;
+        left: -28vw;
         width: 100vw;
     }
     
@@ -1354,7 +1354,7 @@ body {
     }
     
     .subsection-images {
-        margin-left: -28%;
+        margin-left: -28vw;
         width: 100vw;
     }
     
