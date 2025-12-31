@@ -18,11 +18,61 @@
     box-sizing: border-box;
 }
 
+/* Hide scrollbars but keep functionality */
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+* {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+html {
+    overflow: -moz-scrollbars-none; /* Old Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
 body {
     font-family: 'Favorit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: #fff;
     color: #000;
     min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Fade-in animation for elements */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.fade-in-delay-1 {
+    animation-delay: 0.1s;
+}
+
+.fade-in-delay-2 {
+    animation-delay: 0.2s;
+}
+
+.fade-in-delay-3 {
+    animation-delay: 0.3s;
+}
+
+.fade-in-delay-4 {
+    animation-delay: 0.4s;
 }
 
 /* Admin Preloader - Hide admin content until authenticated */
@@ -82,6 +132,7 @@ body {
     position: fixed;
     height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
     z-index: 100;
 }
 
