@@ -353,8 +353,8 @@ body {
 .content-section-hero-image {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: -300px;
+    width: calc(100vw - 300px);
     height: 100%;
     object-fit: cover;
     z-index: 1;
@@ -683,7 +683,7 @@ body {
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    padding: 3rem 5rem 3rem 5rem;
+    padding: 3rem 5rem 0 5rem;
 }
 
 .download-logo-btn {
@@ -709,15 +709,16 @@ body {
     font-size: 0.875rem;
     line-height: 1.5;
     color: #000;
-    padding: 3rem 5rem;
+    padding: 0 5rem 3rem 5rem;
 }
 
-/* Subsection images grid (max 3 columns) - full width, no padding */
+/* Subsection images grid (max 3 columns) - full width from navbar edge to right edge */
 .subsection-images {
     display: grid;
     gap: 0;
     margin: 0;
-    width: 100%;
+    width: calc(100vw - 300px);
+    margin-left: -300px;
     padding: 0;
 }
 
@@ -832,6 +833,7 @@ body {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     margin: 0;
+    padding: 0 5rem;
 }
 
 .color-item-wrapper {
@@ -874,7 +876,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-top: 2rem;
-    padding: 2rem 0;
+    padding: 2rem 5rem;
 }
 
 /* Make color examples grid span full width in grid subsections */
@@ -1155,7 +1157,7 @@ body {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 4px;
-    padding: 2rem;
+    padding: 2rem 5rem;
 }
 
 .preview-header {
@@ -1309,48 +1311,9 @@ body {
         padding: 0;
     }
     
-    .content-section-hero h2 {
-        font-size: 2rem;
-        padding: 0 3rem;
-    }
-    
-    .content-section-content {
-        padding: 1rem 3rem;
-    }
-    
-    .content-section:not(.has-hero) h2 {
-        font-size: 2rem;
-        padding: 3rem 3rem 0 3rem;
-    }
-    
-    .subsection-title {
-        padding: 3rem 3rem 0 3rem;
-    }
-    
-    .subsection-content {
-        padding: 0 3rem;
-    }
-    
-    .content-section-content > p,
-    .content-section-content > h3,
-    .content-section-content > h4,
-    .content-section-content > div:not(.subsection-images):not(.subsection-image) {
-        padding: 0 3rem;
-    }
-}
-
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 300px;
-    }
-    
-    .main-content {
-        width: calc(100% - 300px);
-        margin-left: 300px;
-    }
-    
-    .content-section-hero {
-        padding: 0;
+    .content-section-hero-image {
+        left: -28%;
+        width: 100vw;
     }
     
     .content-section-hero h2 {
@@ -1387,7 +1350,98 @@ body {
     }
     
     .subsection-content {
+        padding: 0 3rem 3rem 3rem;
+    }
+    
+    .subsection-images {
+        margin-left: -28%;
+        width: 100vw;
+    }
+    
+    .color-grid {
         padding: 0 3rem;
+    }
+    
+    .color-examples-grid {
+        padding: 2rem 3rem;
+    }
+    
+    .typography-preview-container {
+        padding: 2rem 3rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 300px;
+    }
+    
+    .main-content {
+        width: calc(100% - 300px);
+        margin-left: 300px;
+    }
+    
+    .content-section-hero {
+        padding: 0;
+    }
+    
+    .content-section-hero-image {
+        left: -300px;
+        width: calc(100vw - 300px);
+    }
+    
+    .content-section-hero h2 {
+        font-size: 2rem;
+        padding: 0 3rem;
+    }
+    
+    .content-section-content {
+        padding: 0;
+    }
+    
+    .content-section-content > p,
+    .content-section-content > h3,
+    .content-section-content > h4,
+    .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+        padding: 0 3rem;
+    }
+    
+    .content-section-content > *:first-child {
+        padding-top: 1rem;
+    }
+    
+    .content-section-content > *:last-child {
+        padding-bottom: 1rem;
+    }
+    
+    .content-section:not(.has-hero) h2 {
+        font-size: 2rem;
+        padding: 3rem 3rem 0 3rem;
+    }
+    
+    .subsection-title {
+        padding: 3rem 3rem 0 3rem;
+    }
+    
+    .subsection-content {
+        padding: 0 3rem 3rem 3rem;
+    }
+    
+    .subsection-images {
+        margin-left: -300px;
+        width: calc(100vw - 300px);
+    }
+    
+    .color-grid {
+        padding: 0 3rem;
+    }
+    
+    .color-examples-grid {
+        padding: 2rem 3rem;
+    }
+    
+    .typography-preview-container {
+        padding: 2rem 3rem;
     }
 }
 
@@ -1410,6 +1464,11 @@ body {
     
     .content-section-hero {
         padding: 0;
+    }
+    
+    .content-section-hero-image {
+        left: 0;
+        width: 100%;
     }
     
     .content-section-hero h2 {
@@ -1453,7 +1512,24 @@ body {
     }
     
     .subsection-content {
+        padding: 0 1.5rem 2rem 1.5rem;
+    }
+    
+    .subsection-images {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .color-grid {
         padding: 0 1.5rem;
+    }
+    
+    .color-examples-grid {
+        padding: 2rem 1.5rem;
+    }
+    
+    .typography-preview-container {
+        padding: 2rem 1.5rem;
     }
     
     .subsection .subsection-images {
@@ -1507,6 +1583,6 @@ body {
 
 
 
-.content-section-content > p, .content-section-content > h3, .content-section-content > h4, .content-section-content > div:not(.subsection-images):not(.subsection-image), .subsection .color-examples-grid {
-    padding: 0 3rem;
+.content-section-content > p, .content-section-content > h3, .content-section-content > h4, .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+    padding: 0 5rem;
 }
