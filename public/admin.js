@@ -4323,6 +4323,100 @@ function renderFontsList() {
             `).join('')}
         </div>
     `;
+    
+    // Also render typography style toggles
+    renderTypographyStylesList();
+}
+
+// Render typography style uppercase toggles
+function renderTypographyStylesList() {
+    const stylesList = document.getElementById('typography-styles-list');
+    if (!stylesList) return;
+    
+    const styleLabels = {
+        display: 'Display',
+        heading1: 'Heading 1',
+        heading2: 'Heading 2',
+        heading3: 'Heading 3',
+        heading4: 'Heading 4',
+        body1: 'Body 1',
+        body2: 'Body 2',
+        button: 'Button',
+        tag: 'Tag',
+        caption: 'Caption'
+    };
+    
+    const { typography = {} } = typographyData;
+    
+    stylesList.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+            ${Object.keys(styleLabels).map(styleName => {
+                const styleConfig = typography[styleName] || {};
+                const isUppercase = styleConfig.uppercase || false;
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+                        <label style="font-weight: 500; cursor: pointer; flex: 1; margin: 0;" for="typography-style-uppercase-${styleName}">
+                            ${styleLabels[styleName]}
+                        </label>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; margin: 0;">
+                            <input type="checkbox" 
+                                   id="typography-style-uppercase-${styleName}" 
+                                   class="typography-style-uppercase-toggle" 
+                                   data-style-name="${styleName}"
+                                   ${isUppercase ? 'checked' : ''}
+                                   style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${isUppercase ? '#000' : '#ccc'}; transition: 0.3s; border-radius: 24px;">
+                                <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; transform: translateX(${isUppercase ? '20px' : '0'});"></span>
+                            </span>
+                        </label>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+    
+    // Attach event listeners to toggles
+    stylesList.querySelectorAll('.typography-style-uppercase-toggle').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const styleName = this.dataset.styleName;
+            updateTypographyStyleUppercase(styleName, this.checked);
+        });
+    });
+}
+
+// Update typography style uppercase setting
+async function updateTypographyStyleUppercase(styleName, uppercase) {
+    try {
+        const response = await fetch('/api/typography');
+        if (!response.ok) throw new Error('Failed to load typography');
+        const data = await response.json();
+        
+        // Get current typography styles
+        const currentStyles = data.typography || {};
+        
+        // Update the specific style
+        if (!currentStyles[styleName]) {
+            currentStyles[styleName] = {};
+        }
+        currentStyles[styleName].uppercase = uppercase;
+        
+        // Save updated styles
+        const saveResponse = await fetch('/api/typography/styles', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ styles: currentStyles })
+        });
+        
+        if (!saveResponse.ok) throw new Error('Failed to save typography style');
+        
+        // Reload typography data
+        await loadTypography();
+        
+        trackSectionChange('typographyStyles');
+    } catch (error) {
+        console.error('Error updating typography style uppercase:', error);
+        showStatus('Error updating typography style', 'error');
+    }
 }
 
 // Delete font
