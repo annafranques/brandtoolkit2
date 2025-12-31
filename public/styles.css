@@ -676,9 +676,52 @@ body {
     gap: 0;
 }
 
-/* Tabbed sections (like Usage) should not use grid layout */
+/* Tabbed sections (like Main logotype) use grid layout with left column for heading/tabs, right for content */
 .logo-usage-section {
+    display: grid;
+    grid-template-columns: 35% 65%;
+    gap: 0;
+    margin: 2rem 0;
+}
+
+.logo-usage-left {
+    padding: 3rem 5rem 0 5rem;
+}
+
+.logo-usage-left .subsection-title {
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.logo-usage-left .download-logo-btn {
     display: block;
+    margin-bottom: 2rem;
+    width: fit-content;
+}
+
+.logo-usage-left .usage-tabs {
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    gap: 0;
+    border-bottom: none;
+}
+
+.logo-usage-left .usage-tab {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.logo-usage-left .usage-tab.active {
+    border-bottom-color: transparent;
+    border-left: 2px solid #000;
+    padding-left: 1rem;
+}
+
+.logo-usage-right {
+    padding: 3rem 0 3rem 0;
 }
 
 .logo-usage-section .subsection {
@@ -1172,9 +1215,6 @@ body {
     display: block;
 }
 
-.logo-usage-section {
-    margin: 2rem 0;
-}
 
 /* Typography Preview Styles */
 .typography-preview-container {
