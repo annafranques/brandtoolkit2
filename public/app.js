@@ -136,18 +136,17 @@ async function loadContent() {
                     if (isVimeoUrl(heroMedia)) {
                         const embedUrl = getVimeoEmbedUrl(heroMedia);
                         if (embedUrl) {
+                            // Wrap iframe in container for cover effect
+                            const videoWrapper = document.createElement('div');
+                            videoWrapper.className = 'content-section-hero-video-wrapper';
                             const iframe = document.createElement('iframe');
                             iframe.src = embedUrl;
                             iframe.className = 'content-section-hero-video';
                             iframe.setAttribute('frameborder', '0');
                             iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
                             iframe.setAttribute('allowfullscreen', '');
-                            iframe.style.width = '100%';
-                            iframe.style.height = '100%';
-                            iframe.style.position = 'absolute';
-                            iframe.style.top = '0';
-                            iframe.style.left = '0';
-                            heroDiv.appendChild(iframe);
+                            videoWrapper.appendChild(iframe);
+                            heroDiv.appendChild(videoWrapper);
                         }
                     } else {
                     // Regular image
@@ -195,18 +194,17 @@ async function loadContent() {
                     if (isVimeoUrl(sectionData.image)) {
                         const embedUrl = getVimeoEmbedUrl(sectionData.image);
                         if (embedUrl) {
+                            // Wrap iframe in container for cover effect
+                            const videoWrapper = document.createElement('div');
+                            videoWrapper.className = 'content-section-hero-video-wrapper';
                             const iframe = document.createElement('iframe');
                             iframe.src = embedUrl;
                             iframe.className = 'content-section-hero-video';
                             iframe.setAttribute('frameborder', '0');
                             iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
                             iframe.setAttribute('allowfullscreen', '');
-                            iframe.style.width = '100%';
-                            iframe.style.height = '100%';
-                            iframe.style.position = 'absolute';
-                            iframe.style.top = '0';
-                            iframe.style.left = '0';
-                            heroDiv.appendChild(iframe);
+                            videoWrapper.appendChild(iframe);
+                            heroDiv.appendChild(videoWrapper);
                         }
                     } else {
                     // Regular image
@@ -266,18 +264,17 @@ async function loadContent() {
                     if (isVimeoUrl(content.frameRebel.image)) {
                         const embedUrl = getVimeoEmbedUrl(content.frameRebel.image);
                         if (embedUrl) {
+                            // Wrap iframe in container for cover effect
+                            const videoWrapper = document.createElement('div');
+                            videoWrapper.className = 'content-section-hero-video-wrapper';
                             const iframe = document.createElement('iframe');
                             iframe.src = embedUrl;
                             iframe.className = 'content-section-hero-video';
                             iframe.setAttribute('frameborder', '0');
                             iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
                             iframe.setAttribute('allowfullscreen', '');
-                            iframe.style.width = '100%';
-                            iframe.style.height = '100%';
-                            iframe.style.position = 'absolute';
-                            iframe.style.top = '0';
-                            iframe.style.left = '0';
-                            heroDiv.appendChild(iframe);
+                            videoWrapper.appendChild(iframe);
+                            heroDiv.appendChild(videoWrapper);
                         }
                     } else {
                         // Regular image
