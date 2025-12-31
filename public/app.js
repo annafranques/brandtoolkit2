@@ -942,16 +942,35 @@ async function loadContent() {
                 if (!isHidden) {
                     const sectionElement = document.getElementById(section.id);
                     if (sectionElement) {
-                        // Special handling for frame-rebel section to use brand name
+                        // Get both regular h2 and hero h2 (if exists)
+                        const h2 = sectionElement.querySelector('h2:not(.content-section-hero h2)');
+                        const heroH2 = sectionElement.querySelector('.content-section-hero h2');
+                        
+                        // Determine the text content
+                        let sectionText;
                         if (section.id === 'frame-rebel') {
-                            const h2 = sectionElement.querySelector('h2');
-                            if (h2) {
-                                h2.textContent = `${String(visibleNumber).padStart(2, '0')}. ${brandName}`;
-                            }
+                            sectionText = `${String(visibleNumber).padStart(2, '0')}. ${brandName}`;
                         } else {
-                            const h2 = sectionElement.querySelector('h2');
-                            if (h2) {
-                                h2.textContent = `${String(visibleNumber).padStart(2, '0')}. ${section.name}`;
+                            sectionText = `${String(visibleNumber).padStart(2, '0')}. ${section.name}`;
+                        }
+                        
+                        // Update regular h2 if it exists
+                        if (h2) {
+                            h2.textContent = sectionText;
+                        }
+                        
+                        // Update hero h2 if it exists (this is the one that displays in hero sections)
+                        if (heroH2) {
+                            // Preserve any button containers that might exist
+                            const buttonsContainer = heroH2.querySelector('.download-buttons-container, .font-download-buttons-container');
+                            if (buttonsContainer) {
+                                heroH2.innerHTML = '';
+                                const textSpan = document.createElement('span');
+                                textSpan.textContent = sectionText;
+                                heroH2.appendChild(textSpan);
+                                heroH2.appendChild(buttonsContainer);
+                            } else {
+                                heroH2.textContent = sectionText;
                             }
                         }
                     }
