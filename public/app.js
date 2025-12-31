@@ -14,6 +14,11 @@ function rgbToHex(rgb) {
 }
 window.rgbToHex = rgbToHex;
 
+// Helper function to check if data URL is a video
+function isVideoDataUrl(dataUrl) {
+    return dataUrl && typeof dataUrl === 'string' && dataUrl.startsWith('data:video/');
+}
+
 // Helper function to check if URL is a Vimeo link
 function isVimeoUrl(url) {
     if (!url || typeof url !== 'string') return false;

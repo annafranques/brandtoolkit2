@@ -2620,13 +2620,16 @@ function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         // Check file size before converting
         // MongoDB has a 16MB document limit, base64 increases size by ~33%
-        // So we limit files to ~12MB to leave room for other content
-        const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+        // For videos, we use a smaller limit (5MB) since they're typically much larger
+        // For images, we allow up to 12MB
+        const isVideo = file.type && file.type.startsWith('video/');
+        const MAX_FILE_SIZE = isVideo ? (5 * 1024 * 1024) : (12 * 1024 * 1024); // 5MB for videos, 12MB for images
         
         if (file.size > MAX_FILE_SIZE) {
             const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
             const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-            reject(new Error(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`));
+            const fileType = isVideo ? 'video' : 'image';
+            reject(new Error(`${fileType.charAt(0).toUpperCase() + fileType.slice(1)} size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the ${fileType}.`));
             return;
         }
         
@@ -3888,11 +3891,15 @@ function setupImageUploadHandlers() {
                 if (!file) return;
                 
                 // Check file size before processing
-                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+                // For videos, use smaller limit (5MB) since they're typically much larger
+                // For images, allow up to 12MB
+                const isVideo = file.type && file.type.startsWith('video/');
+                const MAX_FILE_SIZE = isVideo ? (5 * 1024 * 1024) : (12 * 1024 * 1024); // 5MB for videos, 12MB for images
                 if (file.size > MAX_FILE_SIZE) {
                     const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
                     const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-                    showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
+                    const fileType = isVideo ? 'video' : 'image';
+                    showStatus(`${fileType.charAt(0).toUpperCase() + fileType.slice(1)} size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the ${fileType}.`, 'error');
                     // Clear the input
                     input.value = '';
                     input.removeAttribute('data-base64');
