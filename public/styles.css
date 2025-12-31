@@ -389,12 +389,28 @@ body {
     flex: 1;
 }
 
-/* Content area below hero */
+/* Content area below hero - no padding on container, padding only on text */
 .content-section-content {
-    padding: 1rem 3rem;
+    padding: 0;
     background: #fff;
     position: relative;
     z-index: 4;
+}
+
+/* Add padding to text content within content-section-content */
+.content-section-content > p,
+.content-section-content > h3,
+.content-section-content > h4,
+.content-section-content > div:not(.subsection-images):not(.subsection-image) {
+    padding: 0 5rem;
+}
+
+.content-section-content > *:first-child {
+    padding-top: 1rem;
+}
+
+.content-section-content > *:last-child {
+    padding-bottom: 1rem;
 }
 
 /* Section heading styling is now in .content-section-hero h2 above */
@@ -624,7 +640,7 @@ body {
 /* Subsection Styling */
 .subsection {
     margin-bottom: 0;
-    padding: 3rem 5rem;
+    padding: 0;
     min-height: auto;
 }
 
@@ -667,7 +683,7 @@ body {
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    padding-top: 0;
+    padding: 3rem 5rem 0 5rem;
 }
 
 .download-logo-btn {
@@ -693,15 +709,16 @@ body {
     font-size: 0.875rem;
     line-height: 1.5;
     color: #000;
-    padding-top: 0;
+    padding: 0 5rem;
 }
 
-/* Subsection images grid (max 3 columns) */
+/* Subsection images grid (max 3 columns) - full width, no padding */
 .subsection-images {
     display: grid;
-    gap: 1.5rem;
-    margin: 1.5rem 0;
+    gap: 0;
+    margin: 0;
     width: 100%;
+    padding: 0;
 }
 
 /* Responsive grid: max 3 columns on large screens */
@@ -1302,8 +1319,19 @@ body {
         padding: 3rem 3rem 0 3rem;
     }
     
-    .subsection {
-        padding: 3rem 3rem;
+    .subsection-title {
+        padding: 3rem 3rem 0 3rem;
+    }
+    
+    .subsection-content {
+        padding: 0 3rem;
+    }
+    
+    .content-section-content > p,
+    .content-section-content > h3,
+    .content-section-content > h4,
+    .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+        padding: 0 3rem;
     }
 }
 
@@ -1335,8 +1363,19 @@ body {
         padding: 3rem 3rem 0 3rem;
     }
     
-    .subsection {
-        padding: 3rem 3rem;
+    .subsection-title {
+        padding: 3rem 3rem 0 3rem;
+    }
+    
+    .subsection-content {
+        padding: 0 3rem;
+    }
+    
+    .content-section-content > p,
+    .content-section-content > h3,
+    .content-section-content > h4,
+    .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+        padding: 0 3rem;
     }
 }
 
