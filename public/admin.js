@@ -1947,6 +1947,17 @@ function setupLogotypeSubsectionImageHandlers() {
                 const file = e.target.files[0];
                 if (!file) return;
                 
+                // Check file size before processing
+                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+                if (file.size > MAX_FILE_SIZE) {
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                    showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
+                    input.value = '';
+                    input.removeAttribute('data-base64');
+                    return;
+                }
+                
                 const index = this.getAttribute('data-logotype-subsection-index');
                 const label = document.querySelector(`label[for="${this.id}"]`);
                 const filenameDisplay = document.getElementById(`${this.id}-filename`);
@@ -1972,6 +1983,14 @@ function setupLogotypeSubsectionImageHandlers() {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const base64Data = e.target.result;
+                        // Double-check the base64 string size
+                        const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                        if (base64Data.length > MAX_BASE64_SIZE) {
+                            showStatus('File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.', 'error');
+                            input.value = '';
+                            input.removeAttribute('data-base64');
+                            return;
+                        }
                         // Store base64 data on input so getImageFromInput can retrieve it
                         input.setAttribute('data-base64', base64Data);
                         
@@ -2121,6 +2140,16 @@ function setupLogotypeHandlers() {
             const file = e.target.files[0];
             if (!file) return;
             
+            // Check file size before processing
+            const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+            if (file.size > MAX_FILE_SIZE) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
+                mainLogoInput.value = '';
+                return;
+            }
+            
             const label = document.getElementById('main-logo-label');
             const filenameDisplay = document.getElementById('main-logo-filename');
             const preview = document.getElementById('main-logo-preview');
@@ -2144,7 +2173,15 @@ function setupLogotypeHandlers() {
             if (preview) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    preview.innerHTML = renderImagePreview(e.target.result, 'main-logo-preview', mainLogoInput);
+                    const base64Data = e.target.result;
+                    // Double-check the base64 string size
+                    const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                    if (base64Data.length > MAX_BASE64_SIZE) {
+                        showStatus('File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.', 'error');
+                        mainLogoInput.value = '';
+                        return;
+                    }
+                    preview.innerHTML = renderImagePreview(base64Data, 'main-logo-preview', mainLogoInput);
                     
                     // Attach remove handler
                     const removeBtn = preview.querySelector('.remove-image-btn');
@@ -2180,6 +2217,16 @@ async function setupApplicationImageHandlers() {
             const file = e.target.files[0];
             if (!file) return;
             
+            // Check file size before processing
+            const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+            if (file.size > MAX_FILE_SIZE) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
+                newInput.value = '';
+                return;
+            }
+            
             // Update label to show file selected
             if (label) {
                 label.classList.add('has-file');
@@ -2203,8 +2250,16 @@ async function setupApplicationImageHandlers() {
             if (preview) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
+                    const base64Data = e.target.result;
+                    // Double-check the base64 string size
+                    const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                    if (base64Data.length > MAX_BASE64_SIZE) {
+                        showStatus('File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.', 'error');
+                        newInput.value = '';
+                        return;
+                    }
                     const previewId = preview.id;
-                    preview.innerHTML = renderImagePreview(e.target.result, previewId, newInput);
+                    preview.innerHTML = renderImagePreview(base64Data, previewId, newInput);
                     
                     // Attach remove handler
                     const removeBtn = preview.querySelector('.remove-image-btn');
@@ -2413,8 +2468,31 @@ async function deleteAsset(id) {
 // Helper to convert file to base64
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
+        // Check file size before converting
+        // MongoDB has a 16MB document limit, base64 increases size by ~33%
+        // So we limit files to ~12MB to leave room for other content
+        const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+        
+        if (file.size > MAX_FILE_SIZE) {
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+            reject(new Error(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`));
+            return;
+        }
+        
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
+        reader.onload = () => {
+            // Double-check the base64 string size (should be ~33% larger than original)
+            const base64Size = reader.result.length;
+            const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+            
+            if (base64Size > MAX_BASE64_SIZE) {
+                reject(new Error(`File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.`));
+                return;
+            }
+            
+            resolve(reader.result);
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
@@ -2436,20 +2514,29 @@ function getImageFromInput(input, existingValue = '') {
                 return;
             }
             
-            // Check if there's a file currently selected - convert to base64
-            if (input.files && input.files[0]) {
-                try {
-                    const base64Data = await fileToBase64(input.files[0]);
-                    // Store base64 data on input for future saves
-                    input.setAttribute('data-base64', base64Data);
-                    resolve(base64Data);
-                    return;
-                } catch (err) {
-                    console.warn('Error converting file to base64, preserving existing image:', err);
-                    resolve(existingValue);
-                    return;
-                }
-            }
+                        // Check if there's a file currently selected - convert to base64
+                        if (input.files && input.files[0]) {
+                            try {
+                                const base64Data = await fileToBase64(input.files[0]);
+                                // Store base64 data on input for future saves
+                                input.setAttribute('data-base64', base64Data);
+                                resolve(base64Data);
+                                return;
+                            } catch (err) {
+                                console.error('Error converting file to base64:', err);
+                                // Show user-friendly error message
+                                if (err.message && err.message.includes('exceeds')) {
+                                    showStatus(err.message, 'error');
+                                } else {
+                                    showStatus('File is too large or invalid. Maximum size is 12MB. Please use a smaller file.', 'error');
+                                }
+                                // Clear the input so user can try again
+                                input.value = '';
+                                input.removeAttribute('data-base64');
+                                resolve(existingValue); // Keep existing image
+                                return;
+                            }
+                        }
             
             // Otherwise use existing value (preserve existing image)
             resolve(existingValue || '');
@@ -3424,6 +3511,35 @@ function setupImageUploadHandlers() {
                 const file = e.target.files[0];
                 if (!file) return;
                 
+                // Check file size before processing
+                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+                if (file.size > MAX_FILE_SIZE) {
+                    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                    showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
+                    // Clear the input
+                    input.value = '';
+                    input.removeAttribute('data-base64');
+                    // Reset styled upload label
+                    const wrapper = input.closest('.file-upload-wrapper');
+                    if (wrapper) {
+                        const label = wrapper.querySelector('.file-upload-label');
+                        const filenameDisplay = wrapper.querySelector('.file-name-display');
+                        if (label) {
+                            label.classList.remove('has-file');
+                            const uploadText = label.querySelector('.upload-text');
+                            if (uploadText) {
+                                uploadText.textContent = 'Upload images/videos';
+                            }
+                        }
+                        if (filenameDisplay) {
+                            filenameDisplay.textContent = '';
+                            filenameDisplay.style.display = 'none';
+                        }
+                    }
+                    return;
+                }
+                
                 // Update styled upload label
                 const wrapper = input.closest('.file-upload-wrapper');
                 if (wrapper) {
@@ -3445,6 +3561,31 @@ function setupImageUploadHandlers() {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const base64 = e.target.result;
+                    // Double-check the base64 string size
+                    const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                    if (base64.length > MAX_BASE64_SIZE) {
+                        showStatus('File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.', 'error');
+                        input.value = '';
+                        input.removeAttribute('data-base64');
+                        // Reset styled upload label
+                        const wrapper = input.closest('.file-upload-wrapper');
+                        if (wrapper) {
+                            const label = wrapper.querySelector('.file-upload-label');
+                            const filenameDisplay = wrapper.querySelector('.file-name-display');
+                            if (label) {
+                                label.classList.remove('has-file');
+                                const uploadText = label.querySelector('.upload-text');
+                                if (uploadText) {
+                                    uploadText.textContent = 'Upload images/videos';
+                                }
+                            }
+                            if (filenameDisplay) {
+                                filenameDisplay.textContent = '';
+                                filenameDisplay.style.display = 'none';
+                            }
+                        }
+                        return;
+                    }
                     input.setAttribute('data-base64', base64);
                     
                     // Find preview element
