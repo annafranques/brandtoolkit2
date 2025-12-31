@@ -63,11 +63,11 @@ body {
     }
 }
 
-/* Quick fade-in animation for text */
-@keyframes fadeInQuick {
+/* Very subtle fade-in animation for text */
+@keyframes fadeInSubtle {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
@@ -76,7 +76,18 @@ body {
 }
 
 .fade-in {
-    animation: fadeInQuick 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: fadeInSubtle 0.4s ease-out forwards;
+}
+
+/* Text elements get subtle fade-in */
+.fade-in p,
+.fade-in .subsection-content,
+.fade-in .subsection-title,
+.fade-in h2,
+.fade-in h3,
+.fade-in h4,
+.fade-in div:not(:has(img)) {
+    animation: fadeInSubtle 0.4s ease-out forwards;
 }
 
 /* Mask-up for images with white background */
