@@ -571,7 +571,8 @@ body {
     color: #666;
 }
 
-/* Font download buttons in heading */
+/* Download buttons in heading */
+.download-buttons-container,
 .font-download-buttons-container {
     display: flex;
     align-items: center;
@@ -579,6 +580,7 @@ body {
     flex-wrap: wrap;
 }
 
+.download-buttons-container .section-download-btn,
 .font-download-buttons-container .font-download-btn {
     padding: 0.5rem 1rem;
     background-color: #000;
@@ -594,16 +596,19 @@ body {
     white-space: nowrap;
 }
 
+.download-buttons-container .section-download-btn:hover,
 .font-download-buttons-container .font-download-btn:hover {
     background-color: #333;
 }
 
 /* White buttons in hero headings */
+.content-section-hero h2 .download-buttons-container .section-download-btn,
 .content-section-hero h2 .font-download-buttons-container .font-download-btn {
     background-color: #fff;
     color: #000;
 }
 
+.content-section-hero h2 .download-buttons-container .section-download-btn:hover,
 .content-section-hero h2 .font-download-buttons-container .font-download-btn:hover {
     background-color: #f5f5f5;
 }

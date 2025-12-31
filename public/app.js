@@ -269,6 +269,13 @@ async function loadContent() {
                 logotypeSection.classList.remove('has-hero');
             }
             
+            // Add download button for logotype if URL is provided
+            if (content.logotype && content.logotype.downloadUrl) {
+                setTimeout(() => {
+                    addDownloadButtonToHeading(logotypeSection, content.logotype.downloadUrl, 'Download Logo');
+                }, 0);
+            }
+            
             let logoHtml = '';
             
             // Helper function to render images in a grid (max 3 columns)
@@ -535,6 +542,13 @@ async function loadContent() {
             }
             
             typographySection.setAttribute('data-section-index', sectionIndex++);
+            
+            // Add download button for typography if URL is provided (before font buttons)
+            if (content.typographySection && content.typographySection.downloadUrl) {
+                setTimeout(() => {
+                    addDownloadButtonToHeading(typographySection, content.typographySection.downloadUrl, 'Download Fonts');
+                }, 0);
+            }
             
             // Load fonts for download buttons in heading (after hero handling so we have correct h2)
             setTimeout(() => {
@@ -1850,6 +1864,58 @@ function downloadFont(fontPath, fontName) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// Add download button to section heading in hero
+function addDownloadButtonToHeading(section, downloadUrl, buttonText = 'Download') {
+    if (!section || !downloadUrl) return;
+    
+    // Find the h2 heading (either in hero or in section)
+    let h2 = section.querySelector('.content-section-hero h2');
+    if (!h2) {
+        h2 = section.querySelector('h2');
+    }
+    if (!h2) return;
+    
+    // Use existing font-download-buttons-container if it exists, otherwise create download-buttons-container
+    let buttonsContainer = h2.querySelector('.font-download-buttons-container');
+    if (!buttonsContainer) {
+        buttonsContainer = h2.querySelector('.download-buttons-container');
+    }
+    if (!buttonsContainer) {
+        buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'download-buttons-container';
+        h2.appendChild(buttonsContainer);
+    }
+    
+    // Create download button
+    const downloadBtn = document.createElement('button');
+    downloadBtn.className = 'download-asset-btn section-download-btn';
+    downloadBtn.textContent = buttonText;
+    downloadBtn.setAttribute('data-download-url', downloadUrl);
+    downloadBtn.title = buttonText;
+    
+    // Add click handler
+    downloadBtn.addEventListener('click', function() {
+        const url = this.getAttribute('data-download-url');
+        if (url) {
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                window.open(url, '_blank');
+            } else {
+                // For relative URLs, create a download link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+    });
+    
+    // Add button to container (prepend so it appears first)
+    buttonsContainer.insertBefore(downloadBtn, buttonsContainer.firstChild);
 }
 
 // Load fonts download buttons next to heading

@@ -354,6 +354,11 @@ function populateForm(content) {
             }
         }
         
+        // Load download URL
+        if (content.logotype.downloadUrl) {
+            setValueSafely('logotype-download-url', content.logotype.downloadUrl);
+        }
+        
         // Load subsections array (like applications)
         if (content.logotype.subsections && Array.isArray(content.logotype.subsections)) {
             renderLogotypeSubsectionsList(content.logotype.subsections);
@@ -473,6 +478,11 @@ function populateForm(content) {
                     removeImage(typographyHeroInput, 'typography-hero-preview');
                 });
             }
+        }
+        
+        // Load download URL
+        if (content.typographySection.downloadUrl) {
+            setValueSafely('typography-download-url', content.typographySection.downloadUrl);
         }
         
         ['mainTypography', 'secondaryTypography'].forEach(subsection => {
@@ -2519,6 +2529,7 @@ async function rebuildContentFromForm() {
         },
         logotype: {
             image: getHeroImageFromInput(document.getElementById('logotype-hero-input') || document.querySelector('[data-section="logotype"].section-hero-image-input'), getExistingImage('logotype.image')),
+            downloadUrl: getValue('logotype-download-url', ''),
             mainLogo: await getImageFromInput(document.getElementById('main-logo-upload'), getExistingImage('logotype.mainLogo')),
             subsections: await getLogotypeSubsectionsFromForm()
         },
@@ -2539,6 +2550,7 @@ async function rebuildContentFromForm() {
         },
         typographySection: {
             image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
+            downloadUrl: getValue('typography-download-url', ''),
             mainTypography: {
                 image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
                 content: getValue('typography-main-content')
