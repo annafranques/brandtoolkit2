@@ -116,13 +116,9 @@ async function loadContent() {
             const contentDiv = document.getElementById(`${sectionId}-content`);
             if (!section || !contentDiv) return;
             
-            // Add fade-in animation class with a small delay to ensure it triggers
-            setTimeout(() => {
-                section.classList.add('fade-in');
-                if (sectionIndex > 0) {
-                    section.classList.add(`fade-in-delay-${Math.min(sectionIndex, 4)}`);
-                }
-            }, 50);
+            // Start hidden for scroll-triggered animation
+            section.style.opacity = '0';
+            section.setAttribute('data-animate-on-scroll', 'true');
             
             // Remove existing hero if any
             const existingHero = section.querySelector('.content-section-hero');
@@ -2015,6 +2011,48 @@ function initLenis() {
     }
 }
 
+// Initialize scroll-triggered animations
+function initScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                const element = entry.target;
+                
+                // Add fade-in animation
+                element.classList.add('fade-in');
+                
+                // Add staggered delay for subsections
+                const delayIndex = Array.from(element.parentElement?.children || []).indexOf(element) % 5;
+                if (delayIndex > 0) {
+                    element.classList.add(`fade-in-delay-${Math.min(delayIndex, 4)}`);
+                }
+                
+                // Stop observing once animated
+                observer.unobserve(element);
+            }
+        });
+    }, observerOptions);
+
+    // Observe all sections and subsections
+    const sections = document.querySelectorAll('.content-section[data-animate-on-scroll="true"]');
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    // Also observe subsections, images, and content elements
+    const subsections = document.querySelectorAll('.subsection, .subsection-content, .content-section-content img, .content-section-content p, .content-section-hero');
+    subsections.forEach((element, index) => {
+        element.style.opacity = '0';
+        element.setAttribute('data-animate-on-scroll', 'true');
+        observer.observe(element);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Content Loaded, starting content load...');
     
@@ -2046,6 +2084,10 @@ document.addEventListener('DOMContentLoaded', () => {
         loadContent().then(() => {
             console.log('Content loaded successfully');
             initUsageTabs();
+            // Initialize scroll animations after content is loaded
+            setTimeout(() => {
+                initScrollAnimations();
+            }, 100);
             // Hide preloader after content is loaded (respects minimum 3 seconds)
             hidePreloader();
         }).catch((error) => {
