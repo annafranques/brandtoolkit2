@@ -382,7 +382,21 @@ body {
     z-index: 1;
     border: none;
     pointer-events: none; /* Prevent video controls from interfering */
-    object-fit: cover;
+    object-fit: cover !important;
+}
+
+/* Force object-fit cover for video elements in hero section */
+.content-section-hero video {
+    object-fit: cover !important;
+    width: 100%;
+    height: 100%;
+}
+
+/* Ensure iframe videos cover the container */
+.content-section-hero iframe {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
 }
 
 .content-section-hero::before {
