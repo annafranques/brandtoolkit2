@@ -1000,14 +1000,17 @@ app.post('/api/fonts/upload', upload.single('fontFile'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'No file uploaded' });
     }
     
-    // Extract font family name from filename
+    // Get font name from request body or extract from filename
+    const customFontName = req.body.fontName ? req.body.fontName.trim() : null;
     const originalName = req.file.originalname || req.file.filename;
     const baseName = path.basename(originalName, path.extname(originalName));
-    let fontFamily = baseName.replace(/[-_]/g, ' ');
-    // Capitalize first letter of each word
-    fontFamily = fontFamily.split(' ').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    ).join(' ');
+    let fontFamily = customFontName || baseName.replace(/[-_]/g, ' ');
+    // If not custom name, capitalize first letter of each word
+    if (!customFontName) {
+      fontFamily = fontFamily.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ');
+    }
     
     const fontInfo = {
       id: Date.now().toString(),

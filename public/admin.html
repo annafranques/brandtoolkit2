@@ -291,6 +291,11 @@
                     <!-- Typography Manager Section -->
                     <h3 style="margin-bottom: 1.5rem;">Font Management</h3>
                     <div class="form-group">
+                        <label for="font-name">Font Name (optional)</label>
+                        <input type="text" id="font-name" class="form-control" placeholder="e.g., Favorit Pro">
+                        <small>Leave empty to use filename</small>
+                    </div>
+                    <div class="form-group">
                         <label for="font-upload">Upload Font File</label>
                         <input type="file" id="font-upload" class="form-control" accept=".otf,.ttf,.woff,.woff2,.eot" onchange="handleFontUpload(event)">
                         <small>Supported formats: OTF, TTF, WOFF, WOFF2, EOT (max 10MB)</small>
@@ -309,11 +314,6 @@
                     <div class="form-group">
                         <label for="font-secondary">Secondary Font</label>
                         <input type="text" id="font-secondary" class="form-control" placeholder="e.g., Favorit">
-                    </div>
-                    
-                    <h3 style="margin-top: 2rem; margin-bottom: 1.5rem;">Typography Style Settings</h3>
-                    <div id="typography-styles-list" class="typography-styles-list">
-                        <!-- Typography style toggles will be dynamically added here -->
                     </div>
                     
                     <h3 id="section-typography-mainTypography" style="margin-top: 2rem; margin-bottom: 1rem;">Main Typography</h3>
