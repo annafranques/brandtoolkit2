@@ -665,27 +665,31 @@ textarea.form-control {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
-    padding: 1rem 1.5rem;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0;
+    font-weight: normal;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     display: none;
     z-index: 1000;
     font-family: 'Favorit', sans-serif;
+    font-size: 0.8125rem;
+    border: none;
+    cursor: default;
 }
 
 .save-status.success {
-    background: #28a745;
+    background: #000;
     color: #fff;
 }
 
 .save-status.error {
-    background: #dc3545;
+    background: #000;
     color: #fff;
 }
 
-.save-status.info {
-    background: #17a2b8;
+.save-status.info,
+.save-status.loading {
+    background: #000;
     color: #fff;
 }
 

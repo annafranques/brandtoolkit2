@@ -1877,6 +1877,26 @@ function addDownloadButtonToHeading(section, downloadUrl, buttonText = 'Download
     }
     if (!h2) return;
     
+    // Wrap h2 text in a span if not already wrapped (for proper flex alignment)
+    if (h2.childNodes.length > 0 && h2.childNodes[0].nodeType === Node.TEXT_NODE) {
+        const textContent = h2.textContent;
+        h2.innerHTML = '';
+        const textSpan = document.createElement('span');
+        textSpan.textContent = textContent;
+        h2.appendChild(textSpan);
+    } else if (!h2.querySelector('span:not(.download-buttons-container):not(.font-download-buttons-container)')) {
+        // If no text span exists, wrap all non-button-container children
+        const fragment = document.createDocumentFragment();
+        while (h2.firstChild && !h2.firstChild.classList?.contains('download-buttons-container') && !h2.firstChild.classList?.contains('font-download-buttons-container')) {
+            fragment.appendChild(h2.firstChild);
+        }
+        if (fragment.childNodes.length > 0) {
+            const textSpan = document.createElement('span');
+            textSpan.appendChild(fragment);
+            h2.insertBefore(textSpan, h2.firstChild);
+        }
+    }
+    
     // Use existing font-download-buttons-container if it exists, otherwise create download-buttons-container
     let buttonsContainer = h2.querySelector('.font-download-buttons-container');
     if (!buttonsContainer) {
