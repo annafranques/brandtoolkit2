@@ -91,11 +91,12 @@ async function loadContent() {
         }
         console.log('=== END CONTENT DEBUG ===');
         
-        // Set brand name (but keep "Brand Toolkit" in sidebar)
-        const brandName = content.brandName || 'Brand';
-        // Don't change sidebar - it should always say "Brand Toolkit"
-        // const sidebarBrandName = document.getElementById('sidebar-brand-name');
-        // if (sidebarBrandName) sidebarBrandName.textContent = brandName;
+        // Set brand name and update sidebar
+        const brandName = content.brandName || 'The Name of the Project';
+        const sidebarProjectName = document.getElementById('sidebar-project-name');
+        if (sidebarProjectName) {
+            sidebarProjectName.textContent = brandName;
+        }
         
         // Get brand colors for section separations - use light secondary colors
         const brandColors = content.colors || [];
@@ -253,7 +254,7 @@ async function loadContent() {
         const frameRebelContent = document.getElementById('frame-rebel-content');
         if (frameRebelSection && frameRebelContent && !hiddenSections['frame-rebel'] && content.frameRebel) {
             const h2 = frameRebelSection.querySelector('h2');
-            const hasFrameRebelHero = content.frameRebel && content.frameRebel.image && h2;
+            const hasFrameRebelHero = content.frameRebel && content.frameRebel.image;
             if (hasFrameRebelHero) {
                 frameRebelSection.classList.add('has-hero');
                 const existingHero = frameRebelSection.querySelector('.content-section-hero');
@@ -287,11 +288,16 @@ async function loadContent() {
                         heroDiv.appendChild(img);
                     }
                     
-                    const h2Clone = h2.cloneNode(true);
-                    heroDiv.appendChild(h2Clone);
+                    // Don't add h2 to hero - removed per user request
                     frameRebelSection.insertBefore(heroDiv, frameRebelSection.firstChild);
-                    h2.remove();
+                    // Remove the h2 heading completely
+                    if (h2) {
+                        h2.remove();
+                    }
                 }
+            } else if (h2) {
+                // Remove h2 even if no hero image
+                h2.remove();
             }
             let html = '';
             if (content.frameRebel.aboutTheProject) {

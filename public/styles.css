@@ -155,6 +155,30 @@ body {
     color: #000;
     letter-spacing: -0.02em;
     line-height: 1.1;
+    margin-bottom: 0.5rem;
+}
+
+.brand-name-container h2 {
+    font-family: 'Favorit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: normal;
+    color: #000;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+    margin-top: 0;
+}
+
+.brand-name-container p {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: normal;
+    color: #666;
+    letter-spacing: 0;
+    line-height: 1.4;
+    margin-top: 0;
+    margin-bottom: 0;
+    text-transform: lowercase;
 }
 
 .sidebar-nav {
