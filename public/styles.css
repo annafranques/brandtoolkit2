@@ -1030,7 +1030,7 @@ body {
 /* Typography */
 .typography-item {
     margin: 2rem 0;
-    padding: 1.5rem 0;
+    padding: 1.5rem 5rem;
     border-top: 1px solid #eee;
 }
 
@@ -1158,6 +1158,11 @@ body {
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 2rem 5rem;
+}
+
+/* Typography items need padding like other content */
+#typography-content .typography-item {
+    padding: 1.5rem 5rem;
 }
 
 .preview-header {
@@ -1369,6 +1374,10 @@ body {
     .typography-preview-container {
         padding: 2rem 3rem;
     }
+    
+    #typography-content .typography-item {
+        padding: 1.5rem 3rem;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -1441,6 +1450,10 @@ body {
     
     .typography-preview-container {
         padding: 2rem 3rem;
+    }
+    
+    #typography-content .typography-item {
+        padding: 1.5rem 3rem;
     }
 }
 

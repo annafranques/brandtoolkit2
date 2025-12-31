@@ -544,16 +544,14 @@ async function loadContent() {
             
             typographySection.setAttribute('data-section-index', sectionIndex++);
             
-            // Add download button for typography if URL is provided (before font buttons)
-            if (content.typographySection && content.typographySection.downloadUrl) {
-                setTimeout(() => {
-                    addDownloadButtonToHeading(typographySection, content.typographySection.downloadUrl, 'Download Fonts');
-                }, 0);
-            }
-            
             // Load fonts for download buttons in heading (after hero handling so we have correct h2)
             setTimeout(() => {
                 loadFontsDownloadButtons();
+                
+                // Add download button for typography if URL is provided (after font buttons to ensure it appears)
+                if (content.typographySection && content.typographySection.downloadUrl) {
+                    addDownloadButtonToHeading(typographySection, content.typographySection.downloadUrl, 'Download Fonts');
+                }
             }, 0);
             
             // Render typography subsections (after preview and download sections)
