@@ -1282,6 +1282,10 @@ function setupUsageTabs() {
 // Typography preview functions
 let currentDevice = 'desktop';
 
+// Cache typography data to avoid re-fetching
+let cachedTypographyData = null;
+let cachedContentData = null;
+
 function switchDevice(device) {
     currentDevice = device;
     
@@ -1293,8 +1297,13 @@ function switchDevice(device) {
         }
     });
     
-    // Re-render typography preview
-    loadTypographyPreview();
+    // Update preview instantly using cached data
+    if (cachedTypographyData) {
+        renderTypographyPreview(cachedTypographyData, cachedContentData);
+    } else {
+        // If no cache, load it first
+        loadTypographyPreview();
+    }
 }
 
 async function loadTypographyPreview() {
@@ -1310,26 +1319,34 @@ async function loadTypographyPreview() {
     }
 }
 
-async function renderTypographyPreview(typographyData) {
+async function renderTypographyPreview(typographyData, contentData = null) {
     const previewArea = document.getElementById('typography-preview');
     if (!previewArea) return;
     
     let primaryFontName = '';
     let secondaryFontName = '';
-    try {
-        const contentResponse = await fetch('/api/content');
-        if (contentResponse.ok) {
-            const content = await contentResponse.json();
-            primaryFontName = content.typography?.primary || '';
-            secondaryFontName = content.typography?.secondary || '';
-
-            // Dynamically load Google Fonts if they are set
-            loadGoogleFontIfNeeded(primaryFontName);
-            loadGoogleFontIfNeeded(secondaryFontName);
+    
+    // Use cached content data if available, otherwise fetch
+    if (contentData) {
+        primaryFontName = contentData.typography?.primary || '';
+        secondaryFontName = contentData.typography?.secondary || '';
+    } else {
+        try {
+            const contentResponse = await fetch('/api/content');
+            if (contentResponse.ok) {
+                const content = await contentResponse.json();
+                cachedContentData = content;
+                primaryFontName = content.typography?.primary || '';
+                secondaryFontName = content.typography?.secondary || '';
+            }
+        } catch (error) {
+            console.error('Error loading content for typography preview:', error);
         }
-    } catch (error) {
-        console.error('Error loading content for typography preview:', error);
     }
+
+    // Dynamically load Google Fonts if they are set
+    if (primaryFontName) loadGoogleFontIfNeeded(primaryFontName);
+    if (secondaryFontName) loadGoogleFontIfNeeded(secondaryFontName);
     
     const { fonts = [] } = typographyData;
     

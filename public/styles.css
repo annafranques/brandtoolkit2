@@ -294,6 +294,7 @@ body {
     padding: 0;
     scroll-margin-top: 0;
     margin-bottom: 0;
+    opacity: 0; /* Start hidden for fade-in animation */
     display: flex;
     flex-direction: column;
 }
