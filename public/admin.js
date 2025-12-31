@@ -1190,14 +1190,9 @@ let logotypeCounter = 0;
 
 // Predefined subsection templates
 const LOGOTYPE_SUBSECTION_TEMPLATES = {
-    'main': {
-        title: 'Main',
-        content: '',
-        hasTabs: true,
-        tabs: {
-            positive: {
-                label: 'Positive',
-                content: `Description:
+    'main-positive': {
+        title: 'Main Logotype (Positive)',
+        content: `Description:
 The main logotype is the primary brand identifier. The positive version uses dark text on light backgrounds for maximum readability.
 
 Usage:
@@ -1206,11 +1201,13 @@ Usage:
 • Light-colored materials
 
 General Rule:
-The logotype should never be stretched, skewed, or modified. Its correct proportions and spacing must always be maintained.`
-            },
-            negative: {
-                label: 'Negative',
-                content: `Description:
+The logotype should never be stretched, skewed, or modified. Its correct proportions and spacing must always be maintained.`,
+        images: [],
+        hasTabs: false
+    },
+    'main-negative': {
+        title: 'Main Logotype (Negative)',
+        content: `Description:
 The negative version of the logotype is designed for dark backgrounds, using light or white elements for strong contrast and visibility.
 
 Usage:
@@ -1219,9 +1216,9 @@ Usage:
 • Dark-colored materials
 
 Accessibility:
-Ensure sufficient contrast (minimum 4.5:1) for accessibility compliance. Never place the negative logo on backgrounds that don't provide adequate contrast.`
-            }
-        }
+Ensure sufficient contrast (minimum 4.5:1) for accessibility compliance. Never place the negative logo on backgrounds that don't provide adequate contrast.`,
+        images: [],
+        hasTabs: false
     },
     'iconotype': {
         title: 'Iconotype',
