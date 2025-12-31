@@ -489,30 +489,6 @@ function populateForm(content) {
         if (!Array.isArray(content.applications) && content.applications.image) {
             // Hero image/video for applications section
             populateHeroMedia(content.applications.image, 'applications-hero-input', 'applications-hero-url', 'applications-hero-preview', 'applications');
-            
-            // Old code below is replaced by populateHeroMedia, keeping for reference:
-            /*
-            const applicationsHeroInput = document.getElementById('applications-hero-input') || document.querySelector('[data-section="applications"].section-hero-image-input');
-            const applicationsHeroPreview = document.getElementById('applications-hero-preview');
-            if (applicationsHeroPreview && applicationsHeroInput) {
-                // Ensure input has an ID
-                if (!applicationsHeroInput.id) applicationsHeroInput.id = 'applications-hero-input';
-                // Wrap with styled upload UI if not already wrapped
-                wrapFileInputWithStyledUpload(applicationsHeroInput);
-                // Set the preview
-                applicationsHeroPreview.innerHTML = renderImagePreview(content.applications.image, 'applications-hero-preview', applicationsHeroInput);
-                // Set data attribute
-                applicationsHeroInput.setAttribute('data-base64', content.applications.image || '');
-                // Update styled upload label
-                updateStyledUploadLabel(applicationsHeroInput);
-                // Attach remove handler
-                const removeBtn = applicationsHeroPreview.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                    removeBtn.addEventListener('click', function() {
-                        removeImage(applicationsHeroInput, 'applications-hero-preview');
-                    });
-                }
-            }
         }
         
         // Render as array
