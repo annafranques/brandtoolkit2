@@ -1190,9 +1190,14 @@ let logotypeCounter = 0;
 
 // Predefined subsection templates
 const LOGOTYPE_SUBSECTION_TEMPLATES = {
-    'main-positive': {
-        title: 'Main (Positive)',
-        content: `Description:
+    'main': {
+        title: 'Main',
+        content: '',
+        hasTabs: true,
+        tabs: {
+            positive: {
+                label: 'Positive',
+                content: `Description:
 The main logotype is the primary brand identifier. The positive version uses dark text on light backgrounds for maximum readability.
 
 Usage:
@@ -1201,12 +1206,11 @@ Usage:
 • Light-colored materials
 
 General Rule:
-The logotype should never be stretched, skewed, or modified. Its correct proportions and spacing must always be maintained.`,
-        hasTabs: false
-    },
-    'main-negative': {
-        title: 'Main (Negative)',
-        content: `Description:
+The logotype should never be stretched, skewed, or modified. Its correct proportions and spacing must always be maintained.`
+            },
+            negative: {
+                label: 'Negative',
+                content: `Description:
 The negative version of the logotype is designed for dark backgrounds, using light or white elements for strong contrast and visibility.
 
 Usage:
@@ -1215,8 +1219,9 @@ Usage:
 • Dark-colored materials
 
 Accessibility:
-Ensure sufficient contrast (minimum 4.5:1) for accessibility compliance. Never place the negative logo on backgrounds that don't provide adequate contrast.`,
-        hasTabs: false
+Ensure sufficient contrast (minimum 4.5:1) for accessibility compliance. Never place the negative logo on backgrounds that don't provide adequate contrast.`
+            }
+        }
     },
     'iconotype': {
         title: 'Iconotype',
@@ -1356,7 +1361,12 @@ function renderLogotypeSubsectionsList(subsections) {
                 const tabContentId = `${contentId}-${tabKey}`;
                 const tabImageInputId = `${imageInputId}-${tabKey}`;
                 const tabPreviewId = `${previewId}-${tabKey}`;
-                const tabLabel = LOGOTYPE_SUBSECTION_TEMPLATES.usage?.tabs?.[tabKey]?.label || tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+                // Find the template that matches this subsection (could be 'usage', 'main', etc.)
+                const templateKey = Object.keys(LOGOTYPE_SUBSECTION_TEMPLATES).find(key => {
+                    const template = LOGOTYPE_SUBSECTION_TEMPLATES[key];
+                    return template.hasTabs && template.tabs && template.tabs[tabKey];
+                });
+                const tabLabel = templateKey ? (LOGOTYPE_SUBSECTION_TEMPLATES[templateKey]?.tabs?.[tabKey]?.label || tabKey.charAt(0).toUpperCase() + tabKey.slice(1)) : tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
                 
                 return `
                     <div class="logotype-tab-content" data-tab-key="${tabKey}" style="display: ${tabIndex === 0 ? 'block' : 'none'};">
@@ -1365,28 +1375,39 @@ function renderLogotypeSubsectionsList(subsections) {
                             <textarea class="form-control logotype-subsection-tab-content-input" id="${tabContentId}" rows="8">${((tab.content || '')).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                         </div>
                         <div class="form-group" style="margin-top: 1.5rem;">
-                            <label>${tabLabel} Image</label>
+                            <label>${tabLabel} Images (up to 3)</label>
                             <div class="file-upload-wrapper">
-                                <label for="${tabImageInputId}" class="file-upload-label ${tab.image ? 'has-file' : ''}">
+                                <label for="${tabImageInputId}" class="file-upload-label ${tab.image || (Array.isArray(tab.images) && tab.images.length > 0) ? 'has-file' : ''}">
                                     <span class="upload-icon">
                                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
                                     </span>
-                                    <span class="upload-text">${tab.image ? 'Change Image' : 'Upload images/videos'}</span>
-                                    <span class="upload-hint">Click to browse, or drag & drop files here</span>
+                                    <span class="upload-text">${tab.image || (Array.isArray(tab.images) && tab.images.length > 0) ? 'Change Images' : 'Upload images/videos (select multiple)'}</span>
+                                    <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
                                 </label>
-                                <input type="file" class="file-upload-input logotype-subsection-tab-image-input" id="${tabImageInputId}" data-logotype-subsection-index="${index}" data-tab-key="${tabKey}" accept="image/*">
+                                <input type="file" class="file-upload-input logotype-subsection-tab-image-input" id="${tabImageInputId}" data-logotype-subsection-index="${index}" data-tab-key="${tabKey}" accept="image/*" multiple>
                                 <div class="file-name-display" id="${tabImageInputId}-filename"></div>
                             </div>
-                            <div class="image-preview" id="${tabPreviewId}" style="margin-top: 1rem;">${tab.image ? renderImagePreview(tab.image, tabPreviewId, null) : ''}</div>
+                            <div class="image-preview" id="${tabPreviewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                                ${(() => {
+                                    const tabImages = tab.images || (tab.image ? [tab.image] : []);
+                                    const imagesArray = Array.isArray(tabImages) ? tabImages : [tabImages];
+                                    return imagesArray.map((img, idx) => renderImagePreview(img, `${tabPreviewId}-${idx}`, null)).join('');
+                                })()}
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
             
             const tabButtonsHtml = tabKeys.map((tabKey, tabIndex) => {
-                const tabLabel = LOGOTYPE_SUBSECTION_TEMPLATES.usage?.tabs?.[tabKey]?.label || tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+                // Find the template that matches this subsection (could be 'usage', 'main', etc.)
+                const templateKey = Object.keys(LOGOTYPE_SUBSECTION_TEMPLATES).find(key => {
+                    const template = LOGOTYPE_SUBSECTION_TEMPLATES[key];
+                    return template.hasTabs && template.tabs && template.tabs[tabKey];
+                });
+                const tabLabel = templateKey ? (LOGOTYPE_SUBSECTION_TEMPLATES[templateKey]?.tabs?.[tabKey]?.label || tabKey.charAt(0).toUpperCase() + tabKey.slice(1)) : tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
                 return `
                     <button type="button" class="logotype-tab-button ${tabIndex === 0 ? 'active' : ''}" data-tab-key="${tabKey}" data-subsection-index="${index}" style="padding: 0.75rem 1.5rem; border: none; background: ${tabIndex === 0 ? '#000' : 'transparent'}; color: ${tabIndex === 0 ? '#fff' : '#666'}; cursor: pointer; font-weight: ${tabIndex === 0 ? '500' : '400'}; font-size: 0.875rem; transition: all 0.2s ease; position: relative; border-radius: ${tabIndex === 0 ? '8px 8px 0 0' : '0'};">
                         ${tabLabel}
@@ -1515,7 +1536,7 @@ function renderLogotypeSubsectionsList(subsections) {
             if (subsection.hasTabs && subsection.tabs) {
                 setupLogotypeTabs(index);
                 
-                // Store base64 data for tab images
+                // Store images array for tab images
                 Object.keys(subsection.tabs).forEach(tabKey => {
                     const tab = subsection.tabs[tabKey];
                     const tabImageInputId = `${imageInputId}-${tabKey}`;
@@ -1523,29 +1544,40 @@ function renderLogotypeSubsectionsList(subsections) {
                     const tabImageInput = document.getElementById(tabImageInputId);
                     const tabPreview = document.getElementById(tabPreviewId);
                     
-                    if (tabImageInput && tab.image) {
-                        tabImageInput.setAttribute('data-base64', tab.image);
+                    // Handle images array (support both single image and array)
+                    const tabImages = tab.images || (tab.image ? [tab.image] : []);
+                    const tabImagesArray = Array.isArray(tabImages) ? tabImages : [tabImages];
+                    
+                    if (tabImageInput && tabImagesArray.length > 0) {
+                        tabImageInput.setAttribute('data-images', JSON.stringify(tabImagesArray));
                         const tabLabel = document.querySelector(`label[for="${tabImageInputId}"]`);
                         if (tabLabel) {
                             tabLabel.classList.add('has-file');
                             const uploadText = tabLabel.querySelector('.upload-text');
                             if (uploadText) {
-                                uploadText.textContent = 'Change Image';
+                                uploadText.textContent = tabImagesArray.length === 1 ? 'Change Image' : `Change Images (${tabImagesArray.length})`;
                             }
                         }
                     }
                     
-                    if (tabPreview && tab.image) {
-                        const removeBtn = tabPreview.querySelector('.remove-image-btn');
-                        if (removeBtn) {
-                            removeBtn.setAttribute('data-input-id', tabImageInputId);
-                            removeBtn.setAttribute('data-preview-id', tabPreviewId);
-                            removeBtn.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                removeImage(tabImageInput, tabPreviewId);
-                            });
-                        }
+                    // Attach remove handlers to all preview images
+                    if (tabPreview) {
+                        tabImagesArray.forEach((img, imgIndex) => {
+                            const imgPreviewId = `${tabPreviewId}-${imgIndex}`;
+                            const imgPreview = document.getElementById(imgPreviewId);
+                            if (imgPreview) {
+                                const removeBtn = imgPreview.querySelector('.remove-image-btn');
+                                if (removeBtn) {
+                                    removeBtn.setAttribute('data-input-id', tabImageInputId);
+                                    removeBtn.setAttribute('data-image-index', imgIndex);
+                                    removeBtn.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        removeImageFromArray(tabImageInput, tabPreviewId, imgIndex);
+                                    });
+                                }
+                            }
+                        });
                     }
                 });
             }
@@ -1678,23 +1710,23 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
                         <label>${tab.label} Content</label>
                         <textarea class="form-control logotype-subsection-tab-content-input" id="${tabContentId}" rows="8">${(tab.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                     </div>
-                    <div class="form-group" style="margin-top: 1.5rem;">
-                        <label>${tab.label} Image</label>
-                        <div class="file-upload-wrapper">
-                            <label for="${imageInputId}-${tabKey}" class="file-upload-label">
-                                <span class="upload-icon">
-                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </span>
-                                <span class="upload-text">Upload images/videos</span>
-                                <span class="upload-hint">Click to browse, or drag & drop files here</span>
-                            </label>
-                            <input type="file" class="file-upload-input logotype-subsection-tab-image-input" id="${imageInputId}-${tabKey}" data-logotype-subsection-index="${logotypeCounter}" data-tab-key="${tabKey}" accept="image/*">
-                            <div class="file-name-display" id="${imageInputId}-${tabKey}-filename"></div>
+                        <div class="form-group" style="margin-top: 1.5rem;">
+                            <label>${tab.label} Images (up to 3)</label>
+                            <div class="file-upload-wrapper">
+                                <label for="${imageInputId}-${tabKey}" class="file-upload-label">
+                                    <span class="upload-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="upload-text">Upload images/videos (select multiple)</span>
+                                    <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
+                                </label>
+                                <input type="file" class="file-upload-input logotype-subsection-tab-image-input" id="${imageInputId}-${tabKey}" data-logotype-subsection-index="${logotypeCounter}" data-tab-key="${tabKey}" accept="image/*" multiple>
+                                <div class="file-name-display" id="${imageInputId}-${tabKey}-filename"></div>
+                            </div>
+                            <div class="image-preview" id="${previewId}-${tabKey}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
                         </div>
-                        <div class="image-preview" id="${previewId}-${tabKey}" style="margin-top: 1rem;"></div>
-                    </div>
                 </div>
             `;
         }).join('');
@@ -1901,12 +1933,35 @@ async function getLogotypeSubsectionsFromForm() {
                 
                 // Find corresponding image input
                 const tabImageInput = Array.from(tabImageInputs).find(input => input.id && input.id.includes(tabKey));
-                const existingTabImage = existingTabs[tabKey]?.image || '';
-                const tabImage = tabImageInput ? await getImageFromInput(tabImageInput, existingTabImage) : existingTabImage;
+                
+                // Get images from multiple file input (stored as JSON array in data-images attribute)
+                let tabImages = [];
+                if (tabImageInput) {
+                    const imagesAttr = tabImageInput.getAttribute('data-images');
+                    if (imagesAttr) {
+                        try {
+                            tabImages = JSON.parse(imagesAttr);
+                            if (!Array.isArray(tabImages)) tabImages = [tabImages];
+                        } catch (error) {
+                            console.error('Error parsing tab images array:', error);
+                            // Fallback to existing images
+                            const existingTabImages = existingTabs[tabKey]?.images || existingTabs[tabKey]?.image || [];
+                            tabImages = Array.isArray(existingTabImages) ? existingTabImages : (existingTabImages ? [existingTabImages] : []);
+                        }
+                    } else {
+                        // No new images, use existing
+                        const existingTabImages = existingTabs[tabKey]?.images || existingTabs[tabKey]?.image || [];
+                        tabImages = Array.isArray(existingTabImages) ? existingTabImages : (existingTabImages ? [existingTabImages] : []);
+                    }
+                } else {
+                    // No input found, use existing
+                    const existingTabImages = existingTabs[tabKey]?.images || existingTabs[tabKey]?.image || [];
+                    tabImages = Array.isArray(existingTabImages) ? existingTabImages : (existingTabImages ? [existingTabImages] : []);
+                }
                 
                 tabs[tabKey] = {
                     content: tabContent,
-                    image: tabImage
+                    images: tabImages // Store as array (frontend handles both array and single value)
                 };
             }
         } else {
@@ -2069,8 +2124,15 @@ function setupLogotypeTabImageHandlers() {
         if (!input.hasAttribute('data-handler-added')) {
             input.setAttribute('data-handler-added', 'true');
             input.addEventListener('change', async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                
+                // Limit to 3 images
+                if (files.length > 3) {
+                    showStatus('You can only select up to 3 images. Please select 3 or fewer images.', 'error');
+                    input.value = '';
+                    return;
+                }
                 
                 const index = this.getAttribute('data-logotype-subsection-index');
                 const tabKey = this.getAttribute('data-tab-key');
@@ -2078,45 +2140,84 @@ function setupLogotypeTabImageHandlers() {
                 const filenameDisplay = document.getElementById(`${this.id}-filename`);
                 const preview = document.getElementById(`logotype-subsection-preview-${index}-${tabKey}`);
                 
-                // Update label
-                if (label) {
-                    label.classList.add('has-file');
-                    const uploadText = label.querySelector('.upload-text');
-                    if (uploadText) {
-                        uploadText.textContent = 'Change Image';
-                    }
-                }
-                
-                // Update filename display
-                if (filenameDisplay) {
-                    filenameDisplay.textContent = file.name;
-                    filenameDisplay.style.display = 'block';
-                }
-                
-                // Update preview and store base64 data on input (for getImageFromInput)
-                if (preview) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const base64Data = e.target.result;
-                        // Store base64 data on input so getImageFromInput can retrieve it
-                        input.setAttribute('data-base64', base64Data);
-                        
-                        const previewId = preview.id;
-                        preview.innerHTML = renderImagePreview(base64Data, previewId, input);
-                        
-                        // Attach remove handler
-                        const removeBtn = preview.querySelector('.remove-image-btn');
-                        if (removeBtn) {
-                            removeBtn.setAttribute('data-input-id', input.id);
-                            removeBtn.setAttribute('data-preview-id', previewId);
-                            removeBtn.addEventListener('click', function(ev) {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-                                removeImage(input, previewId);
-                            });
+                // Check file sizes and convert to base64
+                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+                const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                const imagePromises = files.map(file => {
+                    return new Promise((resolve, reject) => {
+                        // Check file size
+                        if (file.size > MAX_FILE_SIZE) {
+                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                            const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                            reject(new Error(`File "${file.name}" (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB.`));
+                            return;
                         }
-                    };
-                    reader.readAsDataURL(file);
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const base64Data = e.target.result;
+                            // Check base64 size
+                            if (base64Data.length > MAX_BASE64_SIZE) {
+                                reject(new Error(`File "${file.name}" is too large after encoding. Maximum size is approximately 12MB.`));
+                                return;
+                            }
+                            resolve(base64Data);
+                        };
+                        reader.onerror = () => reject(new Error(`Failed to read file "${file.name}"`));
+                        reader.readAsDataURL(file);
+                    });
+                });
+                
+                try {
+                    const base64Images = await Promise.all(imagePromises);
+                    
+                    // Store images array on input
+                    input.setAttribute('data-images', JSON.stringify(base64Images));
+                    
+                    // Update label
+                    if (label) {
+                        label.classList.add('has-file');
+                        const uploadText = label.querySelector('.upload-text');
+                        if (uploadText) {
+                            uploadText.textContent = base64Images.length === 1 ? 'Change Image' : `Change Images (${base64Images.length})`;
+                        }
+                    }
+                    
+                    // Update filename display
+                    if (filenameDisplay) {
+                        filenameDisplay.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
+                        filenameDisplay.style.display = 'block';
+                    }
+                    
+                    // Update preview
+                    if (preview) {
+                        const previewId = preview.id;
+                        preview.innerHTML = base64Images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
+                        
+                        // Attach remove handlers
+                        base64Images.forEach((img, idx) => {
+                            const imgPreviewId = `${previewId}-${idx}`;
+                            const imgPreview = document.getElementById(imgPreviewId);
+                            if (imgPreview) {
+                                const removeBtn = imgPreview.querySelector('.remove-image-btn');
+                                if (removeBtn) {
+                                    removeBtn.setAttribute('data-input-id', input.id);
+                                    removeBtn.setAttribute('data-image-index', idx);
+                                    removeBtn.addEventListener('click', function(ev) {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
+                                        removeImageFromArray(input, previewId, idx);
+                                    });
+                                }
+                            }
+                        });
+                    }
+                    
+                    trackSectionChange('logotype');
+                } catch (error) {
+                    showStatus(error.message, 'error');
+                    input.value = '';
+                    input.removeAttribute('data-images');
                 }
             });
         }
