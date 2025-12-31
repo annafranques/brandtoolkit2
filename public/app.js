@@ -1877,36 +1877,85 @@ function addDownloadButtonToHeading(section, downloadUrl, buttonText = 'Download
     }
     if (!h2) return;
     
-    // Wrap h2 text in a span if not already wrapped (for proper flex alignment)
-    if (h2.childNodes.length > 0 && h2.childNodes[0].nodeType === Node.TEXT_NODE) {
-        const textContent = h2.textContent;
-        h2.innerHTML = '';
-        const textSpan = document.createElement('span');
-        textSpan.textContent = textContent;
-        h2.appendChild(textSpan);
-    } else if (!h2.querySelector('span:not(.download-buttons-container):not(.font-download-buttons-container)')) {
-        // If no text span exists, wrap all non-button-container children
-        const fragment = document.createDocumentFragment();
-        while (h2.firstChild && !h2.firstChild.classList?.contains('download-buttons-container') && !h2.firstChild.classList?.contains('font-download-buttons-container')) {
-            fragment.appendChild(h2.firstChild);
-        }
-        if (fragment.childNodes.length > 0) {
-            const textSpan = document.createElement('span');
-            textSpan.appendChild(fragment);
-            h2.insertBefore(textSpan, h2.firstChild);
-        }
-    }
+    // Ensure h2 has flex layout for proper alignment
+    h2.style.display = 'flex';
+    h2.style.alignItems = 'center';
+    h2.style.justifyContent = 'space-between';
+    h2.style.gap = '1.5rem';
     
-    // Use existing font-download-buttons-container if it exists, otherwise create download-buttons-container
+    // Get existing button containers
     let buttonsContainer = h2.querySelector('.font-download-buttons-container');
     if (!buttonsContainer) {
         buttonsContainer = h2.querySelector('.download-buttons-container');
     }
+    
+    // If no container exists, create one
     if (!buttonsContainer) {
+        // First, wrap the text content in a span if needed
+        const existingContainers = h2.querySelectorAll('.download-buttons-container, .font-download-buttons-container');
+        const hasTextWrapper = h2.querySelector('span:not(.download-buttons-container):not(.font-download-buttons-container)');
+        
+        if (!hasTextWrapper && h2.childNodes.length > 0) {
+            // Collect all text nodes and non-container elements
+            const textNodes = [];
+            const walker = document.createTreeWalker(
+                h2,
+                NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+                {
+                    acceptNode: function(node) {
+                        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        if (node.nodeType === Node.ELEMENT_NODE && 
+                            !node.classList.contains('download-buttons-container') && 
+                            !node.classList.contains('font-download-buttons-container')) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                }
+            );
+            
+            let node;
+            while (node = walker.nextNode()) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    textNodes.push(node);
+                } else {
+                    textNodes.push(node);
+                }
+            }
+            
+            // If we found content to wrap, wrap it
+            if (textNodes.length > 0) {
+                const textSpan = document.createElement('span');
+                textSpan.style.flex = '1';
+                
+                // Move all non-container children to the span
+                const children = Array.from(h2.childNodes);
+                children.forEach(child => {
+                    if (child.nodeType === Node.TEXT_NODE || 
+                        (child.nodeType === Node.ELEMENT_NODE && 
+                         !child.classList.contains('download-buttons-container') && 
+                         !child.classList.contains('font-download-buttons-container'))) {
+                        textSpan.appendChild(child);
+                    }
+                });
+                
+                // Clear h2 and add wrapped text first
+                h2.innerHTML = '';
+                h2.appendChild(textSpan);
+            }
+        }
+        
+        // Now create the button container
         buttonsContainer = document.createElement('div');
         buttonsContainer.className = 'download-buttons-container';
         h2.appendChild(buttonsContainer);
     }
+    
+    // Check if button already exists
+    const existingBtn = buttonsContainer.querySelector(`[data-download-url="${downloadUrl}"]`);
+    if (existingBtn) return; // Button already exists
     
     // Create download button
     const downloadBtn = document.createElement('button');
