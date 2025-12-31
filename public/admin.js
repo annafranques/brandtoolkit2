@@ -139,7 +139,7 @@ function populateForm(content) {
                     `;
                 }
             } else {
-                // Regular image
+                // Regular image or video
                 preview.innerHTML = renderImagePreview(heroImage, previewId, fileInput);
                 // Set data attribute
                 fileInput.setAttribute('data-base64', heroImage || '');
@@ -1447,21 +1447,21 @@ function renderLogotypeSubsectionsList(subsections) {
         
         // Generate HTML for single multiple file input
         const imagesHtml = `
-            <div class="form-group" style="margin-top: 1.5rem;">
+                <div class="form-group" style="margin-top: 1.5rem;">
                 <label>Images (up to 3)</label>
-                <div class="file-upload-wrapper">
+                    <div class="file-upload-wrapper">
                     <label for="${imageInputId}" class="file-upload-label ${hasImages ? 'has-file' : ''}">
-                        <span class="upload-icon">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
+                            <span class="upload-icon">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
                         <span class="upload-text">${hasImages ? 'Change Images' : 'Upload images/videos (select multiple)'}</span>
                         <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
-                    </label>
+                        </label>
                     <input type="file" class="file-upload-input logotype-subsection-image-input" id="${imageInputId}" data-logotype-subsection-index="${index}" accept="image/*" multiple>
-                    <div class="file-name-display" id="${imageInputId}-filename"></div>
-                </div>
+                        <div class="file-name-display" id="${imageInputId}-filename"></div>
+                    </div>
                 <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
                     ${imagesArray.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('')}
                 </div>
@@ -1521,15 +1521,15 @@ function renderLogotypeSubsectionsList(subsections) {
                     const imgPreview = document.getElementById(imgPreviewId);
                     if (imgPreview) {
                         const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                        if (removeBtn) {
-                            removeBtn.setAttribute('data-input-id', imageInputId);
+                if (removeBtn) {
+                    removeBtn.setAttribute('data-input-id', imageInputId);
                             removeBtn.setAttribute('data-image-index', imgIndex);
-                            removeBtn.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
                                 removeImageFromArray(imageInput, previewId, imgIndex);
-                            });
-                        }
+                    });
+                }
                     }
                 });
             }
@@ -1569,15 +1569,15 @@ function renderLogotypeSubsectionsList(subsections) {
                             const imgPreview = document.getElementById(imgPreviewId);
                             if (imgPreview) {
                                 const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                                if (removeBtn) {
-                                    removeBtn.setAttribute('data-input-id', tabImageInputId);
+                        if (removeBtn) {
+                            removeBtn.setAttribute('data-input-id', tabImageInputId);
                                     removeBtn.setAttribute('data-image-index', imgIndex);
-                                    removeBtn.addEventListener('click', function(e) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
+                            removeBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
                                         removeImageFromArray(tabImageInput, tabPreviewId, imgIndex);
-                                    });
-                                }
+                            });
+                        }
                             }
                         });
                     }
@@ -1712,23 +1712,23 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
                         <label>${tab.label} Content</label>
                         <textarea class="form-control logotype-subsection-tab-content-input" id="${tabContentId}" rows="8">${(tab.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                     </div>
-                        <div class="form-group" style="margin-top: 1.5rem;">
+                    <div class="form-group" style="margin-top: 1.5rem;">
                             <label>${tab.label} Images (up to 3)</label>
-                            <div class="file-upload-wrapper">
-                                <label for="${imageInputId}-${tabKey}" class="file-upload-label">
-                                    <span class="upload-icon">
-                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </span>
+                        <div class="file-upload-wrapper">
+                            <label for="${imageInputId}-${tabKey}" class="file-upload-label">
+                                <span class="upload-icon">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
                                     <span class="upload-text">Upload images/videos (select multiple)</span>
                                     <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
-                                </label>
+                            </label>
                                 <input type="file" class="file-upload-input logotype-subsection-tab-image-input" id="${imageInputId}-${tabKey}" data-logotype-subsection-index="${logotypeCounter}" data-tab-key="${tabKey}" accept="image/*" multiple>
-                                <div class="file-name-display" id="${imageInputId}-${tabKey}-filename"></div>
-                            </div>
-                            <div class="image-preview" id="${previewId}-${tabKey}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
+                            <div class="file-name-display" id="${imageInputId}-${tabKey}-filename"></div>
                         </div>
+                            <div class="image-preview" id="${previewId}-${tabKey}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -1856,9 +1856,9 @@ function removeLogotypeSubsectionItem(index) {
                 // Find preview in the same form-group
                 const formGroup = imageInput.closest('.form-group');
                 const preview = formGroup ? formGroup.querySelector('.image-preview') : null;
-                if (preview) {
-                    preview.id = `logotype-subsection-preview-${newIndex}`;
-                }
+            if (preview) {
+                preview.id = `logotype-subsection-preview-${newIndex}`;
+            }
                 
                 // Update label
                 const label = item.querySelector(`label[for="${oldId}"]`);
@@ -2069,24 +2069,24 @@ function setupLogotypeSubsectionImageHandlers() {
                     
                     // Store images array on input
                     input.setAttribute('data-images', JSON.stringify(base64Images));
-                    
-                    // Update label
-                    if (label) {
-                        label.classList.add('has-file');
-                        const uploadText = label.querySelector('.upload-text');
-                        if (uploadText) {
+                
+                // Update label
+                if (label) {
+                    label.classList.add('has-file');
+                    const uploadText = label.querySelector('.upload-text');
+                    if (uploadText) {
                             uploadText.textContent = base64Images.length === 1 ? 'Change Image' : `Change Images (${base64Images.length})`;
-                        }
                     }
-                    
-                    // Update filename display
-                    if (filenameDisplay) {
+                }
+                
+                // Update filename display
+                if (filenameDisplay) {
                         filenameDisplay.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
-                        filenameDisplay.style.display = 'block';
-                    }
-                    
+                    filenameDisplay.style.display = 'block';
+                }
+                
                     // Update preview
-                    if (preview) {
+                if (preview) {
                         const previewId = preview.id;
                         preview.innerHTML = base64Images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
                         
@@ -2096,12 +2096,12 @@ function setupLogotypeSubsectionImageHandlers() {
                             const imgPreview = document.getElementById(imgPreviewId);
                             if (imgPreview) {
                                 const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                                if (removeBtn) {
-                                    removeBtn.setAttribute('data-input-id', input.id);
+                        if (removeBtn) {
+                            removeBtn.setAttribute('data-input-id', input.id);
                                     removeBtn.setAttribute('data-image-index', idx);
-                                    removeBtn.addEventListener('click', function(ev) {
-                                        ev.preventDefault();
-                                        ev.stopPropagation();
+                            removeBtn.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                ev.stopPropagation();
                                         removeImageFromArray(input, previewId, idx);
                                     });
                                 }
@@ -2175,24 +2175,24 @@ function setupLogotypeTabImageHandlers() {
                     
                     // Store images array on input
                     input.setAttribute('data-images', JSON.stringify(base64Images));
-                    
-                    // Update label
-                    if (label) {
-                        label.classList.add('has-file');
-                        const uploadText = label.querySelector('.upload-text');
-                        if (uploadText) {
+                
+                // Update label
+                if (label) {
+                    label.classList.add('has-file');
+                    const uploadText = label.querySelector('.upload-text');
+                    if (uploadText) {
                             uploadText.textContent = base64Images.length === 1 ? 'Change Image' : `Change Images (${base64Images.length})`;
-                        }
                     }
-                    
-                    // Update filename display
-                    if (filenameDisplay) {
+                }
+                
+                // Update filename display
+                if (filenameDisplay) {
                         filenameDisplay.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
-                        filenameDisplay.style.display = 'block';
-                    }
-                    
+                    filenameDisplay.style.display = 'block';
+                }
+                
                     // Update preview
-                    if (preview) {
+                if (preview) {
                         const previewId = preview.id;
                         preview.innerHTML = base64Images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
                         
@@ -2202,12 +2202,12 @@ function setupLogotypeTabImageHandlers() {
                             const imgPreview = document.getElementById(imgPreviewId);
                             if (imgPreview) {
                                 const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                                if (removeBtn) {
-                                    removeBtn.setAttribute('data-input-id', input.id);
+                        if (removeBtn) {
+                            removeBtn.setAttribute('data-input-id', input.id);
                                     removeBtn.setAttribute('data-image-index', idx);
-                                    removeBtn.addEventListener('click', function(ev) {
-                                        ev.preventDefault();
-                                        ev.stopPropagation();
+                            removeBtn.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                ev.stopPropagation();
                                         removeImageFromArray(input, previewId, idx);
                                     });
                                 }
@@ -3526,8 +3526,24 @@ function initializeStyledFileUploads() {
 }
 
 // Helper function to render image preview with remove button
+// Helper function to check if data URL is a video
+function isVideoDataUrl(dataUrl) {
+    return dataUrl && typeof dataUrl === 'string' && dataUrl.startsWith('data:video/');
+}
+
 function renderImagePreview(imageSrc, previewId, input) {
     const inputId = input ? (input.id || `${previewId}-input`) : `${previewId}-input`;
+    const isVideo = isVideoDataUrl(imageSrc);
+    
+    if (isVideo) {
+        return `
+            <div style="position: relative; display: inline-block; margin-top: 1rem;">
+                <video src="${imageSrc}" controls style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></video>
+                <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="${previewId}" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 0, 0, 1)'" onmouseout="this.style.background='rgba(255, 0, 0, 0.8)'" title="Remove video">×</button>
+            </div>
+        `;
+    }
+    
     return `
         <div style="position: relative; display: inline-block; margin-top: 1rem;">
             <img src="${imageSrc}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -4195,8 +4211,8 @@ function renderTypographyPreview() {
                             <input type="checkbox" class="typography-style-uppercase-toggle" data-style-name="heading2" ${typography.heading2?.uppercase ? 'checked' : ''} style="cursor: pointer;">
                             <span>Uppercase</span>
                         </label>
-                    </div>
                 </div>
+            </div>
             </div>
             <p class="preview-text preview-heading" style="font-family: ${headingFont ? `'${headingFont}'` : 'inherit'}, sans-serif; font-size: ${specs.heading2.fontSize}; line-height: ${specs.heading2.lineHeight}; letter-spacing: ${specs.heading2.letterSpacing}; ${typography.heading2?.uppercase ? 'text-transform: uppercase;' : ''}">
                 Valet enables you to enjoy alcohol better. A custom formulation that reduces the negative effects of alcohol consumption. We're here to make drinking a worry-free experience. Made from the highest quality ingredients.
@@ -4256,8 +4272,8 @@ function renderTypographyPreview() {
                             <input type="checkbox" class="typography-style-uppercase-toggle" data-style-name="button" ${typography.button?.uppercase ? 'checked' : ''} style="cursor: pointer;">
                             <span>Uppercase</span>
                         </label>
-                    </div>
                 </div>
+            </div>
             </div>
             <button class="preview-button" style="font-family: ${getFontFamily('button') ? `'${getFontFamily('button')}'` : 'inherit'}, sans-serif; font-size: ${specs.button.fontSize}; line-height: ${specs.button.lineHeight}; letter-spacing: ${specs.button.letterSpacing}; ${typography.button?.uppercase ? 'text-transform: uppercase;' : ''}">
                 Click Here
@@ -4284,8 +4300,8 @@ function renderTypographyPreview() {
                             <input type="checkbox" class="typography-style-uppercase-toggle" data-style-name="caption" ${typography.caption?.uppercase ? 'checked' : ''} style="cursor: pointer;">
                             <span>Uppercase</span>
                         </label>
-                    </div>
                 </div>
+            </div>
             </div>
             <p class="preview-text preview-caption" style="font-family: ${getFontFamily('caption') ? `'${getFontFamily('caption')}'` : 'inherit'}, sans-serif; font-size: ${specs.caption.fontSize}; line-height: ${specs.caption.lineHeight}; letter-spacing: ${specs.caption.letterSpacing}; ${typography.caption?.uppercase ? 'text-transform: uppercase;' : ''}">
                 This is a caption text example showing how small text appears.
