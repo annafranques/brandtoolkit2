@@ -353,7 +353,7 @@ body {
 .content-section-hero-image {
     position: absolute;
     top: 0;
-    left: -300px;
+    right: 0;
     width: calc(100vw - 300px);
     height: 100%;
     object-fit: cover;
@@ -709,7 +709,8 @@ body {
     font-size: 0.875rem;
     line-height: 1.5;
     color: #000;
-    padding: 0 5rem 3rem 5rem;
+    padding: 3rem 5rem 3rem 5rem;
+    margin-right: 3rem;
 }
 
 /* Subsection images grid (max 3 columns) - full width from navbar edge to right edge */
@@ -718,7 +719,6 @@ body {
     gap: 0;
     margin: 0;
     width: calc(100vw - 300px);
-    margin-left: -300px;
     padding: 0;
 }
 
@@ -1386,7 +1386,6 @@ body {
     }
     
     .content-section-hero-image {
-        left: -300px;
         width: calc(100vw - 300px);
     }
     
@@ -1428,7 +1427,7 @@ body {
     }
     
     .subsection-images {
-        margin-left: -300px;
+    
         width: calc(100vw - 300px);
     }
     
