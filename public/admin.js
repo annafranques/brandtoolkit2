@@ -4193,9 +4193,15 @@ function renderTypographyPreview() {
                         <span>Alignment:</span>
                         <span>Left</span>
                     </div>
+                    <div class="preview-section-spec" style="margin-left: auto;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem;">
+                            <input type="checkbox" class="typography-style-uppercase-toggle" data-style-name="heading2" ${typography.heading2?.uppercase ? 'checked' : ''} style="cursor: pointer;">
+                            <span>Uppercase</span>
+                        </label>
+                    </div>
                 </div>
             </div>
-            <p class="preview-text preview-heading" style="font-family: ${headingFont ? `'${headingFont}'` : 'inherit'}, sans-serif; font-size: ${specs.heading2.fontSize}; line-height: ${specs.heading2.lineHeight}; letter-spacing: ${specs.heading2.letterSpacing};">
+            <p class="preview-text preview-heading" style="font-family: ${headingFont ? `'${headingFont}'` : 'inherit'}, sans-serif; font-size: ${specs.heading2.fontSize}; line-height: ${specs.heading2.lineHeight}; letter-spacing: ${specs.heading2.letterSpacing}; ${typography.heading2?.uppercase ? 'text-transform: uppercase;' : ''}">
                 Valet enables you to enjoy alcohol better. A custom formulation that reduces the negative effects of alcohol consumption. We're here to make drinking a worry-free experience. Made from the highest quality ingredients.
             </p>
         </div>
@@ -4227,7 +4233,7 @@ function renderTypographyPreview() {
             </div>
             <div class="preview-body-columns">
                 ${Array(4).fill(0).map(() => `
-                    <p class="preview-text preview-body" style="font-family: ${bodyFont ? `'${bodyFont}'` : 'inherit'}, sans-serif; font-size: ${specs.body1.fontSize}; line-height: ${specs.body1.lineHeight}; letter-spacing: ${specs.body1.letterSpacing};">
+                    <p class="preview-text preview-body" style="font-family: ${bodyFont ? `'${bodyFont}'` : 'inherit'}, sans-serif; font-size: ${specs.body1.fontSize}; line-height: ${specs.body1.lineHeight}; letter-spacing: ${specs.body1.letterSpacing}; ${typography.body1?.uppercase ? 'text-transform: uppercase;' : ''}">
                         Enjoy your nights without compromise. For mornings as amazing as your nights. Valet enables you to enjoy alcohol better. A custom formulation that reduces the negative effects of alcohol consumption. We're here to make drinking a worry-free experience. Made from the highest quality ingredients.
                     </p>
                 `).join('')}
@@ -4256,7 +4262,7 @@ function renderTypographyPreview() {
                     </div>
                 </div>
             </div>
-            <button class="preview-button" style="font-family: ${getFontFamily('button') ? `'${getFontFamily('button')}'` : 'inherit'}, sans-serif; font-size: ${specs.button.fontSize}; line-height: ${specs.button.lineHeight}; letter-spacing: ${specs.button.letterSpacing};">
+            <button class="preview-button" style="font-family: ${getFontFamily('button') ? `'${getFontFamily('button')}'` : 'inherit'}, sans-serif; font-size: ${specs.button.fontSize}; line-height: ${specs.button.lineHeight}; letter-spacing: ${specs.button.letterSpacing}; ${typography.button?.uppercase ? 'text-transform: uppercase;' : ''}">
                 Click Here
             </button>
         </div>
@@ -4284,7 +4290,7 @@ function renderTypographyPreview() {
                     </div>
                 </div>
             </div>
-            <p class="preview-text preview-caption" style="font-family: ${getFontFamily('caption') ? `'${getFontFamily('caption')}'` : 'inherit'}, sans-serif; font-size: ${specs.caption.fontSize}; line-height: ${specs.caption.lineHeight}; letter-spacing: ${specs.caption.letterSpacing};">
+            <p class="preview-text preview-caption" style="font-family: ${getFontFamily('caption') ? `'${getFontFamily('caption')}'` : 'inherit'}, sans-serif; font-size: ${specs.caption.fontSize}; line-height: ${specs.caption.lineHeight}; letter-spacing: ${specs.caption.letterSpacing}; ${typography.caption?.uppercase ? 'text-transform: uppercase;' : ''}">
                 This is a caption text example showing how small text appears.
             </p>
         </div>
