@@ -1716,6 +1716,59 @@ app.post('/api/figma/import', async (req, res) => {
         }
         content.typography.primary = primaryFont;
         content.typography.secondary = secondaryFont;
+        
+        // Initialize typographySection if it doesn't exist
+        if (!content.typographySection) {
+          content.typographySection = {
+            mainTypography: { content: '' },
+            secondaryTypography: { content: '' }
+          };
+        }
+        
+        // Group typography by font family to determine primary vs secondary
+        const primaryStyles = typography.filter(t => t.fontFamily === primaryFont);
+        const secondaryStyles = typography.filter(t => t.fontFamily === secondaryFont && t.fontFamily !== primaryFont);
+        
+        // Generate content for mainTypography
+        if (primaryStyles.length > 0) {
+          let mainContent = `**Primary Typeface: ${primaryFont}**\n\n`;
+          mainContent += `The primary typeface provides strong visual hierarchy and brand recognition.\n\n`;
+          mainContent += `**Text Styles:**\n`;
+          primaryStyles.forEach(style => {
+            mainContent += `- **${style.name || 'Untitled'}**: ${style.fontSize ? style.fontSize + 'px' : 'N/A'} / ${style.fontWeight || 'normal'}`;
+            if (style.lineHeight) mainContent += ` / Line-height: ${style.lineHeight}`;
+            if (style.letterSpacing) mainContent += ` / Letter-spacing: ${style.letterSpacing}`;
+            mainContent += `\n`;
+          });
+          mainContent += `\n**Usage Guidelines:**\n`;
+          mainContent += `- Use for display text and headings\n`;
+          mainContent += `- Maintain consistent sizing hierarchy\n`;
+          mainContent += `- Pay attention to letter spacing and line height\n`;
+          mainContent += `- Use appropriate weights for emphasis`;
+          content.typographySection.mainTypography = { content: mainContent };
+        }
+        
+        // Generate content for secondaryTypography
+        if (secondaryStyles.length > 0 || (secondaryFont && secondaryFont !== primaryFont)) {
+          let secondaryContent = `**Secondary Typeface: ${secondaryFont}**\n\n`;
+          secondaryContent += `The secondary typeface complements the primary while ensuring excellent readability for extended text.\n\n`;
+          if (secondaryStyles.length > 0) {
+            secondaryContent += `**Text Styles:**\n`;
+            secondaryStyles.forEach(style => {
+              secondaryContent += `- **${style.name || 'Untitled'}**: ${style.fontSize ? style.fontSize + 'px' : 'N/A'} / ${style.fontWeight || 'normal'}`;
+              if (style.lineHeight) secondaryContent += ` / Line-height: ${style.lineHeight}`;
+              if (style.letterSpacing) secondaryContent += ` / Letter-spacing: ${style.letterSpacing}`;
+              secondaryContent += `\n`;
+            });
+            secondaryContent += `\n`;
+          }
+          secondaryContent += `**Usage Guidelines:**\n`;
+          secondaryContent += `- Use for body text and paragraphs\n`;
+          secondaryContent += `- Maintain readable line length (45-75 characters)\n`;
+          secondaryContent += `- Use appropriate line spacing for readability\n`;
+          secondaryContent += `- Apply consistent sizing across applications`;
+          content.typographySection.secondaryTypography = { content: secondaryContent };
+        }
       }
       
       await saveContent(content);

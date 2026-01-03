@@ -464,18 +464,6 @@ function populateForm(content) {
             if (el && content.typographySection[subsection]) {
                 if (typeof content.typographySection[subsection] === 'object') {
                     setValueSafely(elId, content.typographySection[subsection].content || '');
-                    const previewId = `typography-${camelToKebab(subsection)}-preview`;
-                    const preview = document.getElementById(previewId);
-                    if (preview && content.typographySection[subsection].image) {
-                        const input = document.querySelector(`[data-section="typographySection"][data-subsection="${subsection}"]`);
-                        preview.innerHTML = renderImagePreview(content.typographySection[subsection].image, previewId, input);
-                        const removeBtn = preview.querySelector('.remove-image-btn');
-                        if (removeBtn && input) {
-                            removeBtn.addEventListener('click', function() {
-                                removeImage(input, previewId);
-                            });
-                        }
-                    }
                 } else {
                     setValueSafely(elId, content.typographySection[subsection] || '');
                 }
@@ -2832,11 +2820,9 @@ async function rebuildContentFromForm() {
             image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
             downloadUrl: getValue('typography-download-url', ''),
             mainTypography: {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
                 content: getValue('typography-main-content')
             },
             secondaryTypography: {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
                 content: getValue('typography-secondary-content')
             },
         },
@@ -3173,12 +3159,10 @@ async function getSectionDataFromForm(sectionPath) {
     if (parentSection === 'typographySection') {
         if (section === 'mainTypography') {
             return {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
                 content: getValue('typography-main-content')
             };
         } else if (section === 'secondaryTypography') {
             return {
-                image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
                 content: getValue('typography-secondary-content')
             };
         }
