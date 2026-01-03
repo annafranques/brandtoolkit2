@@ -457,18 +457,6 @@ function populateForm(content) {
             setValueSafely('typography-download-url', content.typographySection.downloadUrl);
         }
         
-        ['mainTypography', 'secondaryTypography'].forEach(subsection => {
-            const camelToKebab = (str) => str.replace(/([A-Z])/g, '-$1').toLowerCase();
-            const elId = `typography-${camelToKebab(subsection)}-content`;
-            const el = document.getElementById(elId);
-            if (el && content.typographySection[subsection]) {
-                if (typeof content.typographySection[subsection] === 'object') {
-                    setValueSafely(elId, content.typographySection[subsection].content || '');
-                } else {
-                    setValueSafely(elId, content.typographySection[subsection] || '');
-                }
-            }
-        });
     }
     
     // 05. Applications - Hero Image
@@ -2819,12 +2807,6 @@ async function rebuildContentFromForm() {
         typographySection: {
             image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
             downloadUrl: getValue('typography-download-url', ''),
-            mainTypography: {
-                content: getValue('typography-main-content')
-            },
-            secondaryTypography: {
-                content: getValue('typography-secondary-content')
-            },
         },
         applications: await getApplicationsFromForm(),
         hiddenSections: currentContent?.hiddenSections || {},
@@ -3151,19 +3133,6 @@ async function getSectionDataFromForm(sectionPath) {
             return {
                 image: await getImageFromInput(document.querySelector('[data-section="frameRebel"][data-subsection="toneOfVoice"]'), getExistingImage('frameRebel.toneOfVoice.image')),
                 content: getValue('frame-rebel-tone-content')
-            };
-        }
-    }
-    
-    // Handle typographySection subsections
-    if (parentSection === 'typographySection') {
-        if (section === 'mainTypography') {
-            return {
-                content: getValue('typography-main-content')
-            };
-        } else if (section === 'secondaryTypography') {
-            return {
-                content: getValue('typography-secondary-content')
             };
         }
     }

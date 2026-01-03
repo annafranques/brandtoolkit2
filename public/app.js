@@ -684,16 +684,8 @@ async function loadContent() {
         if (typographySection && typographyContent && !hiddenSections['typography'] && content.typographySection) {
             const h2 = typographySection.querySelector('h2');
             
-            // Check for hero image (use content.typographySection.image if available, otherwise mainTypography.image)
-            let typographyHeroImage = null;
-            if (content.typographySection.image) {
-                typographyHeroImage = content.typographySection.image;
-            } else {
-                const typographyData = typeof content.typographySection.mainTypography === 'object' ? content.typographySection.mainTypography : { content: content.typographySection.mainTypography?.content || '' };
-                if (typographyData.image) {
-                    typographyHeroImage = typographyData.image;
-                }
-            }
+            // Check for hero image
+            const typographyHeroImage = content.typographySection.image || null;
             
             if (typographyHeroImage && h2) {
                 addSectionHero(typographySection, typographyHeroImage, 'Typography');
@@ -713,54 +705,6 @@ async function loadContent() {
                 }
             }, 0);
             
-            // Render typography subsections (after preview and download sections)
-            let typographySubsectionsHtml = '';
-            
-            if (content.typographySection.mainTypography) {
-                typographySubsectionsHtml += '<div class="subsection" id="typography-mainTypography"><div class="subsection-title">Main Typography</div>';
-                const mainContent = typeof content.typographySection.mainTypography === 'object' ? content.typographySection.mainTypography.content : content.typographySection.mainTypography;
-                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(mainContent || '')}</div>`;
-                const mainImages = content.typographySection.mainTypography.image || content.typographySection.mainTypography.images;
-                if (mainImages) {
-                    const mainImagesArray = Array.isArray(mainImages) ? mainImages : [mainImages];
-                    // Filter out hero image
-                    const filteredMainImages = mainImagesArray.filter(img => img !== typographyHeroImage);
-                    if (filteredMainImages.length > 0) {
-                        typographySubsectionsHtml += '<div class="subsection-images">';
-                        filteredMainImages.forEach((img, idx) => {
-                            typographySubsectionsHtml += `<div class="subsection-image"><img src="${img}" alt="Main Typography${filteredMainImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
-                        });
-                        typographySubsectionsHtml += '</div>';
-                    }
-                }
-                typographySubsectionsHtml += `</div>`;
-            }
-            
-            if (content.typographySection.secondaryTypography) {
-                typographySubsectionsHtml += '<div class="subsection" id="typography-secondaryTypography"><div class="subsection-title">Secondary Typography</div>';
-                const secondaryContent = typeof content.typographySection.secondaryTypography === 'object' ? content.typographySection.secondaryTypography.content : content.typographySection.secondaryTypography;
-                typographySubsectionsHtml += `<div class="subsection-content">${formatContent(secondaryContent || '')}</div>`;
-                const secondaryImages = content.typographySection.secondaryTypography.image || content.typographySection.secondaryTypography.images;
-                if (secondaryImages) {
-                    const secondaryImagesArray = Array.isArray(secondaryImages) ? secondaryImages : [secondaryImages];
-                    // Filter out hero image
-                    const filteredSecondaryImages = secondaryImagesArray.filter(img => img !== typographyHeroImage);
-                    if (filteredSecondaryImages.length > 0) {
-                        typographySubsectionsHtml += '<div class="subsection-images">';
-                        filteredSecondaryImages.forEach((img, idx) => {
-                            typographySubsectionsHtml += `<div class="subsection-image"><img src="${img}" alt="Secondary Typography${filteredSecondaryImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
-                        });
-                        typographySubsectionsHtml += '</div>';
-                    }
-                }
-                typographySubsectionsHtml += `</div>`;
-            }
-            
-            
-            // Append subsections to existing content (after preview and download sections)
-            if (typographySubsectionsHtml) {
-                typographyContent.insertAdjacentHTML('beforeend', typographySubsectionsHtml);
-            }
         }
         
         
