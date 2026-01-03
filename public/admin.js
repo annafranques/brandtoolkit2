@@ -1989,6 +1989,11 @@ async function getLogotypeSubsectionsFromForm() {
                 subsection.hasTabs = true;
             }
             
+            // Add generateDoNotExamples flag if this is a DO NOT template
+            if (shouldGenerateDoNot) {
+                subsection.generateDoNotExamples = true;
+            }
+            
             subsections.push(subsection);
         }
     }
