@@ -1249,6 +1249,12 @@ Guidelines:
         content: '',
         hasTabs: false
     },
+    'do-not': {
+        title: 'DO NOT',
+        content: `This section demonstrates incorrect logo usage. Examples are automatically generated from the logo SVG to show common mistakes that should be avoided.`,
+        hasTabs: false,
+        generateDoNotExamples: true
+    },
     'usage': {
         title: 'Usage',
         content: '',
@@ -1445,7 +1451,7 @@ function renderLogotypeSubsectionsList(subsections) {
         `;
         
         return `
-            <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+            <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${index}" ${templateKey ? `data-template-key="${templateKey}"` : ''} style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Logotype Subsection ${index + 1}</h3>
                     <button type="button" class="btn btn-danger" onclick="removeLogotypeSubsectionItem(${index})">Remove</button>
@@ -1890,6 +1896,10 @@ async function getLogotypeSubsectionsFromForm() {
         const existingSubsection = existingSubsections[index] || {};
         const existingImages = existingSubsection.image || existingSubsection.images || [];
         const existingImagesArray = Array.isArray(existingImages) ? existingImages : (existingImages ? [existingImages] : []);
+        
+        // Check template key from data attribute to determine if this is a DO NOT subsection
+        const templateKey = item.getAttribute('data-template-key');
+        const shouldGenerateDoNot = templateKey === 'do-not' || existingSubsection.generateDoNotExamples;
         
         // Check if this is a tabbed subsection (has tab content inputs)
         const tabContentInputs = item.querySelectorAll('.logotype-subsection-tab-content-input');

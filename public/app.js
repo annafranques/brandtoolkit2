@@ -480,8 +480,8 @@ async function loadContent() {
                 // Images after content (excluding hero image)
                 html += renderSubsectionImages(images, title, logotypeHeroImage);
                 
-                // Automatically generate DO NOT examples if we have an SVG logo
-                if (hasImages) {
+                // Automatically generate DO NOT examples only if this subsection has the generateDoNotExamples flag
+                if (subsection.generateDoNotExamples && hasImages) {
                     const imageArray = Array.isArray(images) ? images : [images];
                     const firstImage = imageArray[0];
                     
