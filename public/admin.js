@@ -3046,14 +3046,6 @@ async function saveContentFull() {
             },
             typographySection: {
                 image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
-                mainTypography: {
-                    image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="mainTypography"]'), getExistingImage('typographySection.mainTypography.image')),
-                    content: getValue('typography-main-content')
-                },
-                secondaryTypography: {
-                    image: await getImageFromInput(document.querySelector('[data-section="typographySection"][data-subsection="secondaryTypography"]'), getExistingImage('typographySection.secondaryTypography.image')),
-                    content: getValue('typography-secondary-content')
-                },
             },
             applications: await getApplicationsFromForm(),
             hiddenSections: currentContent?.hiddenSections || {},
@@ -4455,10 +4447,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (input.id.includes('correct')) trackSectionChange('color.correctApplications');
             else if (input.id.includes('monochromatic')) trackSectionChange('color.monochromatic');
             else if (input.id.includes('incorrect')) trackSectionChange('color.incorrectApplications');
-        } else if (input.id && input.id.includes('typography-') && input.id.includes('-content')) {
-            // Typography subsection changes
-            if (input.id.includes('main')) trackSectionChange('typographySection.mainTypography');
-            else if (input.id.includes('secondary')) trackSectionChange('typographySection.secondaryTypography');
         } else if (input.id && input.id.includes('frame-rebel-') && input.id.includes('-content')) {
             // FrameRebel subsection changes
             if (input.id.includes('about')) trackSectionChange('frameRebel.aboutTheProject');
@@ -4494,10 +4482,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (input.id.includes('correct')) trackSectionChange('color.correctApplications');
             else if (input.id.includes('monochromatic')) trackSectionChange('color.monochromatic');
             else if (input.id.includes('incorrect')) trackSectionChange('color.incorrectApplications');
-        } else if (input.id && input.id.includes('typography-') && input.id.includes('-content')) {
-            // Typography subsection changes
-            if (input.id.includes('main')) trackSectionChange('typographySection.mainTypography');
-            else if (input.id.includes('secondary')) trackSectionChange('typographySection.secondaryTypography');
         } else if (input.id && input.id.includes('frame-rebel-') && input.id.includes('-content')) {
             // FrameRebel subsection changes
             if (input.id.includes('about')) trackSectionChange('frameRebel.aboutTheProject');
