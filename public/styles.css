@@ -1763,6 +1763,17 @@ body {
     
     .color-grid {
         padding: 0 1.5rem;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .color-item {
+        padding: 1.5rem;
+        min-height: auto;
+    }
+    
+    .color-item-wrapper.color-item-full {
+        grid-column: 1;
     }
     
     .color-examples-grid {
@@ -1871,7 +1882,7 @@ video {
 
 
 @media only screen and (max-width: 768px) {
-    .typography-preview-container .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+  .content-section-content > div:not(.subsection-images):not(.subsection-image) {
         padding: 0;
     }
 
