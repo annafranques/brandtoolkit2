@@ -1867,3 +1867,23 @@ body {
 
 video {
     object-fit: cover !important; }
+
+
+
+@media only screen and (max-width: 768px) {
+    .typography-preview-container .content-section-content > div:not(.subsection-images):not(.subsection-image) {
+        padding: 0;
+    }
+
+    .preview-section-header {
+        flex-direction: column;
+    }
+
+    .subsection:not(:has(.usage-tabs)) {
+        grid-template-columns: 100%;
+    }
+
+    .subsection-title {
+        margin-bottom: 2rem;
+    }
+}
