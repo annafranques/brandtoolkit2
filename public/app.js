@@ -1698,7 +1698,7 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                     </div>
                 </div>
             </div>
-            <p class="preview-text preview-caption" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.caption.fontSize} !important; line-height: ${specs.caption.lineHeight} !important; letter-spacing: ${specs.caption.letterSpacing} !important;">
+            <p class="preview-text preview-caption" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.caption.fontSize} !important; line-height: ${specs.caption.lineHeight} !important; letter-spacing: ${specs.caption.letterSpacing} !important; ${uppercaseStyle}">
                 This is a caption text example showing how small text appears.
             </p>
         </div>
