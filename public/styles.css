@@ -1653,6 +1653,10 @@ body {
         min-height: 50vh;
         object-fit: cover;
     }
+
+    .typography-preview-area {
+        padding: 0;
+    }
     
     .content-section-hero video {
         position: relative !important;
@@ -1766,7 +1770,7 @@ body {
     }
     
     .typography-preview-container {
-        padding: 2rem 1.5rem;
+        padding: 0;
     }
     
     #typography-content .typography-item {
