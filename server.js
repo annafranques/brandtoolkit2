@@ -683,14 +683,6 @@ function getDefaultContent() {
       }
     },
     typographySection: {
-      mainTypography: {
-        image: '',
-        content: 'Our main typography system provides the foundation for all brand communications. The primary typeface has been selected for its clarity, versatility, and ability to convey our brand personality.\n\n**Primary Typeface:**\nThe primary typeface should be used for headlines, subheadings, and key messaging. It provides strong visual hierarchy and brand recognition.\n\n**Usage Guidelines:**\n- Use for display text and headings\n- Maintain consistent sizing hierarchy\n- Pay attention to letter spacing and line height\n- Use appropriate weights for emphasis'
-      },
-      secondaryTypography: {
-        image: '',
-        content: 'The secondary typography supports the main typeface and provides flexibility for body text, captions, and supplementary information.\n\n**Secondary Typeface:**\nThe secondary typeface complements the primary while ensuring excellent readability for extended text.\n\n**Usage Guidelines:**\n- Use for body text and paragraphs\n- Maintain readable line length (45-75 characters)\n- Use appropriate line spacing for readability\n- Apply consistent sizing across applications'
-      },
       readingLevels: {
         image: '',
         content: 'Typography hierarchy creates clear reading levels that guide users through content and establish information priority.\n\n**Reading Levels:**\n1. **Level 1 - Display:** Largest size, used for hero headlines and major statements\n2. **Level 2 - Heading 1:** Primary section headings\n3. **Level 3 - Heading 2:** Subsection headings\n4. **Level 4 - Heading 3:** Minor headings and labels\n5. **Level 5 - Body:** Standard body text\n6. **Level 6 - Small:** Captions, footnotes, and fine print\n\nConsistent application of these levels ensures clarity and professional appearance across all materials.'
