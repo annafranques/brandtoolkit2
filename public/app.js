@@ -1418,6 +1418,30 @@ let currentDevice = 'desktop';
 // Cache typography data to avoid re-fetching
 let cachedTypographyData = null;
 let cachedContentData = null;
+let uppercaseEnabled = false;
+
+function toggleUppercase() {
+    uppercaseEnabled = !uppercaseEnabled;
+    const toggleBtn = document.getElementById('uppercase-toggle');
+    const toggleText = document.getElementById('uppercase-toggle-text');
+    
+    if (toggleBtn) {
+        if (uppercaseEnabled) {
+            toggleBtn.classList.add('active');
+            if (toggleText) toggleText.textContent = 'Uppercase (ON)';
+        } else {
+            toggleBtn.classList.remove('active');
+            if (toggleText) toggleText.textContent = 'Uppercase';
+        }
+    }
+    
+    // Re-render preview with updated uppercase state
+    if (cachedTypographyData) {
+        renderTypographyPreview(cachedTypographyData, cachedContentData);
+    } else {
+        loadTypographyPreview();
+    }
+}
 
 function switchDevice(device) {
     currentDevice = device;
@@ -1558,7 +1582,7 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                     </div>
                 </div>
             </div>
-            <p class="preview-text preview-display" style="font-family: '${displayFont || 'inherit'}' !important; font-size: ${specs.display.fontSize} !important; line-height: ${specs.display.lineHeight} !important; letter-spacing: ${specs.display.letterSpacing} !important;">
+            <p class="preview-text preview-display" style="font-family: '${displayFont || 'inherit'}' !important; font-size: ${specs.display.fontSize} !important; line-height: ${specs.display.lineHeight} !important; letter-spacing: ${specs.display.letterSpacing} !important; ${uppercaseStyle}">
                 The Quick Brown Fox
             </p>
         </div>
@@ -1578,7 +1602,7 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                     </div>
                 </div>
             </div>
-            <h1 class="preview-text preview-heading" style="font-family: '${headingFont || 'inherit'}' !important; font-size: ${specs.heading1.fontSize} !important; line-height: ${specs.heading1.lineHeight} !important; letter-spacing: ${specs.heading1.letterSpacing} !important;">
+            <h1 class="preview-text preview-heading" style="font-family: '${headingFont || 'inherit'}' !important; font-size: ${specs.heading1.fontSize} !important; line-height: ${specs.heading1.lineHeight} !important; letter-spacing: ${specs.heading1.letterSpacing} !important; ${uppercaseStyle}">
                 The Quick Brown Fox Jumps Over The Lazy Dog
             </h1>
         </div>
@@ -1599,16 +1623,16 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                 </div>
             </div>
             <div class="preview-body-columns">
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
                     Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                 </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
                     Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
                 </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important;">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
                     Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                 </p>
             </div>
@@ -1629,7 +1653,7 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                     </div>
                 </div>
             </div>
-            <div class="preview-button" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.button.fontSize} !important; line-height: ${specs.button.lineHeight} !important; letter-spacing: ${specs.button.letterSpacing} !important;">
+            <div class="preview-button" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.button.fontSize} !important; line-height: ${specs.button.lineHeight} !important; letter-spacing: ${specs.button.letterSpacing} !important; ${uppercaseStyle}">
                 Button Text
             </div>
         </div>
@@ -1650,10 +1674,10 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                 </div>
             </div>
             <div>
-                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important;">
+                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${uppercaseStyle}">
                     Cardboard Box
                 </span>
-                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important;">
+                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${uppercaseStyle}">
                     Rolex Booklet
                 </span>
             </div>
