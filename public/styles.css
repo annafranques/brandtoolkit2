@@ -899,6 +899,158 @@ body {
     margin-bottom: 1rem;
 }
 
+/* DO NOT Examples Grid */
+.do-not-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    margin: 3rem 0 0 0;
+    padding: 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+.do-not-example {
+    padding: 2rem;
+    border-bottom: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+}
+
+.do-not-example:nth-child(2n) {
+    border-right: none;
+}
+
+.do-not-example:last-child,
+.do-not-example:nth-last-child(2) {
+    border-bottom: none;
+}
+
+.do-not-instruction {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: normal;
+    color: #000;
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+}
+
+.do-not-logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 80px;
+    width: 100%;
+}
+
+.do-not-logo-container svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Crop - overflow hidden with smaller height */
+.do-not-crop {
+    overflow: hidden;
+    height: 60px;
+}
+
+/* Distort - scale transform */
+.do-not-distort svg {
+    transform: scaleX(0.7) scaleY(1.3);
+}
+
+/* Transparency - opacity */
+.do-not-transparency {
+    opacity: 0.4;
+}
+
+/* Drop Shadow - filter */
+.do-not-shadow svg {
+    filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Colors - custom fill color */
+.do-not-color svg path {
+    fill: #eec258 !important;
+}
+
+.do-not-color svg {
+    fill: #eec258 !important;
+}
+
+/* Outline - fill none, stroke black */
+.do-not-outline svg path {
+    fill: none !important;
+    stroke: #000 !important;
+    stroke-width: 1 !important;
+}
+
+/* Shuffle - transform scaleY(-1) */
+.do-not-shuffle svg {
+    transform: scaleY(-1);
+}
+
+/* Re-create - Times New Roman text */
+.do-not-text-recreate {
+    font-family: 'Times New Roman', serif;
+    font-size: 1.5rem;
+    color: #000;
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Graphic Elements - yellow background block */
+.do-not-graphic {
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.do-not-graphic-element {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: #eec258;
+    width: 110%;
+    margin-left: -5%;
+}
+
+/* Rotate - transform rotate */
+.do-not-rotate svg {
+    transform: rotate(-5deg);
+}
+
+/* Mobile responsive for DO NOT grid */
+@media (max-width: 768px) {
+    .do-not-grid {
+        grid-template-columns: 1fr;
+        margin: 2rem 0 0 0;
+    }
+    
+    .do-not-example {
+        padding: 1.5rem;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .do-not-example:last-child {
+        border-bottom: none;
+    }
+    
+    .do-not-example:nth-child(2n) {
+        border-right: none;
+    }
+    
+    .do-not-instruction {
+        font-size: 0.8125rem;
+        margin-bottom: 1rem;
+    }
+    
+    .do-not-logo-container {
+        min-height: 60px;
+    }
+}
+
 /* Logo Container */
 .logo-container {
     margin: 2rem 0;

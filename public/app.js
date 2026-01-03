@@ -480,6 +480,46 @@ async function loadContent() {
                 // Images after content (excluding hero image)
                 html += renderSubsectionImages(images, title, logotypeHeroImage);
                 
+                // Automatically generate DO NOT examples if we have an SVG logo
+                if (hasImages) {
+                    const imageArray = Array.isArray(images) ? images : [images];
+                    const firstImage = imageArray[0];
+                    
+                    // Check if the first image is an SVG (either data URL or inline SVG)
+                    if (firstImage && (firstImage.trim().startsWith('<svg') || firstImage.includes('data:image/svg+xml'))) {
+                        let logoSVG = firstImage;
+                        
+                        // If it's a data URL, we need to extract the SVG
+                        if (firstImage.includes('data:image/svg+xml')) {
+                            try {
+                                // Handle both base64 and URL-encoded SVG data URLs
+                                if (firstImage.includes(';base64,')) {
+                                    // Base64 encoded
+                                    const base64Match = firstImage.match(/data:image\/svg\+xml[^,]*;base64,(.+)/);
+                                    if (base64Match) {
+                                        logoSVG = atob(base64Match[1]);
+                                    }
+                                } else {
+                                    // URL encoded
+                                    const urlMatch = firstImage.match(/data:image\/svg\+xml[^,]*,?(.+)/);
+                                    if (urlMatch) {
+                                        logoSVG = decodeURIComponent(urlMatch[1]);
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Could not decode SVG data URL:', e);
+                                // Fallback: try to use the original if it's already an SVG
+                                if (!firstImage.trim().startsWith('<svg')) {
+                                    return html + `</div>`;
+                                }
+                            }
+                        }
+                        
+                        // Generate DO NOT examples
+                        html += generateDoNotExamples(logoSVG, content.brandName);
+                    }
+                }
+                
                 html += `</div>`;
                 
                 return html;
@@ -1802,6 +1842,134 @@ function applyColorToSVG(svgString, color) {
     });
     
     return modifiedSVG;
+}
+
+// Generate DO NOT examples from SVG logo
+function generateDoNotExamples(logoSVG, brandName) {
+    if (!logoSVG) return '';
+    
+    // Extract text content from SVG for the "Re-create" example
+    // Try to find text elements or use brand name as fallback
+    let logoText = brandName || 'LOGO';
+    try {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(logoSVG, 'image/svg+xml');
+        const textElements = svgDoc.querySelectorAll('text, tspan');
+        if (textElements.length > 0) {
+            logoText = Array.from(textElements).map(el => el.textContent).join(' ').trim() || brandName || 'LOGO';
+        }
+    } catch (e) {
+        // Use brand name if parsing fails
+        logoText = brandName || 'LOGO';
+    }
+    
+    // Create SVG with outline (fill: none, stroke: black)
+    function createOutlineSVG(svgString) {
+        let outlineSVG = svgString;
+        // Replace all fill attributes with fill="none" (but preserve fill="none" if already there)
+        outlineSVG = outlineSVG.replace(/fill="(?!none)[^"]*"/gi, 'fill="none"');
+        outlineSVG = outlineSVG.replace(/fill='(?!none)[^']*'/gi, "fill='none'");
+        // Add or replace stroke="black" to all relevant SVG elements (path, circle, rect, ellipse, polygon, polyline, text)
+        const svgElements = ['path', 'circle', 'rect', 'ellipse', 'polygon', 'polyline', 'text'];
+        svgElements.forEach(element => {
+            outlineSVG = outlineSVG.replace(new RegExp(`<${element}([^>]*?)>`, 'gi'), (match, attrs) => {
+                if (!attrs.includes('stroke')) {
+                    return `<${element}${attrs} stroke="black" stroke-width="1">`;
+                }
+                return match.replace(/stroke="[^"]*"/gi, 'stroke="black"').replace(/stroke='[^']*'/gi, "stroke='black'");
+            });
+        });
+        return outlineSVG;
+    }
+    
+    // Create SVG with custom fill color
+    function createColoredSVG(svgString, color) {
+        return applyColorToSVG(svgString, color);
+    }
+    
+    const doNotExamples = [
+        {
+            instruction: 'DO NOT CROP THE LOGO',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT CROP THE LOGO</div>
+                <div class="do-not-logo-container do-not-crop">${logoSVG}</div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT DISTORT THE LOGO',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT DISTORT THE LOGO</div>
+                <div class="do-not-logo-container do-not-distort">${logoSVG}</div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT CHANGE THE TRANSPARENCY OF THE LOGO',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT CHANGE THE TRANSPARENCY OF THE LOGO</div>
+                <div class="do-not-logo-container do-not-transparency">${logoSVG}</div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT USE DROP SHADOWS OR ANY OTHER EFFECTS',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT USE DROP SHADOWS OR ANY OTHER EFFECTS</div>
+                <div class="do-not-logo-container do-not-shadow">${logoSVG}</div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT USE DIFFERENT COLORS',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT USE DIFFERENT COLORS</div>
+                <div class="do-not-logo-container do-not-color">${createColoredSVG(logoSVG, '#eec258')}</div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT OUTLINE LOGOTYPE',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT OUTLINE LOGOTYPE</div>
+                <div class="do-not-logo-container do-not-outline">${createOutlineSVG(logoSVG)}</div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT SHUFFLE AROUND THE LOGO',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT SHUFFLE AROUND THE LOGO</div>
+                <div class="do-not-logo-container do-not-shuffle">${logoSVG}</div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT RE-CREATE USING ANY OTHER TYPEFACE',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT RE-CREATE USING ANY OTHER TYPEFACE</div>
+                <div class="do-not-logo-container do-not-recreate"><div class="do-not-text-recreate">${logoText}</div></div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT ADD NEW GRAPHIC ELEMENTS TO THE LOGO.',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT ADD NEW GRAPHIC ELEMENTS TO THE LOGO.</div>
+                <div class="do-not-logo-container do-not-graphic">
+                    ${logoSVG}
+                    <div class="do-not-graphic-element"></div>
+                </div>
+            </div>`
+        },
+        {
+            instruction: 'DO NOT ROTATE ANY PART OF THE LOGO',
+            html: `<div class="do-not-example">
+                <div class="do-not-instruction">DO NOT ROTATE ANY PART OF THE LOGO</div>
+                <div class="do-not-logo-container do-not-rotate">${logoSVG}</div>
+            </div>`
+        }
+    ];
+    
+    let html = '<div class="do-not-grid">';
+    doNotExamples.forEach(example => {
+        html += example.html;
+    });
+    html += '</div>';
+    
+    return html;
 }
 
 // Generate incorrect color examples - colors that are NOT in the brand palette or have poor contrast
