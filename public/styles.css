@@ -1636,17 +1636,52 @@ body {
     
     .content-section-hero {
         padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: auto;
     }
     
     .content-section-hero-image,
     .content-section-hero-video {
         left: 0;
         width: 100%;
+        position: relative;
+        height: auto;
+        min-height: 50vh;
+    }
+    
+    .content-section-hero video {
+        position: relative;
+        height: auto;
+        min-height: 50vh;
     }
     
     .content-section-hero h2 {
         font-size: 1.75rem;
-        padding: 0 1.5rem;
+        padding: 2rem 1.5rem;
+        color: #000;
+        position: relative;
+        z-index: auto;
+        display: block;
+        background: #fff;
+    }
+    
+    .content-section-hero h2 > span:not(.download-buttons-container):not(.font-download-buttons-container) {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .content-section-hero h2 .download-buttons-container,
+    .content-section-hero h2 .font-download-buttons-container {
+        display: block;
+        margin-top: 1rem;
+    }
+    
+    .content-section-hero h2 .download-buttons-container .section-download-btn,
+    .content-section-hero h2 .font-download-buttons-container .font-download-btn {
+        background-color: #000;
+        color: #fff;
     }
     
     .content-section-content {
@@ -1661,7 +1696,7 @@ body {
     }
     
     .content-section-content > *:first-child {
-        padding-top: 1rem;
+        padding-top: 0;
     }
     
     .content-section-content > *:last-child {
