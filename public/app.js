@@ -2417,9 +2417,48 @@ document.addEventListener('DOMContentLoaded', () => {
             hidePreloader();
         });
         loadTypographyPreview();
+        
+        // Initialize mobile menu
+        initMobileMenu();
     } catch (error) {
         console.error('Error in DOMContentLoaded:', error);
         // Hide preloader on error (respects minimum 3 seconds)
         hidePreloader();
     }
 });
+
+// Initialize mobile menu functionality
+function initMobileMenu() {
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const body = document.body;
+    
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+            body.classList.toggle('sidebar-open');
+            const isOpen = sidebar.classList.contains('mobile-open');
+            mobileMenuBtn.setAttribute('aria-expanded', isOpen);
+        });
+        
+        // Close menu when clicking overlay
+        const overlay = document.querySelector('.sidebar-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-open');
+                body.classList.remove('sidebar-open');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            });
+        }
+        
+        // Close menu when clicking a nav link
+        const navLinks = sidebar.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-open');
+                body.classList.remove('sidebar-open');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
+}

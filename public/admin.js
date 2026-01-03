@@ -2620,10 +2620,9 @@ function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         // Check file size before converting
         // MongoDB has a 16MB document limit, base64 increases size by ~33%
-        // For videos, we use a smaller limit (5MB) since they're typically much larger
-        // For images, we allow up to 12MB
+        // For videos and images, we allow up to 12MB
         const isVideo = file.type && file.type.startsWith('video/');
-        const MAX_FILE_SIZE = isVideo ? (5 * 1024 * 1024) : (12 * 1024 * 1024); // 5MB for videos, 12MB for images
+        const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB for both videos and images
         
         if (file.size > MAX_FILE_SIZE) {
             const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
@@ -3891,10 +3890,9 @@ function setupImageUploadHandlers() {
                 if (!file) return;
                 
                 // Check file size before processing
-                // For videos, use smaller limit (5MB) since they're typically much larger
-                // For images, allow up to 12MB
+                // For videos and images, allow up to 12MB
                 const isVideo = file.type && file.type.startsWith('video/');
-                const MAX_FILE_SIZE = isVideo ? (5 * 1024 * 1024) : (12 * 1024 * 1024); // 5MB for videos, 12MB for images
+                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB for both videos and images
                 if (file.size > MAX_FILE_SIZE) {
                     const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
                     const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
