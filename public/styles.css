@@ -526,7 +526,6 @@ body {
 
 /* Download button for assets */
 .download-asset-btn {
-    position: absolute;
     top: 1rem;
     right: 1rem;
     background: #000;
