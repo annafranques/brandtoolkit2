@@ -465,7 +465,14 @@ async function loadContent() {
                 const contentOnlyClass = !hasImages && contentText ? 'logotype-content-only' : '';
                 const subsectionId = `logotype-subsection-${index}`;
                 
-                console.log(`Rendering subsection ${index}:`, { title, hasContent: !!contentText, hasImages, contentLength: contentText.length });
+                console.log(`Rendering subsection ${index}:`, { 
+                    title, 
+                    hasContent: !!contentText, 
+                    hasImages, 
+                    contentLength: contentText.length,
+                    generateDoNotExamples: subsection.generateDoNotExamples,
+                    images: images
+                });
                 
                 let html = `<div class="subsection ${contentOnlyClass}" id="${subsectionId}">`;
                 html += `<div class="subsection-title">${title}`;
@@ -481,6 +488,14 @@ async function loadContent() {
                 html += renderSubsectionImages(images, title, logotypeHeroImage);
                 
                 // Automatically generate DO NOT examples only if this subsection has the generateDoNotExamples flag
+                console.log(`DO NOT check for subsection ${index}:`, {
+                    generateDoNotExamples: subsection.generateDoNotExamples,
+                    hasImages: hasImages,
+                    imagesType: typeof images,
+                    isArray: Array.isArray(images),
+                    firstImage: Array.isArray(images) ? images[0] : images
+                });
+                
                 if (subsection.generateDoNotExamples && hasImages) {
                     const imageArray = Array.isArray(images) ? images : [images];
                     const firstImage = imageArray[0];
