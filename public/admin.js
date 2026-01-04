@@ -2939,89 +2939,6 @@ function setupLogotypeHandlers() {
     }
 }
 
-async function setupApplicationImageHandlers() {
-    const imageInputs = document.querySelectorAll('.application-image-input');
-    imageInputs.forEach(input => {
-        if (!input.hasAttribute('data-handler-added')) {
-            input.setAttribute('data-handler-added', 'true');
-            input.addEventListener('change', async function(e) {
-                const files = Array.from(e.target.files);
-                if (files.length === 0) return;
-                
-                // Limit to 3 images
-                if (files.length > 3) {
-                    showStatus('You can only select up to 3 images. Please select 3 or fewer images.', 'error');
-                    input.value = '';
-                    return;
-                }
-                
-                const applicationIndex = this.getAttribute('data-application-index');
-                const label = document.querySelector(`label[for="${this.id}"]`);
-                const filenameDisplay = document.getElementById(`${this.id}-filename`);
-                const preview = document.getElementById(`application-preview-${applicationIndex}`);
-                
-                // Convert files to base64 (images will be compressed automatically)
-                const imagePromises = files.map(file => {
-                    return fileToBase64(file).catch(error => {
-                        throw new Error(`File "${file.name}": ${error.message}`);
-                    });
-                });
-                
-                try {
-                    const base64Images = await Promise.all(imagePromises);
-                    
-                    // Store images array on input
-                    input.setAttribute('data-images', JSON.stringify(base64Images));
-                
-                    // Update label
-            if (label) {
-                label.classList.add('has-file');
-                const uploadText = label.querySelector('.upload-text');
-                if (uploadText) {
-                            uploadText.textContent = base64Images.length === 1 ? 'Change Image' : `Change Images (${base64Images.length})`;
-                }
-            }
-            
-            // Update filename display
-            if (filenameDisplay) {
-                        filenameDisplay.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
-                filenameDisplay.style.display = 'block';
-            }
-            
-            // Update preview
-            if (preview) {
-                    const previewId = preview.id;
-                        preview.innerHTML = base64Images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
-                        
-                        // Attach remove handlers
-                        base64Images.forEach((img, idx) => {
-                            const imgPreviewId = `${previewId}-${idx}`;
-                            const imgPreview = document.getElementById(imgPreviewId);
-                            if (imgPreview) {
-                                const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                    if (removeBtn) {
-                                    removeBtn.setAttribute('data-input-id', input.id);
-                                    removeBtn.setAttribute('data-image-index', idx);
-                        removeBtn.addEventListener('click', function(ev) {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                                        removeImageFromArray(input, previewId, idx);
-                                    });
-                                }
-                            }
-                        });
-                    }
-                    
-                    trackSectionChange('applications');
-                } catch (error) {
-                    showStatus(error.message, 'error');
-                    input.value = '';
-                    input.removeAttribute('data-images');
-                }
-            });
-        }
-    });
-}
 
 // Handle Figma JSON file upload
 async function handleFigmaFileUpload(event) {
@@ -3480,10 +3397,10 @@ async function rebuildContentFromForm() {
         typographySection: {
             image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
             downloadUrl: getValue('typography-download-url', ''),
-        },
+            },
         applications: {
             subsections: await getApplicationsSubsectionsFromForm()
-        },
+            },
         hiddenSections: currentContent?.hiddenSections || {},
         assets: currentContent?.assets || []
     };
@@ -3721,10 +3638,10 @@ async function saveContentFull() {
             },
             typographySection: {
                 image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
-            },
+                },
             applications: {
             subsections: await getApplicationsSubsectionsFromForm()
-        },
+                },
             hiddenSections: currentContent?.hiddenSections || {},
             assets: currentContent?.assets || []
         };
