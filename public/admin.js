@@ -1754,7 +1754,7 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
     }
     
     const newSubsectionHtml = `
-        <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${logotypeCounter}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+        <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${logotypeCounter}" ${templateKey ? `data-template-key="${templateKey}"` : ''} style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Logotype Subsection ${logotypeCounter + 1}</h3>
                 <button type="button" class="btn btn-danger" onclick="removeLogotypeSubsectionItem(${logotypeCounter})">Remove</button>
