@@ -62,7 +62,7 @@
                         <a href="#section-typography" class="admin-nav-link" data-section="typography">03. Typography</a>
                     </li>
                     <li>
-                        <a href="#section-applications" class="admin-nav-link" data-section="applications">04. Applications</a>
+                        <a href="#section-applications" class="admin-nav-link" data-section="applications">04. Applications v2</a>
                         <ul id="admin-applications-subsections" style="list-style: none; margin-left: 0; padding-left: 0; margin-top: 0.25rem;">
                             <!-- Subsections will be populated dynamically -->
                         </ul>
@@ -317,25 +317,22 @@
                 <!-- 04. Applications Section -->
                 <div class="admin-section" id="section-applications">
                     <div class="admin-section-header">
-                        <h2>04. Applications</h2>
+                        <h2>04. Applications v2</h2>
                         <label class="visibility-toggle">
                             <input type="checkbox" id="visibility-applications" data-section="applications">
                             <span>Visible on frontend</span>
                         </label>
                     </div>
                     
-                    <div class="form-group" style="margin-top: 2rem; margin-bottom: 2rem;">
-                        <label>Hero Image / Video</label>
-                        <input type="file" class="section-hero-image-input" id="applications-hero-input" data-section="applications" accept="image/*,video/*">
-                        <small style="display: block; margin-top: 0.5rem; margin-bottom: 0.5rem; color: #666;">OR paste a Vimeo URL:</small>
-                        <input type="url" class="form-control section-hero-url-input" id="applications-hero-url" data-section="applications" placeholder="https://vimeo.com/123456789">
-                        <div class="image-preview" id="applications-hero-preview"></div>
-                    </div>
-                    
-                    <div id="applications-list"></div>
-                    
-                    <div class="form-group" style="margin-top: 2rem;">
-                        <button type="button" id="add-application-btn" class="btn btn-secondary">+ Add Application Subsection</button>
+                    <div class="applications-section">
+                        <!-- Applications Subsections Repeater -->
+                        <div style="margin-top: 2rem;">
+                            <h3 style="margin: 0 0 1.5rem 0; font-size: 1.125rem; font-weight: normal;">Application Subsections</h3>
+                            <div id="applications-subsections-list"></div>
+                            <div style="margin-top: 2rem;">
+                                <button type="button" class="btn btn-primary" id="add-applications-subsection-btn">Add Subsection</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
