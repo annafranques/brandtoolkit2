@@ -1905,7 +1905,9 @@ async function getLogotypeSubsectionsFromForm() {
         
         // Check template key from data attribute to determine if this is a DO NOT subsection
         const templateKey = item.getAttribute('data-template-key');
-        const shouldGenerateDoNot = templateKey === 'do-not' || existingSubsection.generateDoNotExamples;
+        // Also check title as fallback (in case data-template-key was not set in older versions)
+        const isDoNotByTitle = title && title.toLowerCase().includes('do not');
+        const shouldGenerateDoNot = templateKey === 'do-not' || existingSubsection.generateDoNotExamples || isDoNotByTitle;
         
         // Check if this is a tabbed subsection (has tab content inputs)
         const tabContentInputs = item.querySelectorAll('.logotype-subsection-tab-content-input');
