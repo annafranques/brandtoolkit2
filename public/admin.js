@@ -1140,6 +1140,25 @@ function removeApplicationItem(index) {
     }
 }
 
+// Update admin navigation for applications subsections
+function updateAdminNavApplications(applications) {
+    const navList = document.getElementById('admin-applications-subsections');
+    if (!navList) return;
+    
+    const applicationsArray = Array.isArray(applications) ? applications : [];
+    
+    if (applicationsArray.length === 0) {
+        navList.innerHTML = '';
+        return;
+    }
+    
+    navList.innerHTML = applicationsArray.map((app, index) => {
+        const title = app.title || `Application ${index + 1}`;
+        const subsectionId = `applications-${index}`;
+        return `<li><a href="#${subsectionId}" class="admin-nav-link subsection-link" data-section="applications" data-subsection-index="${index}">${title.replace(/"/g, '&quot;')}</a></li>`;
+    }).join('');
+}
+
 // Synchronous version for getting applications (for nav updates)
 function getApplicationsFromFormSync() {
     const applicationsList = document.getElementById('applications-list');
