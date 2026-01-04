@@ -1828,6 +1828,46 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
     }
 }
 
+async function moveLogotypeSubsectionUp(index) {
+    if (index === 0) return; // Can't move first item up
+    
+    const subsectionsList = document.getElementById('logotype-subsections-list');
+    if (!subsectionsList) return;
+    
+    // Get current data from form (this preserves all form values including images)
+    const currentSubsections = await getLogotypeSubsectionsFromForm();
+    if (index >= currentSubsections.length || index === 0) return;
+    
+    // Swap the items in the array
+    [currentSubsections[index - 1], currentSubsections[index]] = [currentSubsections[index], currentSubsections[index - 1]];
+    
+    // Update currentContent
+    if (!currentContent.logotype) currentContent.logotype = {};
+    currentContent.logotype.subsections = currentSubsections;
+    
+    // Re-render the list with the new order
+    renderLogotypeSubsectionsList(currentSubsections);
+}
+
+async function moveLogotypeSubsectionDown(index) {
+    const subsectionsList = document.getElementById('logotype-subsections-list');
+    if (!subsectionsList) return;
+    
+    // Get current data from form (this preserves all form values including images)
+    const currentSubsections = await getLogotypeSubsectionsFromForm();
+    if (index >= currentSubsections.length - 1) return; // Can't move last item down
+    
+    // Swap the items in the array
+    [currentSubsections[index], currentSubsections[index + 1]] = [currentSubsections[index + 1], currentSubsections[index]];
+    
+    // Update currentContent
+    if (!currentContent.logotype) currentContent.logotype = {};
+    currentContent.logotype.subsections = currentSubsections;
+    
+    // Re-render the list with the new order
+    renderLogotypeSubsectionsList(currentSubsections);
+}
+
 function removeLogotypeSubsectionItem(index) {
     const subsectionsList = document.getElementById('logotype-subsections-list');
     if (!subsectionsList) return;
