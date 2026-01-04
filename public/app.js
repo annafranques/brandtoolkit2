@@ -934,9 +934,14 @@ async function loadContent() {
             let applicationsHeroImage = null;
             if (content.applications && content.applications.image) {
                 applicationsHeroImage = content.applications.image;
-            } else if (applicationsArray.length > 0 && applicationsArray[0].image) {
-                const firstAppImage = applicationsArray[0].image;
-                applicationsHeroImage = Array.isArray(firstAppImage) ? firstAppImage[0] : firstAppImage;
+            } else if (applicationsArray.length > 0) {
+                // Check for images array first, then fall back to image for backward compatibility
+                const firstApp = applicationsArray[0];
+                const firstAppImages = firstApp.images || (firstApp.image ? [firstApp.image] : []);
+                const firstAppImagesArray = Array.isArray(firstAppImages) ? firstAppImages : [firstAppImages];
+                if (firstAppImagesArray.length > 0) {
+                    applicationsHeroImage = firstAppImagesArray[0];
+                }
             }
             
             const h2Applications = applicationsSection.querySelector('h2');
