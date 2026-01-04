@@ -960,7 +960,8 @@ async function loadContent() {
                 html += `<div class="subsection-content">${formatContent(app.content || '')}</div>`;
                 
                 // Render images (handle both single and array, excluding hero image)
-                const appImages = app.image || app.images;
+                // Check images array first (new format), then fall back to image (old format)
+                const appImages = app.images || app.image;
                 if (appImages) {
                     const appImagesArray = Array.isArray(appImages) ? appImages : [appImages];
                     const filteredImages = appImagesArray.filter(img => img !== applicationsHeroImage);
