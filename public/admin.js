@@ -1433,8 +1433,17 @@ function renderLogotypeSubsectionsList(subsections) {
         const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
         const hasImages = imagesArray.length > 0;
         
-        // Generate HTML for single multiple file input
-        const imagesHtml = `
+        // DO NOT subsections should not have image uploads - they use the main logo automatically
+        const isDoNotSubsection = templateKey === 'do-not' || subsection.generateDoNotExamples;
+        
+        // Generate HTML for single multiple file input (skip for DO NOT subsections)
+        const imagesHtml = isDoNotSubsection ? `
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <p style="color: #666; font-size: 0.875rem; margin: 0; padding: 0.75rem; background: #f5f5f5; border-radius: 4px;">
+                        Images are not required for this subsection. The DO NOT examples will be automatically generated from the main logo.
+                    </p>
+                </div>
+        ` : `
                 <div class="form-group" style="margin-top: 1.5rem;">
                 <label>Images (up to 3)</label>
                     <div class="file-upload-wrapper">
@@ -2001,6 +2010,8 @@ async function getLogotypeSubsectionsFromForm() {
             // Add generateDoNotExamples flag if this is a DO NOT template
             if (shouldGenerateDoNot) {
                 subsection.generateDoNotExamples = true;
+                // DO NOT subsections should not have images - clear them
+                subsection.images = [];
             }
             
             subsections.push(subsection);

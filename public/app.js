@@ -497,48 +497,10 @@ async function loadContent() {
                     let logoSVG = null;
                     let logoSVGSource = null;
                     
-                    // First, try to get SVG from subsection images
-                    if (hasImages) {
-                        const imageArray = Array.isArray(images) ? images : [images];
-                        const firstImage = imageArray[0];
-                        
-                        console.log(`Checking subsection image for SVG:`, {
-                            firstImage: firstImage ? firstImage.substring(0, 100) : 'null',
-                            startsWithSvg: firstImage ? firstImage.trim().startsWith('<svg') : false,
-                            includesDataUrl: firstImage ? firstImage.includes('data:image/svg+xml') : false
-                        });
-                        
-                        if (firstImage && (firstImage.trim().startsWith('<svg') || firstImage.includes('data:image/svg+xml'))) {
-                            logoSVG = firstImage;
-                            logoSVGSource = 'subsection-image';
-                            
-                            // If it's a data URL, extract the SVG
-                            if (firstImage.includes('data:image/svg+xml')) {
-                                try {
-                                    if (firstImage.includes(';base64,')) {
-                                        const base64Match = firstImage.match(/data:image\/svg\+xml[^,]*;base64,(.+)/);
-                                        if (base64Match) {
-                                            logoSVG = atob(base64Match[1]);
-                                            console.log('Decoded base64 SVG from subsection image, length:', logoSVG.length);
-                                        }
-                                    } else {
-                                        const urlMatch = firstImage.match(/data:image\/svg\+xml[^,]*,?(.+)/);
-                                        if (urlMatch) {
-                                            logoSVG = decodeURIComponent(urlMatch[1]);
-                                            console.log('Decoded URL-encoded SVG from subsection image, length:', logoSVG.length);
-                                        }
-                                    }
-                                } catch (e) {
-                                    console.warn('Could not decode SVG data URL from subsection image:', e);
-                                    logoSVG = null;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Fallback: use main logo from content.logo if subsection has no SVG
-                    if (!logoSVG && content.logo) {
-                        console.log('Subsection has no SVG image, trying main logo from content.logo as fallback');
+                    // DO NOT subsections should always use the main logo, not subsection images
+                    // Skip checking subsection images and go straight to main logo
+                    if (content.logo) {
+                        console.log('DO NOT subsection: Using main logo from content.logo');
                         if (content.logo.trim().startsWith('<svg') || content.logo.includes('data:image/svg+xml')) {
                             logoSVG = content.logo;
                             logoSVGSource = 'main-logo';
