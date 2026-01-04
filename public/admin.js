@@ -933,21 +933,21 @@ function renderApplicationsSubsectionsList(subsections) {
         const hasImages = imagesArray.length > 0;
         
         const imagesHtml = `
-            <div class="form-group" style="margin-top: 1.5rem;">
+                <div class="form-group" style="margin-top: 1.5rem;">
                 <label>Images (up to 3)</label>
-                <div class="file-upload-wrapper">
+                    <div class="file-upload-wrapper">
                     <label for="${imageInputId}" class="file-upload-label ${hasImages ? 'has-file' : ''}">
-                        <span class="upload-icon">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
+                            <span class="upload-icon">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
                         <span class="upload-text">${hasImages ? 'Change Images' : 'Upload images/videos (select multiple)'}</span>
                         <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
-                    </label>
+                        </label>
                     <input type="file" class="file-upload-input application-subsection-image-input" id="${imageInputId}" data-application-subsection-index="${index}" accept="image/*" multiple>
-                    <div class="file-name-display" id="${imageInputId}-filename"></div>
-                </div>
+                        <div class="file-name-display" id="${imageInputId}-filename"></div>
+                    </div>
                 <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
                     ${imagesArray.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('')}
                 </div>
@@ -1014,15 +1014,15 @@ function renderApplicationsSubsectionsList(subsections) {
                     const imgPreview = document.getElementById(imgPreviewId);
                     if (imgPreview) {
                         const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                        if (removeBtn) {
+                if (removeBtn) {
                             removeBtn.setAttribute('data-input-id', imageInputId);
                             removeBtn.setAttribute('data-image-index', imgIndex);
-                            removeBtn.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
                                 removeImageFromArray(imageInput, previewId, imgIndex);
-                            });
-                        }
+                    });
+                }
                     }
                 });
             }
@@ -1058,10 +1058,10 @@ function showApplicationsTemplateSelector() {
                     </button>
                 `;
             }).join('')}
-        </div>
+            </div>
         <div style="margin-top: 2rem; text-align: right; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
             <button type="button" class="btn btn-secondary" id="cancel-application-template-selector" style="padding: 0.75rem 1.5rem;">Cancel</button>
-        </div>
+            </div>
     `;
     
     overlay.appendChild(modal);
@@ -1116,23 +1116,23 @@ function addApplicationSubsectionItemWithTemplate(templateKey) {
     const previewId = `application-subsection-preview-${applicationsCounter}`;
     
     const imagesHtml = `
-        <div class="form-group" style="margin-top: 1.5rem;">
+            <div class="form-group" style="margin-top: 1.5rem;">
             <label>Images (up to 3)</label>
-            <div class="file-upload-wrapper">
-                <label for="${imageInputId}" class="file-upload-label">
-                    <span class="upload-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
+                <div class="file-upload-wrapper">
+                    <label for="${imageInputId}" class="file-upload-label">
+                        <span class="upload-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
                     <span class="upload-text">Upload images/videos (select multiple)</span>
                     <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
-                </label>
+                    </label>
                 <input type="file" class="file-upload-input application-subsection-image-input" id="${imageInputId}" data-application-subsection-index="${applicationsCounter}" accept="image/*" multiple>
-                <div class="file-name-display" id="${imageInputId}-filename"></div>
-            </div>
+                    <div class="file-name-display" id="${imageInputId}-filename"></div>
+                </div>
             <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
-        </div>
+            </div>
     `;
     
     const newSubsectionHtml = `
@@ -1345,7 +1345,7 @@ function setupApplicationsSubsectionImageHandlers() {
                             const imgPreview = document.getElementById(imgPreviewId);
                             if (imgPreview) {
                                 const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                                if (removeBtn) {
+                if (removeBtn) {
                                     removeBtn.setAttribute('data-input-id', input.id);
                                     removeBtn.setAttribute('data-image-index', idx);
                                     removeBtn.addEventListener('click', function(ev) {
@@ -1375,16 +1375,16 @@ function setupApplicationsHandlers() {
         if (!addBtn.hasAttribute('data-handler-attached')) {
             addBtn.setAttribute('data-handler-attached', 'true');
             addBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+                        e.preventDefault();
+                        e.stopPropagation();
                 try {
                     addApplicationSubsectionItem();
                 } catch (error) {
                     console.error('Error adding application subsection:', error);
                 }
-            });
-        }
-    }
+                    });
+                }
+            }
     
     window.addApplicationSubsectionItem = addApplicationSubsectionItem;
     window.showApplicationsTemplateSelector = showApplicationsTemplateSelector;
@@ -1392,372 +1392,6 @@ function setupApplicationsHandlers() {
     window.moveApplicationSubsectionUp = moveApplicationSubsectionUp;
     window.moveApplicationSubsectionDown = moveApplicationSubsectionDown;
     window.removeApplicationSubsectionItem = removeApplicationSubsectionItem;
-}
-    const applicationsList = document.getElementById('applications-list');
-    if (!applicationsList) return;
-    
-    const applicationsArray = Array.isArray(applications) ? applications : [];
-    
-    if (applicationsArray.length === 0) {
-        applicationsList.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No application subsections added yet. Click "Add Application Subsection" to get started.</p>';
-        applicationCounter = 0;
-        return;
-    }
-    
-    applicationsList.innerHTML = applicationsArray.map((app, index) => {
-        applicationCounter = Math.max(applicationCounter, index);
-        const appId = `application-${index}`;
-        const titleId = `application-title-${index}`;
-        const contentId = `application-content-${index}`;
-        const imageInputId = `application-image-${index}`;
-        const previewId = `application-preview-${index}`;
-        
-        // Handle images array (support both single image and array)
-        const images = app.image || app.images || [];
-        const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
-        const hasImages = imagesArray.length > 0;
-        
-        return `
-            <div class="application-item-admin" data-application-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Application Subsection ${index + 1}</h3>
-                    <button type="button" class="btn btn-danger" onclick="removeApplicationItem(${index})">Remove</button>
-                </div>
-                <div class="form-group">
-                    <label>Subsection Title</label>
-                    <input type="text" class="form-control application-title-input" id="${titleId}" value="${(app.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Business Cards">
-                </div>
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <label>Images (up to 3)</label>
-                    <div class="file-upload-wrapper">
-                        <label for="${imageInputId}" class="file-upload-label ${hasImages ? 'has-file' : ''}">
-                            <span class="upload-icon">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="upload-text">${hasImages ? (imagesArray.length === 1 ? 'Change Image' : `Change Images (${imagesArray.length})`) : 'Upload images/videos (select multiple)'}</span>
-                            <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
-                        </label>
-                        <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${index}" accept="image/*" multiple>
-                        <div class="file-name-display" id="${imageInputId}-filename"></div>
-                    </div>
-                    <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
-                        ${imagesArray.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('')}
-                    </div>
-                </div>
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <label>Description/Content</label>
-                    <textarea class="form-control application-content-input" id="${contentId}" rows="6" placeholder="Enter description/content...">${(app.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    // Setup image upload handlers for new items
-    setupApplicationImageHandlers();
-    
-    // Store base64 data on inputs and attach remove button handlers
-    setTimeout(() => {
-        applicationsArray.forEach((app, index) => {
-            // Handle images array (support both single image and array)
-            const images = app.image || app.images || [];
-            const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
-            
-            const imageInputId = `application-image-${index}`;
-            const imageInput = document.getElementById(imageInputId);
-            const previewId = `application-preview-${index}`;
-            const preview = document.getElementById(previewId);
-            
-            // Store images array as JSON on input
-            if (imageInput && imagesArray.length > 0) {
-                imageInput.setAttribute('data-images', JSON.stringify(imagesArray));
-                // Update label state
-                const label = document.querySelector(`label[for="${imageInputId}"]`);
-                if (label) {
-                    label.classList.add('has-file');
-                    const uploadText = label.querySelector('.upload-text');
-                    if (uploadText) {
-                        uploadText.textContent = imagesArray.length === 1 ? 'Change Image' : `Change Images (${imagesArray.length})`;
-                    }
-                }
-                // Update filename display
-                const filenameDisplay = document.getElementById(`${imageInputId}-filename`);
-                if (filenameDisplay) {
-                    filenameDisplay.textContent = imagesArray.length === 1 ? '1 file selected' : `${imagesArray.length} files selected`;
-                    filenameDisplay.style.display = 'block';
-                }
-            }
-            
-            // Attach remove handlers to all preview images
-            if (preview && imagesArray.length > 0) {
-                imagesArray.forEach((img, imgIndex) => {
-                    const imgPreviewId = `${previewId}-${imgIndex}`;
-                    const imgPreview = document.getElementById(imgPreviewId);
-                    if (imgPreview) {
-                        const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                            removeBtn.setAttribute('data-input-id', imageInputId);
-                            removeBtn.setAttribute('data-image-index', imgIndex);
-                    removeBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                                removeImageFromArray(imageInput, previewId, imgIndex);
-                    });
-                }
-                    }
-                });
-            }
-        });
-    }, 0);
-}
-
-function addApplicationItem() {
-    const applicationsList = document.getElementById('applications-list');
-    if (!applicationsList) return;
-    
-    applicationCounter++;
-    const appId = `application-${applicationCounter}`;
-    const titleId = `application-title-${applicationCounter}`;
-    const contentId = `application-content-${applicationCounter}`;
-    const imageInputId = `application-image-${applicationCounter}`;
-    const previewId = `application-preview-${applicationCounter}`;
-    
-    const newApplicationHtml = `
-        <div class="application-item-admin" data-application-index="${applicationCounter}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Application Subsection ${applicationCounter + 1}</h3>
-                <button type="button" class="btn btn-danger" onclick="removeApplicationItem(${applicationCounter})">Remove</button>
-            </div>
-            <div class="form-group">
-                <label>Subsection Title</label>
-                <input type="text" class="form-control application-title-input" id="${titleId}" value="" placeholder="e.g., Business Cards" oninput="updateAdminNavApplications()">
-            </div>
-            <div class="form-group" style="margin-top: 1.5rem;">
-                <label>Images (up to 3)</label>
-                <div class="file-upload-wrapper">
-                    <label for="${imageInputId}" class="file-upload-label">
-                        <span class="upload-icon">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
-                        <span class="upload-text">Upload images/videos (select multiple)</span>
-                        <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
-                    </label>
-                    <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${applicationCounter}" accept="image/*" multiple>
-                    <div class="file-name-display" id="${imageInputId}-filename"></div>
-                </div>
-                <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
-            </div>
-            <div class="form-group" style="margin-top: 1.5rem;">
-                <label>Description/Content</label>
-                <textarea class="form-control application-content-input" id="${contentId}" rows="6" placeholder="Enter description/content..."></textarea>
-            </div>
-        </div>
-    `;
-    
-    const existingContent = applicationsList.innerHTML;
-    if (existingContent.includes('No application subsections')) {
-        applicationsList.innerHTML = newApplicationHtml;
-    } else {
-        applicationsList.insertAdjacentHTML('beforeend', newApplicationHtml);
-    }
-    
-    // Setup image upload handler for new item
-    setupApplicationImageHandlers();
-    // Update admin navigation
-    updateAdminNavApplications(getApplicationsFromFormSync());
-}
-
-function removeApplicationItem(index) {
-    const applicationsList = document.getElementById('applications-list');
-    if (!applicationsList) return;
-    
-    const item = applicationsList.querySelector(`[data-application-index="${index}"]`);
-    if (item) {
-        item.remove();
-        
-        // Reindex remaining items
-        const remainingItems = applicationsList.querySelectorAll('.application-item-admin');
-        remainingItems.forEach((item, newIndex) => {
-            item.setAttribute('data-application-index', newIndex);
-            const titleInput = item.querySelector('.application-title-input');
-            const contentInput = item.querySelector('.application-content-input');
-            const imageInput = item.querySelector('.application-image-input');
-            const preview = item.querySelector('.image-preview');
-            const removeBtn = item.querySelector('button');
-            const heading = item.querySelector('h3');
-            
-            if (titleInput) {
-                titleInput.id = `application-title-${newIndex}`;
-                titleInput.setAttribute('oninput', 'updateAdminNavApplications()');
-            }
-            if (contentInput) {
-                contentInput.id = `application-content-${newIndex}`;
-            }
-            if (imageInput) {
-                imageInput.id = `application-image-${newIndex}`;
-                imageInput.setAttribute('data-application-index', newIndex);
-            }
-            if (preview) {
-                preview.id = `application-preview-${newIndex}`;
-            }
-            if (removeBtn) {
-                removeBtn.setAttribute('onclick', `removeApplicationItem(${newIndex})`);
-            }
-            if (heading) {
-                heading.textContent = `Application Subsection ${newIndex + 1}`;
-            }
-        });
-        
-        // If no applications left, show message
-        if (applicationsList.children.length === 0) {
-            applicationsList.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No application subsections added yet. Click "Add Application Subsection" to get started.</p>';
-            applicationCounter = 0;
-            updateAdminNavApplications([]);
-        } else {
-            applicationCounter = remainingItems.length - 1;
-            // Update nav with current applications
-            const currentApps = getApplicationsFromFormSync();
-            updateAdminNavApplications(currentApps);
-            // Update currentContent to reflect the deletion
-            getApplicationsFromForm().then(apps => {
-                currentContent.applications = apps;
-                trackSectionChange('applications');
-            });
-        }
-        
-        // Re-setup image handlers after reindexing
-        setupApplicationImageHandlers();
-    }
-}
-
-// Update admin navigation for applications subsections
-function updateAdminNavApplications(applications) {
-    const navList = document.getElementById('admin-applications-subsections');
-    if (!navList) return;
-    
-    const applicationsArray = Array.isArray(applications) ? applications : [];
-    
-    if (applicationsArray.length === 0) {
-        navList.innerHTML = '';
-        return;
-    }
-    
-    navList.innerHTML = applicationsArray.map((app, index) => {
-        const title = app.title || `Application ${index + 1}`;
-        const subsectionId = `applications-${index}`;
-        return `<li><a href="#${subsectionId}" class="admin-nav-link subsection-link" data-section="applications" data-subsection-index="${index}">${title.replace(/"/g, '&quot;')}</a></li>`;
-    }).join('');
-}
-
-// Synchronous version for getting applications (for nav updates)
-function getApplicationsFromFormSync() {
-    const applicationsList = document.getElementById('applications-list');
-    if (!applicationsList) return [];
-    
-    const applicationItems = applicationsList.querySelectorAll('.application-item-admin');
-    const applications = [];
-    
-    applicationItems.forEach((item, index) => {
-        const titleInput = item.querySelector('.application-title-input');
-        const contentInput = item.querySelector('.application-content-input');
-        const imageInput = item.querySelector('.application-image-input');
-        
-        const title = titleInput ? titleInput.value.trim() : '';
-        const content = contentInput ? contentInput.value.trim() : '';
-        
-        // Get images from data-images attribute or from preview images
-        let images = [];
-        if (imageInput) {
-            const imagesAttr = imageInput.getAttribute('data-images');
-            if (imagesAttr) {
-                try {
-                    images = JSON.parse(imagesAttr);
-                    if (!Array.isArray(images)) images = [images];
-                } catch (error) {
-                    console.error('Error parsing images array:', error);
-                }
-            } else {
-                // Fallback to preview images if data-images not set
-                const preview = item.querySelector('.image-preview');
-                if (preview) {
-                    const previewImages = preview.querySelectorAll('img');
-                    images = Array.from(previewImages).map(img => img.src);
-                }
-            }
-        }
-        
-        if (title) {
-            applications.push({
-                title: title,
-                content: content,
-                images: images // Store as array (frontend handles both array and single value)
-            });
-        }
-    });
-    
-    return applications;
-}
-
-async function getApplicationsFromForm() {
-    const applicationsList = document.getElementById('applications-list');
-    if (!applicationsList) return [];
-    
-    const applicationItems = applicationsList.querySelectorAll('.application-item-admin');
-    const applications = [];
-    
-    // Get existing content to preserve images
-    const existingApplications = currentContent.applications || [];
-    
-    for (let index = 0; index < applicationItems.length; index++) {
-        const item = applicationItems[index];
-        const titleInput = item.querySelector('.application-title-input');
-        const contentInput = item.querySelector('.application-content-input');
-        const imageInput = item.querySelector('.application-image-input');
-        
-        const title = titleInput ? titleInput.value.trim() : '';
-        const content = contentInput ? contentInput.value.trim() : '';
-        
-        // Get existing application data to preserve images
-        // Find by index in the current DOM order, not by matching old data
-        const existingApp = existingApplications[index] || {};
-        const existingImages = existingApp.image || existingApp.images || [];
-        const existingImagesArray = Array.isArray(existingImages) ? existingImages : (existingImages ? [existingImages] : []);
-        
-        // Get images from data-images attribute
-        let images = existingImagesArray;
-        if (imageInput) {
-            const imagesAttr = imageInput.getAttribute('data-images');
-            if (imagesAttr) {
-                try {
-                    images = JSON.parse(imagesAttr);
-                    if (!Array.isArray(images)) images = [images];
-                } catch (error) {
-                    console.error('Error parsing images array:', error);
-                    images = existingImagesArray;
-                }
-            }
-        }
-        
-        if (title) {
-            applications.push({
-                title: title,
-                content: content,
-                images: images // Store as array (frontend handles both array and single value)
-            });
-        }
-    }
-    
-    return applications;
-}
-
-function setupApplicationsHandlers() {
-    const addBtn = document.getElementById('add-application-btn');
-    if (addBtn) {
-        addBtn.addEventListener('click', addApplicationItem);
-    }
 }
 
 // Logotype repeater functions
@@ -1848,18 +1482,6 @@ Guidelines:
         content: '',
         hasTabs: false
     },
-};
-
-// Applications repeater functions
-let applicationsCounter = 0;
-
-// Predefined subsection templates for Applications
-const APPLICATION_SUBSECTION_TEMPLATES = {
-    'blank': {
-        title: 'Blank',
-        content: '',
-        hasTabs: false
-    }
 };
 
 function renderLogotypeSubsectionsList(subsections) {
