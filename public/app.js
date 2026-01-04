@@ -493,7 +493,8 @@ async function loadContent() {
                     hasImages: hasImages,
                     imagesType: typeof images,
                     isArray: Array.isArray(images),
-                    firstImage: Array.isArray(images) ? images[0] : images
+                    firstImage: Array.isArray(images) ? images[0] : images,
+                    fullSubsection: JSON.parse(JSON.stringify(subsection)) // Deep clone to see all properties
                 });
                 
                 if (subsection.generateDoNotExamples && hasImages) {
