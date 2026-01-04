@@ -1768,6 +1768,36 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
         `;
     }
     
+    // Check if this is a DO NOT subsection
+    const isDoNotSubsection = templateKey === 'do-not' || template.generateDoNotExamples;
+    
+    // Generate HTML for images section (skip for DO NOT subsections)
+    const imagesHtml = isDoNotSubsection ? `
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <p style="color: #666; font-size: 0.875rem; margin: 0; padding: 0.75rem; background: #f5f5f5; border-radius: 4px;">
+                Images are not required for this subsection. The DO NOT examples will be automatically generated from the main logo.
+            </p>
+            </div>
+    ` : `
+            <div class="form-group" style="margin-top: 1.5rem;">
+            <label>Images (up to 3)</label>
+                <div class="file-upload-wrapper">
+                    <label for="${imageInputId}" class="file-upload-label">
+                        <span class="upload-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    <span class="upload-text">Upload images/videos (select multiple)</span>
+                    <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
+                    </label>
+                <input type="file" class="file-upload-input logotype-subsection-image-input" id="${imageInputId}" data-logotype-subsection-index="${logotypeCounter}" accept="image/*" multiple>
+                    <div class="file-name-display" id="${imageInputId}-filename"></div>
+                </div>
+            <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
+            </div>
+    `;
+    
     const newSubsectionHtml = `
         <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${logotypeCounter}" ${templateKey ? `data-template-key="${templateKey}"` : ''} style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -1782,23 +1812,7 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
                 <label>Subsection Title</label>
                 <input type="text" class="form-control logotype-subsection-title-input" id="${titleId}" value="${(template.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Iconography">
             </div>
-            <div class="form-group" style="margin-top: 1.5rem;">
-                <label>Images (up to 3)</label>
-                <div class="file-upload-wrapper">
-                    <label for="${imageInputId}" class="file-upload-label">
-                        <span class="upload-icon">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
-                        <span class="upload-text">Upload images/videos (select multiple)</span>
-                        <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
-                    </label>
-                    <input type="file" class="file-upload-input logotype-subsection-image-input" id="${imageInputId}" data-logotype-subsection-index="${logotypeCounter}" accept="image/*" multiple>
-                    <div class="file-name-display" id="${imageInputId}-filename"></div>
-                </div>
-                <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
-            </div>
+            ${imagesHtml}
             ${contentSection}
         </div>
     `;
