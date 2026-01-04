@@ -1468,7 +1468,7 @@ function renderLogotypeSubsectionsList(subsections) {
         `;
         
         return `
-            <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${index}" ${templateKey ? `data-template-key="${templateKey}"` : ''} style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+            <div class="logotype-subsection-item-admin" data-logotype-subsection-index="${index}" ${templateKey ? `data-template-key="${templateKey}"` : ''} style="margin-bottom: 3rem; padding: 2rem 2rem 3rem 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; border-bottom: 2px solid #e0e0e0; ${index < subsectionsArray.length - 1 ? 'margin-bottom: 0; padding-bottom: 3rem;' : ''}">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Logotype Subsection ${index + 1}</h3>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
