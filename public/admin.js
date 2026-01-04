@@ -1812,8 +1812,8 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
                 <label>Subsection Title</label>
                 <input type="text" class="form-control logotype-subsection-title-input" id="${titleId}" value="${(template.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Iconography">
             </div>
-            ${contentSection}
             ${imagesHtml}
+            ${contentSection}
         </div>
     `;
     
@@ -2162,8 +2162,8 @@ function setupLogotypeSubsectionImageHandlers() {
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                         removeImageFromArray(input, previewId, idx);
-                                    });
-                                }
+                            });
+                        }
                             }
                         });
                     }
@@ -2247,8 +2247,8 @@ function setupLogotypeTabImageHandlers() {
                                 ev.preventDefault();
                                 ev.stopPropagation();
                                         removeImageFromArray(input, previewId, idx);
-                                    });
-                                }
+                            });
+                        }
                             }
                         });
                     }
@@ -2726,7 +2726,7 @@ async function fileToBase64(file) {
             const fileType = isVideo ? 'video' : 'image';
             reject(new Error(`${fileType.charAt(0).toUpperCase() + fileType.slice(1)} size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the ${fileType}.`));
             return;
-        }
+    }
         
         const reader = new FileReader();
         reader.onload = () => {
@@ -2792,7 +2792,7 @@ function getImageFromInput(input, existingValue = '') {
             
                         // Check if there's a file currently selected - convert to base64
             if (input.files && input.files[0]) {
-                            try {
+                try {
                                 const base64Data = await fileToBase64(input.files[0]);
                                 // Store base64 data on input for future saves
                                 input.setAttribute('data-base64', base64Data);
