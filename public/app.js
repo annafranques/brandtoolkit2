@@ -501,6 +501,12 @@ async function loadContent() {
                     const firstImage = imageArray[0];
                     
                     // Check if the first image is an SVG (either data URL or inline SVG)
+                    console.log(`Checking first image for SVG:`, {
+                        firstImage: firstImage ? firstImage.substring(0, 100) : 'null',
+                        startsWithSvg: firstImage ? firstImage.trim().startsWith('<svg') : false,
+                        includesDataUrl: firstImage ? firstImage.includes('data:image/svg+xml') : false
+                    });
+                    
                     if (firstImage && (firstImage.trim().startsWith('<svg') || firstImage.includes('data:image/svg+xml'))) {
                         let logoSVG = firstImage;
                         
@@ -513,25 +519,62 @@ async function loadContent() {
                                     const base64Match = firstImage.match(/data:image\/svg\+xml[^,]*;base64,(.+)/);
                                     if (base64Match) {
                                         logoSVG = atob(base64Match[1]);
+                                        console.log('Decoded base64 SVG, length:', logoSVG.length);
                                     }
                                 } else {
                                     // URL encoded
                                     const urlMatch = firstImage.match(/data:image\/svg\+xml[^,]*,?(.+)/);
                                     if (urlMatch) {
                                         logoSVG = decodeURIComponent(urlMatch[1]);
+                                        console.log('Decoded URL-encoded SVG, length:', logoSVG.length);
                                     }
                                 }
                             } catch (e) {
                                 console.warn('Could not decode SVG data URL:', e);
                                 // Fallback: try to use the original if it's already an SVG
                                 if (!firstImage.trim().startsWith('<svg')) {
+                                    console.warn('First image is not an SVG, skipping DO NOT examples');
                                     return html + `</div>`;
                                 }
                             }
                         }
                         
+                        console.log('Generating DO NOT examples with SVG, brandName:', content.brandName);
                         // Generate DO NOT examples
-                        html += generateDoNotExamples(logoSVG, content.brandName);
+                        const doNotHtml = generateDoNotExamples(logoSVG, content.brandName);
+                        console.log('Generated DO NOT HTML length:', doNotHtml.length);
+                        html += doNotHtml;
+                    } else {
+                        // Fallback: try to use the main logo from content.logo if available
+                        if (content.logo && (content.logo.trim().startsWith('<svg') || content.logo.includes('data:image/svg+xml'))) {
+                            console.log('Using main logo from content.logo as fallback');
+                            let logoSVG = content.logo;
+                            
+                            if (content.logo.includes('data:image/svg+xml')) {
+                                try {
+                                    if (content.logo.includes(';base64,')) {
+                                        const base64Match = content.logo.match(/data:image\/svg\+xml[^,]*;base64,(.+)/);
+                                        if (base64Match) {
+                                            logoSVG = atob(base64Match[1]);
+                                        }
+                                    } else {
+                                        const urlMatch = content.logo.match(/data:image\/svg\+xml[^,]*,?(.+)/);
+                                        if (urlMatch) {
+                                            logoSVG = decodeURIComponent(urlMatch[1]);
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn('Could not decode main logo SVG data URL:', e);
+                                }
+                            }
+                            
+                            console.log('Generating DO NOT examples with main logo, brandName:', content.brandName);
+                            const doNotHtml = generateDoNotExamples(logoSVG, content.brandName);
+                            console.log('Generated DO NOT HTML length:', doNotHtml.length);
+                            html += doNotHtml;
+                        } else {
+                            console.warn('First image is not an SVG and no main logo available, cannot generate DO NOT examples');
+                        }
                     }
                 }
                 
