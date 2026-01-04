@@ -1822,7 +1822,50 @@ async function renderTypographyPreview(typographyData, contentData = null) {
     `;
     
     previewArea.setAttribute('data-device', currentDevice);
+    
+    // Update toggle link states
+    document.querySelectorAll('.uppercase-toggle-link').forEach(link => {
+        const section = link.getAttribute('data-section');
+        if (previewArea.uppercaseStates[section]) {
+            link.classList.add('active');
+            link.textContent = 'Uppercase (ON)';
+        } else {
+            link.classList.remove('active');
+            link.textContent = 'Uppercase';
+        }
+    });
 }
+
+// Toggle uppercase for a specific section
+function toggleSectionUppercase(section) {
+    const previewArea = document.getElementById('typography-preview');
+    if (!previewArea) return;
+    
+    // Initialize if needed
+    if (!previewArea.uppercaseStates) {
+        previewArea.uppercaseStates = {
+            display: false,
+            heading: false,
+            body: false,
+            button: false,
+            tag: false,
+            caption: false
+        };
+    }
+    
+    // Toggle the state for this section
+    previewArea.uppercaseStates[section] = !previewArea.uppercaseStates[section];
+    
+    // Re-render preview with updated state
+    if (cachedTypographyData) {
+        renderTypographyPreview(cachedTypographyData, cachedContentData);
+    } else {
+        loadTypographyPreview();
+    }
+}
+
+// Make it available globally
+window.toggleSectionUppercase = toggleSectionUppercase;
 
 // List of common Google Fonts to check against
 const GOOGLE_FONTS = [
