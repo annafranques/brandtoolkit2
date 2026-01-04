@@ -1665,13 +1665,21 @@ async function renderTypographyPreview(typographyData, contentData = null) {
     let headingFont = primaryFontName || '';
     let bodyFont = secondaryFontName || primaryFontName || '';
     
-    // Check if uppercase is enabled (from toggle or preview area class)
-    const isUppercase = previewArea.classList.contains('uppercase-view') || (typeof uppercaseEnabled !== 'undefined' && uppercaseEnabled);
-    const uppercaseStyle = isUppercase ? 'text-transform: uppercase;' : '';
+    // Store uppercase state per section
+    if (!previewArea.uppercaseStates) {
+        previewArea.uppercaseStates = {
+            display: false,
+            heading: false,
+            body: false,
+            button: false,
+            tag: false,
+            caption: false
+        };
+    }
     
     previewArea.innerHTML = `
         <!-- Display Section -->
-        <div class="preview-section">
+        <div class="preview-section" data-section="display">
             <div class="preview-section-header">
                 <h4 class="preview-section-title">Display</h4>
                 <div class="preview-section-specs">
@@ -1684,14 +1692,15 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                         <span>${specs.display.lineHeight}</span>
                     </div>
                 </div>
+                <a href="#" class="uppercase-toggle-link" data-section="display" onclick="toggleSectionUppercase('display'); return false;">Uppercase</a>
             </div>
-            <p class="preview-text preview-display" style="font-family: '${displayFont || 'inherit'}' !important; font-size: ${specs.display.fontSize} !important; line-height: ${specs.display.lineHeight} !important; letter-spacing: ${specs.display.letterSpacing} !important; ${uppercaseStyle}">
+            <p class="preview-text preview-display" style="font-family: '${displayFont || 'inherit'}' !important; font-size: ${specs.display.fontSize} !important; line-height: ${specs.display.lineHeight} !important; letter-spacing: ${specs.display.letterSpacing} !important; ${previewArea.uppercaseStates.display ? 'text-transform: uppercase;' : ''}">
                 The Quick Brown Fox
             </p>
         </div>
         
         <!-- Heading Section -->
-        <div class="preview-section">
+        <div class="preview-section" data-section="heading">
             <div class="preview-section-header">
                 <h4 class="preview-section-title">Heading</h4>
                 <div class="preview-section-specs">
@@ -1704,14 +1713,15 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                         <span>${specs.heading1.lineHeight}</span>
                     </div>
                 </div>
+                <a href="#" class="uppercase-toggle-link" data-section="heading" onclick="toggleSectionUppercase('heading'); return false;">Uppercase</a>
             </div>
-            <h1 class="preview-text preview-heading" style="font-family: '${headingFont || 'inherit'}' !important; font-size: ${specs.heading1.fontSize} !important; line-height: ${specs.heading1.lineHeight} !important; letter-spacing: ${specs.heading1.letterSpacing} !important; ${uppercaseStyle}">
+            <h1 class="preview-text preview-heading" style="font-family: '${headingFont || 'inherit'}' !important; font-size: ${specs.heading1.fontSize} !important; line-height: ${specs.heading1.lineHeight} !important; letter-spacing: ${specs.heading1.letterSpacing} !important; ${previewArea.uppercaseStates.heading ? 'text-transform: uppercase;' : ''}">
                 The Quick Brown Fox Jumps Over The Lazy Dog
             </h1>
         </div>
         
         <!-- Body Section -->
-        <div class="preview-section">
+        <div class="preview-section" data-section="body">
             <div class="preview-section-header">
                 <h4 class="preview-section-title">Body</h4>
                 <div class="preview-section-specs">
@@ -1724,25 +1734,26 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                         <span>${specs.body1.lineHeight}</span>
                     </div>
                 </div>
+                <a href="#" class="uppercase-toggle-link" data-section="body" onclick="toggleSectionUppercase('body'); return false;">Uppercase</a>
             </div>
             <div class="preview-body-columns">
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
                     Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                 </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
                     Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
                 </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${uppercaseStyle}">
+                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
                     Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                 </p>
             </div>
         </div>
         
         <!-- Button Section -->
-        <div class="preview-section">
+        <div class="preview-section" data-section="button">
             <div class="preview-section-header">
                 <h4 class="preview-section-title">Button</h4>
                 <div class="preview-section-specs">
@@ -1755,14 +1766,15 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                         <span>${specs.button.lineHeight}</span>
                     </div>
                 </div>
+                <a href="#" class="uppercase-toggle-link" data-section="button" onclick="toggleSectionUppercase('button'); return false;">Uppercase</a>
             </div>
-            <div class="preview-button" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.button.fontSize} !important; line-height: ${specs.button.lineHeight} !important; letter-spacing: ${specs.button.letterSpacing} !important; ${uppercaseStyle}">
+            <div class="preview-button" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.button.fontSize} !important; line-height: ${specs.button.lineHeight} !important; letter-spacing: ${specs.button.letterSpacing} !important; ${previewArea.uppercaseStates.button ? 'text-transform: uppercase;' : ''}">
                 Button Text
             </div>
         </div>
         
         <!-- Tag Section -->
-        <div class="preview-section">
+        <div class="preview-section" data-section="tag">
             <div class="preview-section-header">
                 <h4 class="preview-section-title">Tag</h4>
                 <div class="preview-section-specs">
@@ -1775,19 +1787,20 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                         <span>${specs.tag.lineHeight}</span>
                     </div>
                 </div>
+                <a href="#" class="uppercase-toggle-link" data-section="tag" onclick="toggleSectionUppercase('tag'); return false;">Uppercase</a>
             </div>
             <div>
-                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${uppercaseStyle}">
+                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${previewArea.uppercaseStates.tag ? 'text-transform: uppercase;' : ''}">
                     Cardboard Box
                 </span>
-                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${uppercaseStyle}">
+                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${previewArea.uppercaseStates.tag ? 'text-transform: uppercase;' : ''}">
                     Rolex Booklet
                 </span>
             </div>
         </div>
         
         <!-- Caption Section -->
-        <div class="preview-section">
+        <div class="preview-section" data-section="caption">
             <div class="preview-section-header">
                 <h4 class="preview-section-title">Caption</h4>
                 <div class="preview-section-specs">
@@ -1800,8 +1813,9 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                         <span>${specs.caption.lineHeight}</span>
                     </div>
                 </div>
+                <a href="#" class="uppercase-toggle-link" data-section="caption" onclick="toggleSectionUppercase('caption'); return false;">Uppercase</a>
             </div>
-            <p class="preview-text preview-caption" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.caption.fontSize} !important; line-height: ${specs.caption.lineHeight} !important; letter-spacing: ${specs.caption.letterSpacing} !important; ${uppercaseStyle}">
+            <p class="preview-text preview-caption" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.caption.fontSize} !important; line-height: ${specs.caption.lineHeight} !important; letter-spacing: ${specs.caption.letterSpacing} !important; ${previewArea.uppercaseStates.caption ? 'text-transform: uppercase;' : ''}">
                 This is a caption text example showing how small text appears.
             </p>
         </div>

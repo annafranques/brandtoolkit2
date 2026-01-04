@@ -1488,6 +1488,28 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.uppercase-toggle-link {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.75rem;
+    color: #666;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.uppercase-toggle-link:hover {
+    color: #000;
+    text-decoration: underline;
+}
+
+.uppercase-toggle-link.active {
+    color: #000;
+    font-weight: 500;
 }
 
 .preview-section-title {
