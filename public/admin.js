@@ -2010,10 +2010,15 @@ async function getLogotypeSubsectionsFromForm() {
             }
             
             // Add generateDoNotExamples flag if this is a DO NOT template
-            if (shouldGenerateDoNot) {
+            // Only clear images if the title is exactly "DO NOT" (case-insensitive)
+            if (shouldGenerateDoNot && title.toLowerCase().trim() === 'do not') {
                 subsection.generateDoNotExamples = true;
                 // DO NOT subsections should not have images - clear them
                 subsection.images = [];
+            } else if (shouldGenerateDoNot) {
+                // If shouldGenerateDoNot is true but title doesn't match, just set the flag (don't clear images)
+                // This handles cases where the flag was set incorrectly in existing data
+                subsection.generateDoNotExamples = false; // Clear the flag if title doesn't match
             }
             
             subsections.push(subsection);
