@@ -1128,6 +1128,11 @@ function removeApplicationItem(index) {
             // Update nav with current applications
             const currentApps = getApplicationsFromFormSync();
             updateAdminNavApplications(currentApps);
+            // Update currentContent to reflect the deletion
+            getApplicationsFromForm().then(apps => {
+                currentContent.applications = apps;
+                trackSectionChange('applications');
+            });
         }
         
         // Re-setup image handlers after reindexing
@@ -1184,7 +1189,7 @@ function getApplicationsFromFormSync() {
     return applications;
 }
 
-function getApplicationsFromForm() {
+async function getApplicationsFromForm() {
     const applicationsList = document.getElementById('applications-list');
     if (!applicationsList) return [];
     
@@ -1194,7 +1199,8 @@ function getApplicationsFromForm() {
     // Get existing content to preserve images
     const existingApplications = currentContent.applications || [];
     
-    applicationItems.forEach((item, index) => {
+    for (let index = 0; index < applicationItems.length; index++) {
+        const item = applicationItems[index];
         const titleInput = item.querySelector('.application-title-input');
         const contentInput = item.querySelector('.application-content-input');
         const imageInput = item.querySelector('.application-image-input');
@@ -1203,6 +1209,7 @@ function getApplicationsFromForm() {
         const content = contentInput ? contentInput.value.trim() : '';
         
         // Get existing application data to preserve images
+        // Find by index in the current DOM order, not by matching old data
         const existingApp = existingApplications[index] || {};
         const existingImages = existingApp.image || existingApp.images || [];
         const existingImagesArray = Array.isArray(existingImages) ? existingImages : (existingImages ? [existingImages] : []);
@@ -1229,7 +1236,7 @@ function getApplicationsFromForm() {
                 images: images // Store as array (frontend handles both array and single value)
             });
         }
-    });
+    }
     
     return applications;
 }
