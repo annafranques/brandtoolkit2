@@ -2034,8 +2034,32 @@ function generateDoNotExamples(logoSVG, brandName) {
         return svgString;
     }
     
-    // Process the base SVG to ensure it's properly formatted
-    const processedSVG = ensureSVGDimensions(logoSVG);
+    // Ensure SVG has a visible fill color (default to black if all fills are white/transparent)
+    function ensureVisibleFill(svgString) {
+        if (!svgString || !svgString.trim().startsWith('<svg')) {
+            return svgString;
+        }
+        
+        // Check if SVG has any visible fills (not white, not none, not transparent)
+        const hasVisibleFill = /fill="(?!none|white|#fff|#ffffff|transparent|rgba?\([^)]*0[^)]*\))[^"]*"/i.test(svgString);
+        
+        // If no visible fills found, add a default black fill to paths
+        if (!hasVisibleFill) {
+            // Add fill="black" to paths that don't have fill or have fill="white"/fill="none"
+            svgString = svgString.replace(/<path([^>]*?)(?:fill="(?:none|white|#fff|#ffffff)"|fill='(?:none|white|#fff|#ffffff)')?([^>]*?)>/gi, (match, before, fill, after) => {
+                if (!fill) {
+                    return `<path${before}${after} fill="black">`;
+                }
+                return match.replace(/fill="(?:none|white|#fff|#ffffff)"/gi, 'fill="black"').replace(/fill='(?:none|white|#fff|#ffffff)'/gi, "fill='black'");
+            });
+        }
+        
+        return svgString;
+    }
+    
+    // Process the base SVG to ensure it's properly formatted and visible
+    let processedSVG = ensureSVGDimensions(logoSVG);
+    processedSVG = ensureVisibleFill(processedSVG);
     
     const doNotExamples = [
         {
