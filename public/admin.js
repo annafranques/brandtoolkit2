@@ -919,6 +919,11 @@ function renderApplicationsList(applications) {
         const imageInputId = `application-image-${index}`;
         const previewId = `application-preview-${index}`;
         
+        // Handle images array (support both single image and array)
+        const images = app.image || app.images || [];
+        const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
+        const hasImages = imagesArray.length > 0;
+        
         return `
             <div class="application-item-admin" data-application-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -930,21 +935,23 @@ function renderApplicationsList(applications) {
                     <input type="text" class="form-control application-title-input" id="${titleId}" value="${(app.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Business Cards">
                 </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
-                    <label>Image</label>
+                    <label>Images (up to 3)</label>
                     <div class="file-upload-wrapper">
-                        <label for="${imageInputId}" class="file-upload-label ${app.image ? 'has-file' : ''}">
+                        <label for="${imageInputId}" class="file-upload-label ${hasImages ? 'has-file' : ''}">
                             <span class="upload-icon">
                                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
-                            <span class="upload-text">${app.image ? 'Change Image' : 'Upload images/videos'}</span>
-                            <span class="upload-hint">Click to browse, or drag & drop files here</span>
+                            <span class="upload-text">${hasImages ? (imagesArray.length === 1 ? 'Change Image' : `Change Images (${imagesArray.length})`) : 'Upload images/videos (select multiple)'}</span>
+                            <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
                         </label>
-                        <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${index}" accept="image/*">
+                        <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${index}" accept="image/*" multiple>
                         <div class="file-name-display" id="${imageInputId}-filename"></div>
                     </div>
-                    <div class="image-preview" id="${previewId}" style="margin-top: 1rem;">${app.image ? renderImagePreview(app.image, previewId, null).replace('${previewId}', previewId) : ''}</div>
+                    <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                        ${imagesArray.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('')}
+                    </div>
                 </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
                     <label>Description/Content</label>
@@ -957,24 +964,56 @@ function renderApplicationsList(applications) {
     // Setup image upload handlers for new items
     setupApplicationImageHandlers();
     
-    // Attach remove button handlers for application images (after DOM is updated)
+    // Store base64 data on inputs and attach remove button handlers
     setTimeout(() => {
         applicationsArray.forEach((app, index) => {
+            // Handle images array (support both single image and array)
+            const images = app.image || app.images || [];
+            const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
+            
+            const imageInputId = `application-image-${index}`;
+            const imageInput = document.getElementById(imageInputId);
             const previewId = `application-preview-${index}`;
             const preview = document.getElementById(previewId);
-            if (preview && app.image) {
-                const removeBtn = preview.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                    const imageInput = document.getElementById(`application-image-${index}`);
-                    removeBtn.setAttribute('data-input-id', `application-image-${index}`);
-                    removeBtn.setAttribute('data-preview-id', previewId);
-                    // Event delegation will handle the click, but we can also attach directly as backup
-                    removeBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        removeImage(imageInput, previewId);
-                    });
+            
+            // Store images array as JSON on input
+            if (imageInput && imagesArray.length > 0) {
+                imageInput.setAttribute('data-images', JSON.stringify(imagesArray));
+                // Update label state
+                const label = document.querySelector(`label[for="${imageInputId}"]`);
+                if (label) {
+                    label.classList.add('has-file');
+                    const uploadText = label.querySelector('.upload-text');
+                    if (uploadText) {
+                        uploadText.textContent = imagesArray.length === 1 ? 'Change Image' : `Change Images (${imagesArray.length})`;
+                    }
                 }
+                // Update filename display
+                const filenameDisplay = document.getElementById(`${imageInputId}-filename`);
+                if (filenameDisplay) {
+                    filenameDisplay.textContent = imagesArray.length === 1 ? '1 file selected' : `${imagesArray.length} files selected`;
+                    filenameDisplay.style.display = 'block';
+                }
+            }
+            
+            // Attach remove handlers to all preview images
+            if (preview && imagesArray.length > 0) {
+                imagesArray.forEach((img, imgIndex) => {
+                    const imgPreviewId = `${previewId}-${imgIndex}`;
+                    const imgPreview = document.getElementById(imgPreviewId);
+                    if (imgPreview) {
+                        const removeBtn = imgPreview.querySelector('.remove-image-btn');
+                        if (removeBtn) {
+                            removeBtn.setAttribute('data-input-id', imageInputId);
+                            removeBtn.setAttribute('data-image-index', imgIndex);
+                            removeBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeImageFromArray(imageInput, previewId, imgIndex);
+                            });
+                        }
+                    }
+                });
             }
         });
     }, 0);
@@ -1002,7 +1041,7 @@ function addApplicationItem() {
                 <input type="text" class="form-control application-title-input" id="${titleId}" value="" placeholder="e.g., Business Cards" oninput="updateAdminNavApplications()">
             </div>
             <div class="form-group" style="margin-top: 1.5rem;">
-                <label>Hero Image</label>
+                <label>Images (up to 3)</label>
                 <div class="file-upload-wrapper">
                     <label for="${imageInputId}" class="file-upload-label">
                         <span class="upload-icon">
@@ -1010,13 +1049,13 @@ function addApplicationItem() {
                                 <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
-                        <span class="upload-text">Upload images/videos</span>
-                        <span class="upload-hint">Click to browse, or drag & drop files here</span>
+                        <span class="upload-text">Upload images/videos (select multiple)</span>
+                        <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
                     </label>
-                    <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${applicationCounter}" accept="image/*">
+                    <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${applicationCounter}" accept="image/*" multiple>
                     <div class="file-name-display" id="${imageInputId}-filename"></div>
                 </div>
-                <div class="image-preview" id="${previewId}" style="margin-top: 1rem;"></div>
+                <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
             </div>
             <div class="form-group" style="margin-top: 1.5rem;">
                 <label>Description/Content</label>
@@ -1104,20 +1143,40 @@ function getApplicationsFromFormSync() {
     const applicationItems = applicationsList.querySelectorAll('.application-item-admin');
     const applications = [];
     
-    applicationItems.forEach((item) => {
+    applicationItems.forEach((item, index) => {
         const titleInput = item.querySelector('.application-title-input');
         const contentInput = item.querySelector('.application-content-input');
-        const preview = item.querySelector('.image-preview img');
+        const imageInput = item.querySelector('.application-image-input');
         
         const title = titleInput ? titleInput.value.trim() : '';
         const content = contentInput ? contentInput.value.trim() : '';
-        const image = preview ? preview.src : '';
+        
+        // Get images from data-images attribute or from preview images
+        let images = [];
+        if (imageInput) {
+            const imagesAttr = imageInput.getAttribute('data-images');
+            if (imagesAttr) {
+                try {
+                    images = JSON.parse(imagesAttr);
+                    if (!Array.isArray(images)) images = [images];
+                } catch (error) {
+                    console.error('Error parsing images array:', error);
+                }
+            } else {
+                // Fallback to preview images if data-images not set
+                const preview = item.querySelector('.image-preview');
+                if (preview) {
+                    const previewImages = preview.querySelectorAll('img');
+                    images = Array.from(previewImages).map(img => img.src);
+                }
+            }
+        }
         
         if (title) {
             applications.push({
                 title: title,
                 content: content,
-                image: image
+                images: images // Store as array (frontend handles both array and single value)
             });
         }
     });
@@ -1132,21 +1191,42 @@ function getApplicationsFromForm() {
     const applicationItems = applicationsList.querySelectorAll('.application-item-admin');
     const applications = [];
     
+    // Get existing content to preserve images
+    const existingApplications = currentContent.applications || [];
+    
     applicationItems.forEach((item, index) => {
         const titleInput = item.querySelector('.application-title-input');
         const contentInput = item.querySelector('.application-content-input');
         const imageInput = item.querySelector('.application-image-input');
-        const preview = item.querySelector('.image-preview img');
         
         const title = titleInput ? titleInput.value.trim() : '';
         const content = contentInput ? contentInput.value.trim() : '';
-        const image = preview ? preview.src : '';
+        
+        // Get existing application data to preserve images
+        const existingApp = existingApplications[index] || {};
+        const existingImages = existingApp.image || existingApp.images || [];
+        const existingImagesArray = Array.isArray(existingImages) ? existingImages : (existingImages ? [existingImages] : []);
+        
+        // Get images from data-images attribute
+        let images = existingImagesArray;
+        if (imageInput) {
+            const imagesAttr = imageInput.getAttribute('data-images');
+            if (imagesAttr) {
+                try {
+                    images = JSON.parse(imagesAttr);
+                    if (!Array.isArray(images)) images = [images];
+                } catch (error) {
+                    console.error('Error parsing images array:', error);
+                    images = existingImagesArray;
+                }
+            }
+        }
         
         if (title) {
             applications.push({
                 title: title,
                 content: content,
-                image: image
+                images: images // Store as array (frontend handles both array and single value)
             });
         }
     });
@@ -2393,80 +2473,84 @@ function setupLogotypeHandlers() {
 async function setupApplicationImageHandlers() {
     const imageInputs = document.querySelectorAll('.application-image-input');
     imageInputs.forEach(input => {
-        // Remove existing listeners by cloning
-        const newInput = input.cloneNode(true);
-        const parent = input.parentNode;
-        parent.replaceChild(newInput, input);
-        
-        // Find associated label and filename display
-        const inputId = newInput.id;
-        const label = document.querySelector(`label[for="${inputId}"]`);
-        const filenameDisplay = document.getElementById(`${inputId}-filename`);
-        const preview = document.getElementById(`application-preview-${newInput.getAttribute('data-application-index')}`);
-        
-        newInput.addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            // Check file size before processing
-            const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
-            if (file.size > MAX_FILE_SIZE) {
-                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-                showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
-                newInput.value = '';
-                return;
-            }
-            
-            // Update label to show file selected
-            if (label) {
-                label.classList.add('has-file');
-                const uploadText = label.querySelector('.upload-text');
-                if (uploadText) {
-                    uploadText.textContent = 'Change Image';
+        if (!input.hasAttribute('data-handler-added')) {
+            input.setAttribute('data-handler-added', 'true');
+            input.addEventListener('change', async function(e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                
+                // Limit to 3 images
+                if (files.length > 3) {
+                    showStatus('You can only select up to 3 images. Please select 3 or fewer images.', 'error');
+                    input.value = '';
+                    return;
                 }
-                const uploadIcon = label.querySelector('.upload-icon');
-                if (uploadIcon) {
-                    uploadIcon.style.display = 'none';
-                }
-            }
-            
-            // Update filename display
-            if (filenameDisplay) {
-                filenameDisplay.textContent = file.name;
-                filenameDisplay.style.display = 'block';
-            }
-            
-            // Update preview
-            if (preview) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64Data = e.target.result;
-                    // Double-check the base64 string size
-                    const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
-                    if (base64Data.length > MAX_BASE64_SIZE) {
-                        showStatus('File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.', 'error');
-                        newInput.value = '';
-                        return;
-                    }
-                    const previewId = preview.id;
-                    preview.innerHTML = renderImagePreview(base64Data, previewId, newInput);
+                
+                const applicationIndex = this.getAttribute('data-application-index');
+                const label = document.querySelector(`label[for="${this.id}"]`);
+                const filenameDisplay = document.getElementById(`${this.id}-filename`);
+                const preview = document.getElementById(`application-preview-${applicationIndex}`);
+                
+                // Convert files to base64 (images will be compressed automatically)
+                const imagePromises = files.map(file => {
+                    return fileToBase64(file).catch(error => {
+                        throw new Error(`File "${file.name}": ${error.message}`);
+                    });
+                });
+                
+                try {
+                    const base64Images = await Promise.all(imagePromises);
                     
-                    // Attach remove handler
-                    const removeBtn = preview.querySelector('.remove-image-btn');
-                    if (removeBtn) {
-                        removeBtn.setAttribute('data-input-id', newInput.id);
-                        removeBtn.setAttribute('data-preview-id', previewId);
-                        removeBtn.addEventListener('click', function(ev) {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            removeImage(newInput, previewId);
+                    // Store images array on input
+                    input.setAttribute('data-images', JSON.stringify(base64Images));
+                
+                    // Update label
+                    if (label) {
+                        label.classList.add('has-file');
+                        const uploadText = label.querySelector('.upload-text');
+                        if (uploadText) {
+                            uploadText.textContent = base64Images.length === 1 ? 'Change Image' : `Change Images (${base64Images.length})`;
+                        }
+                    }
+                    
+                    // Update filename display
+                    if (filenameDisplay) {
+                        filenameDisplay.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
+                        filenameDisplay.style.display = 'block';
+                    }
+                    
+                    // Update preview
+                    if (preview) {
+                        const previewId = preview.id;
+                        preview.innerHTML = base64Images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
+                        
+                        // Attach remove handlers
+                        base64Images.forEach((img, idx) => {
+                            const imgPreviewId = `${previewId}-${idx}`;
+                            const imgPreview = document.getElementById(imgPreviewId);
+                            if (imgPreview) {
+                                const removeBtn = imgPreview.querySelector('.remove-image-btn');
+                                if (removeBtn) {
+                                    removeBtn.setAttribute('data-input-id', input.id);
+                                    removeBtn.setAttribute('data-image-index', idx);
+                                    removeBtn.addEventListener('click', function(ev) {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
+                                        removeImageFromArray(input, previewId, idx);
+                                    });
+                                }
+                            }
                         });
                     }
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+                    
+                    trackSectionChange('applications');
+                } catch (error) {
+                    showStatus(error.message, 'error');
+                    input.value = '';
+                    input.removeAttribute('data-images');
+                }
+            });
+        }
     });
 }
 
