@@ -487,10 +487,12 @@ async function loadContent() {
                 // Images after content (excluding hero image)
                 html += renderSubsectionImages(images, title, logotypeHeroImage);
                 
-                // Automatically generate DO NOT examples only if this subsection has the generateDoNotExamples flag
+                // Automatically generate DO NOT examples only if this subsection has the generateDoNotExamples flag AND title is "DO NOT"
                 // Place DO NOT grid outside subsection-content (like subsection-images) so it can span full width
-                if (subsection.generateDoNotExamples) {
-                    console.log(`✓ generateDoNotExamples is TRUE for subsection ${index} - attempting to generate DO NOT examples`);
+                // Double-check title to prevent examples from appearing in other subsections
+                const isDoNotSubsection = subsection.generateDoNotExamples && title.toLowerCase().trim() === 'do not';
+                if (isDoNotSubsection) {
+                    console.log(`✓ generateDoNotExamples is TRUE and title matches "DO NOT" for subsection ${index} - attempting to generate DO NOT examples`);
                     
                     let logoSVG = null;
                     let logoSVGSource = null;
