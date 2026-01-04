@@ -538,16 +538,6 @@ app.get('/api/content', async (req, res) => {
       needsUpdate = true;
     }
     
-    // Initialize applications if empty (support both array and object formats)
-    if (isEmptySection(content.applications)) {
-      // Use empty array format (new format) instead of object format
-      content.applications = [];
-      needsUpdate = true;
-    } else if (Array.isArray(content.applications)) {
-      // Applications is already an array - that's correct, no migration needed
-      // The client-side code handles migration from object to array format
-    }
-    
     // Migrate introduction content into frameRebel.aboutTheProject if introduction exists
     if (content.introduction && typeof content.introduction === 'object') {
       if (!content.frameRebel) content.frameRebel = {};
@@ -692,36 +682,6 @@ function getDefaultContent() {
       readingLevels: {
         image: '',
         content: 'Typography hierarchy creates clear reading levels that guide users through content and establish information priority.\n\n**Reading Levels:**\n1. **Level 1 - Display:** Largest size, used for hero headlines and major statements\n2. **Level 2 - Heading 1:** Primary section headings\n3. **Level 3 - Heading 2:** Subsection headings\n4. **Level 4 - Heading 3:** Minor headings and labels\n5. **Level 5 - Body:** Standard body text\n6. **Level 6 - Small:** Captions, footnotes, and fine print\n\nConsistent application of these levels ensures clarity and professional appearance across all materials.'
-      }
-    },
-    applications: {
-      businessCards: {
-        image: '',
-        content: 'Business cards are often the first physical touchpoint with our brand. They should reflect our professionalism and attention to detail.\n\n**Specifications:**\n- Standard size: 85mm x 55mm (3.37" x 2.17")\n- Logo placement: Top left or centered\n- Contact information: Clear hierarchy and readable fonts\n- Paper stock: Premium matte or satin finish\n- Colors: Use brand colors appropriately\n\nBusiness cards should feel substantial and professional while maintaining the clean, modern aesthetic of our brand.'
-      },
-      deckSlides: {
-        image: '',
-        content: 'Presentation slides should maintain brand consistency while effectively communicating information.\n\n**Slide Guidelines:**\n- Use brand-approved templates\n- Maintain consistent typography hierarchy\n- Apply brand colors strategically\n- Include logo on title slide and optionally in footer\n- Keep slides clean and uncluttered\n- Use high-quality images and graphics\n- Ensure readability at presentation size\n\nSlides should feel cohesive as a set while allowing flexibility for different content types.'
-      },
-      socialPosts: {
-        image: '',
-        content: 'Social media posts require brand consistency while adapting to platform-specific requirements and formats.\n\n**Social Media Guidelines:**\n- Use brand colors and typography\n- Include logo or iconotype when appropriate\n- Maintain brand voice in captions\n- Follow platform-specific size requirements\n- Ensure readability on mobile devices\n- Use high-quality imagery\n- Maintain consistent visual style across posts\n\nEach platform has unique specifications—always check current requirements for optimal display.'
-      },
-      badgesAndTape: {
-        image: '',
-        content: 'Badges and tape applications provide opportunities for brand visibility in events, packaging, and promotional contexts.\n\n**Applications:**\n- Event badges and name tags\n- Packaging tape\n- Sealing tape for boxes\n- Promotional stickers\n\n**Guidelines:**\n- Use simplified logo versions for small applications\n- Ensure legibility at small sizes\n- Use appropriate colors for visibility\n- Consider material constraints\n- Maintain brand consistency across all applications'
-      },
-      capAndTshirt: {
-        image: '',
-        content: 'Branded apparel extends our brand presence and creates opportunities for team unity and brand advocacy.\n\n**Apparel Applications:**\n- Company caps and hats\n- T-shirts and polo shirts\n- Hoodies and jackets\n- Other branded merchandise\n\n**Guidelines:**\n- Use appropriate logo placement (typically chest or back)\n- Consider embroidery vs. print based on material\n- Use colors that work with garment colors\n- Maintain logo proportions and clarity\n- Follow garment-specific placement guidelines\n\nApparel should feel high-quality and represent the brand well.'
-      },
-      cardAndTape: {
-        image: '',
-        content: 'Cards and tape combinations are often used for packaging, invitations, and special communications.\n\n**Applications:**\n- Product packaging\n- Invitation cards with sealing tape\n- Gift cards with branded tape\n- Special event materials\n\n**Guidelines:**\n- Coordinate card and tape designs for cohesive look\n- Ensure both elements work together visually\n- Use appropriate materials for each element\n- Maintain brand consistency\n- Consider the unboxing or opening experience'
-      },
-      stick: {
-        image: '',
-        content: 'Sticker applications provide versatile branding opportunities for various contexts.\n\n**Sticker Applications:**\n- Product labels\n- Promotional stickers\n- Branding stickers for events\n- Seal stickers for packaging\n- Window decals\n\n**Guidelines:**\n- Use simplified logo versions for small stickers\n- Ensure adhesive quality matches application\n- Consider substrate compatibility\n- Use appropriate colors for visibility\n- Maintain brand consistency across all sticker types\n\nStickers should be durable, high-quality, and representative of the brand.'
       }
     },
     hiddenSections: {},

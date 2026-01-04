@@ -906,89 +906,13 @@ async function loadContent() {
             }, 0);
         }
         
-        // 04. Applications
-        const applicationsSection = document.getElementById('applications');
-        const applicationsContent = document.getElementById('applications-content');
-        if (applicationsSection && applicationsContent && !hiddenSections['applications'] && content.applications) {
-            // Check if it's array format (new) or object format (old)
-            let applicationsArray = [];
-            if (Array.isArray(content.applications)) {
-                applicationsArray = content.applications;
-            } else {
-                // Migrate old format to array
-                const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
-                const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
-                oldSubsections.forEach((subsection, index) => {
-                    if (content.applications[subsection]) {
-                        const data = content.applications[subsection];
-                        applicationsArray.push({
-                            title: oldNames[index],
-                            content: typeof data === 'object' ? data.content : data,
-                            image: typeof data === 'object' ? data.image : ''
-                        });
-                    }
-                });
-            }
-            
-            // Check for hero image (use content.applications.image if available, otherwise first application image)
-            let applicationsHeroImage = null;
-            if (content.applications && content.applications.image) {
-                applicationsHeroImage = content.applications.image;
-            } else if (applicationsArray.length > 0) {
-                // Check for images array first, then fall back to image for backward compatibility
-                const firstApp = applicationsArray[0];
-                const firstAppImages = firstApp.images || (firstApp.image ? [firstApp.image] : []);
-                const firstAppImagesArray = Array.isArray(firstAppImages) ? firstAppImages : [firstAppImages];
-                if (firstAppImagesArray.length > 0) {
-                    applicationsHeroImage = firstAppImagesArray[0];
-                }
-            }
-            
-            const h2Applications = applicationsSection.querySelector('h2');
-            if (applicationsHeroImage && h2Applications) {
-                addSectionHero(applicationsSection, applicationsHeroImage, 'Applications');
-            } else if (h2Applications) {
-                applicationsSection.classList.remove('has-hero');
-            }
-            
-            // Background will be handled by CSS :not(.has-hero) selector
-            let html = '';
-            applicationsArray.forEach((app, index) => {
-                if (!app.title) return; // Skip if no title
-                const subsectionId = `applications-${index}`;
-                html += `<div class="subsection" id="${subsectionId}"><div class="subsection-title">${app.title}</div>`;
-                html += `<div class="subsection-content">${formatContent(app.content || '')}</div>`;
-                
-                // Render images (handle both single and array, excluding hero image)
-                // Check images array first (new format), then fall back to image (old format)
-                const appImages = app.images || app.image;
-                if (appImages) {
-                    const appImagesArray = Array.isArray(appImages) ? appImages : [appImages];
-                    const filteredImages = appImagesArray.filter(img => img !== applicationsHeroImage);
-                    if (filteredImages.length > 0) {
-                        html += '<div class="subsection-images">';
-                        filteredImages.forEach((img, idx) => {
-                            html += `<div class="subsection-image"><img src="${img}" alt="${app.title}${filteredImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
-                        });
-                        html += '</div>';
-                    }
-                }
-                
-                html += `</div>`;
-            });
-            
-            applicationsContent.className = 'content-section-content';
-            applicationsContent.innerHTML = html;
-            sectionIndex++;
-        }
         
         // Frontend section order mapping (matching new structure)
         const FRONTEND_SECTION_ORDER = [
             { id: 'frame-rebel', name: content.brandName || 'The Name of the Project', navName: content.brandName || 'The Name of the Project' },
             { id: 'logotype', name: 'Logotype', navName: 'Logotype' },
             { id: 'color', name: 'Color', navName: 'Color' },
-            { id: 'typography', name: 'Typography', navName: 'Typography' },
-            { id: 'applications', name: 'Applications', navName: 'Applications' }
+            { id: 'typography', name: 'Typography', navName: 'Typography' }
         ];
         
         // Build navigation dynamically based on visible sections
@@ -1019,8 +943,7 @@ async function loadContent() {
                 'typography': [
                     { id: 'mainTypography', name: 'Main Typography' },
                     { id: 'secondaryTypography', name: 'Secondary Typography' }
-                ],
-                'applications': [] // Will be populated dynamically from content.applications array
+                ]
             };
             
             // Populate logotype subsections dynamically from content
@@ -1032,35 +955,6 @@ async function loadContent() {
                     .map(({ subsection, originalIndex }) => ({
                         id: `logotype-subsection-${originalIndex}`, // Use originalIndex to match rendered HTML IDs
                         name: subsection.title || `Logotype Subsection ${originalIndex + 1}`
-                    }));
-            }
-            
-            // Populate applications subsections dynamically from content
-            if (content.applications) {
-                let applicationsArray = [];
-                if (Array.isArray(content.applications)) {
-                    applicationsArray = content.applications;
-                } else {
-                    // Migrate old format
-                    const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
-                    const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
-                    oldSubsections.forEach((subsection, index) => {
-                        if (content.applications[subsection]) {
-                            applicationsArray.push({
-                                title: oldNames[index],
-                                content: typeof content.applications[subsection] === 'object' ? content.applications[subsection].content : content.applications[subsection],
-                                image: typeof content.applications[subsection] === 'object' ? content.applications[subsection].image : ''
-                            });
-                        }
-                    });
-                }
-                
-                // Build subsections array for navigation
-                sectionSubsections['applications'] = applicationsArray
-                    .filter(app => app.title) // Only include items with titles
-                    .map((app, index) => ({
-                        id: index.toString(),
-                        name: app.title
                     }));
             }
             
@@ -1083,9 +977,9 @@ async function loadContent() {
                         subsections.forEach(subsection => {
                             const subListItem = document.createElement('li');
                             const subNavLink = document.createElement('a');
-                            // For logotype and applications, use the ID directly (already includes prefix)
+                            // For logotype, use the ID directly (already includes prefix)
                             // For other sections, combine section id with subsection id
-                            const subsectionId = (section.id === 'applications' || section.id === 'logotype') 
+                            const subsectionId = (section.id === 'logotype') 
                                 ? subsection.id 
                                 : `${section.id}-${subsection.id}`;
                             subNavLink.href = `#${subsectionId}`;
