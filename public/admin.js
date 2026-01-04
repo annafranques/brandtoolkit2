@@ -2035,31 +2035,10 @@ function setupLogotypeSubsectionImageHandlers() {
                 const filenameDisplay = document.getElementById(`${this.id}-filename`);
                 const preview = document.getElementById(`logotype-subsection-preview-${subsectionIndex}`);
                 
-                // Check file sizes and convert to base64
-                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
-                const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                // Convert files to base64 (images will be compressed automatically)
                 const imagePromises = files.map(file => {
-                    return new Promise((resolve, reject) => {
-                        // Check file size
-                        if (file.size > MAX_FILE_SIZE) {
-                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                            const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-                            reject(new Error(`File "${file.name}" (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB.`));
-                            return;
-                        }
-                        
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const base64Data = e.target.result;
-                            // Check base64 size
-                            if (base64Data.length > MAX_BASE64_SIZE) {
-                                reject(new Error(`File "${file.name}" is too large after encoding. Maximum size is approximately 12MB.`));
-                                return;
-                            }
-                            resolve(base64Data);
-                        };
-                        reader.onerror = () => reject(new Error(`Failed to read file "${file.name}"`));
-                        reader.readAsDataURL(file);
+                    return fileToBase64(file).catch(error => {
+                        throw new Error(`File "${file.name}": ${error.message}`);
                     });
                 });
                 
@@ -2141,31 +2120,10 @@ function setupLogotypeTabImageHandlers() {
                 const filenameDisplay = document.getElementById(`${this.id}-filename`);
                 const preview = document.getElementById(`logotype-subsection-preview-${index}-${tabKey}`);
                 
-                // Check file sizes and convert to base64
-                const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
-                const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                // Convert files to base64 (images will be compressed automatically)
                 const imagePromises = files.map(file => {
-                    return new Promise((resolve, reject) => {
-                        // Check file size
-                        if (file.size > MAX_FILE_SIZE) {
-                            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                            const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-                            reject(new Error(`File "${file.name}" (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB.`));
-                            return;
-                        }
-                        
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const base64Data = e.target.result;
-                            // Check base64 size
-                            if (base64Data.length > MAX_BASE64_SIZE) {
-                                reject(new Error(`File "${file.name}" is too large after encoding. Maximum size is approximately 12MB.`));
-                                return;
-                            }
-                            resolve(base64Data);
-                        };
-                        reader.onerror = () => reject(new Error(`Failed to read file "${file.name}"`));
-                        reader.readAsDataURL(file);
+                    return fileToBase64(file).catch(error => {
+                        throw new Error(`File "${file.name}": ${error.message}`);
                     });
                 });
                 
