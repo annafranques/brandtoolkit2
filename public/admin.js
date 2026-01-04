@@ -1325,7 +1325,7 @@ function renderLogotypeSubsectionsList(subsections) {
         return;
     }
     
-    const htmlString = subsectionsArray.map((subsection, index) => {
+    subsectionsList.innerHTML = subsectionsArray.map((subsection, index) => {
         logotypeCounter = Math.max(logotypeCounter, index);
         const subsectionId = `logotype-subsection-${index}`;
         const titleId = `logotype-subsection-title-${index}`;
