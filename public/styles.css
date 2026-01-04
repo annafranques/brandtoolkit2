@@ -939,6 +939,7 @@ body {
     justify-content: flex-start;
     min-height: 80px;
     width: 100%;
+    position: relative;
 }
 
 .do-not-logo-container svg {
@@ -948,6 +949,18 @@ body {
     height: auto;
     display: block;
     flex-shrink: 0;
+    visibility: visible;
+}
+
+/* Ensure SVG paths are visible by default */
+.do-not-logo-container svg path,
+.do-not-logo-container svg circle,
+.do-not-logo-container svg rect,
+.do-not-logo-container svg ellipse,
+.do-not-logo-container svg polygon,
+.do-not-logo-container svg polyline,
+.do-not-logo-container svg text {
+    fill: currentColor;
 }
 
 /* Crop - overflow hidden with smaller height */
