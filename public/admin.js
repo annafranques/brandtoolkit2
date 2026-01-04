@@ -1434,7 +1434,9 @@ function renderLogotypeSubsectionsList(subsections) {
         const hasImages = imagesArray.length > 0;
         
         // DO NOT subsections should not have image uploads - they use the main logo automatically
-        const isDoNotSubsection = templateKey === 'do-not' || subsection.generateDoNotExamples;
+        // Only hide images if the title is exactly "DO NOT" (case-insensitive)
+        const subsectionTitle = subsection.title || '';
+        const isDoNotSubsection = (templateKey === 'do-not' || subsection.generateDoNotExamples) && subsectionTitle.toLowerCase().trim() === 'do not';
         
         // Generate HTML for single multiple file input (skip for DO NOT subsections)
         const imagesHtml = isDoNotSubsection ? `
