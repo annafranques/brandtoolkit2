@@ -1664,6 +1664,10 @@ async function renderTypographyPreview(typographyData, contentData = null) {
     let headingFont = primaryFontName || '';
     let bodyFont = secondaryFontName || primaryFontName || '';
     
+    // Check if uppercase is enabled (from toggle or preview area class)
+    const isUppercase = previewArea.classList.contains('uppercase-view') || (typeof uppercaseEnabled !== 'undefined' && uppercaseEnabled);
+    const uppercaseStyle = isUppercase ? 'text-transform: uppercase;' : '';
+    
     previewArea.innerHTML = `
         <!-- Display Section -->
         <div class="preview-section">
