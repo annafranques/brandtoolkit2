@@ -470,7 +470,7 @@ function populateForm(content) {
         // Render as array
         // Check if it's the new array format or old object format
         if (Array.isArray(content.applications)) {
-            renderApplicationsList(content.applications);
+            renderApplicationsSubsectionsList(content.applications);
         } else {
             // Migrate old format to new array format
             const applicationsArray = [];
@@ -487,10 +487,10 @@ function populateForm(content) {
                     });
                 }
             });
-            renderApplicationsList(applicationsArray);
+            renderApplicationsSubsectionsList(applicationsArray);
         }
     } else {
-        renderApplicationsList([]);
+        renderApplicationsSubsectionsList([]);
     }
     
     // Colors - render color list
