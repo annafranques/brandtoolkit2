@@ -494,8 +494,23 @@ async function loadContent() {
                     imagesType: typeof images,
                     isArray: Array.isArray(images),
                     firstImage: Array.isArray(images) ? images[0] : images,
-                    fullSubsection: JSON.parse(JSON.stringify(subsection)) // Deep clone to see all properties
+                    fullSubsection: JSON.parse(JSON.stringify(subsection)), // Deep clone to see all properties
+                    imagesValue: images,
+                    title: title
                 });
+                
+                // Debug: Check if condition would pass
+                if (subsection.generateDoNotExamples) {
+                    console.log(`✓ generateDoNotExamples is TRUE for subsection ${index}`);
+                } else {
+                    console.log(`✗ generateDoNotExamples is FALSE/UNDEFINED for subsection ${index}`);
+                }
+                
+                if (hasImages) {
+                    console.log(`✓ hasImages is TRUE for subsection ${index}`);
+                } else {
+                    console.log(`✗ hasImages is FALSE for subsection ${index}`);
+                }
                 
                 if (subsection.generateDoNotExamples && hasImages) {
                     const imageArray = Array.isArray(images) ? images : [images];
