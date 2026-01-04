@@ -1336,6 +1336,12 @@ function renderLogotypeSubsectionsList(subsections) {
         // Check if this subsection has tabs
         const hasTabs = subsection.hasTabs && subsection.tabs && Object.keys(subsection.tabs).length > 0;
         
+        // Determine template key - if generateDoNotExamples is true, use 'do-not'
+        let templateKey = null;
+        if (subsection.generateDoNotExamples) {
+            templateKey = 'do-not';
+        }
+        
         // Build content section - either tabs or textarea
         let contentSection = '';
         if (hasTabs) {
