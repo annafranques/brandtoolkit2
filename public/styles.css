@@ -839,11 +839,11 @@ body {
     grid-column: 1 / -1;
 }
 
-/* DO NOT grid should span full width in subsections */
+/* DO NOT grid should span full width in subsections - break out of padding like subsection-images */
 .subsection .do-not-grid {
     grid-column: 1 / -1;
     width: calc(100vw - 300px);
-    margin-left: calc(-5rem - ((100vw - 300px) - 100%) / 2);
+    margin-left: -5rem;
 }
 
 .subsection-image {
