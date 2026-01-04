@@ -488,6 +488,7 @@ async function loadContent() {
                 html += renderSubsectionImages(images, title, logotypeHeroImage);
                 
                 // Automatically generate DO NOT examples only if this subsection has the generateDoNotExamples flag
+                // Place DO NOT grid outside subsection-content (like subsection-images) so it can span full width
                 if (subsection.generateDoNotExamples) {
                     console.log(`✓ generateDoNotExamples is TRUE for subsection ${index} - attempting to generate DO NOT examples`);
                     
