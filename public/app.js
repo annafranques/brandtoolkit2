@@ -2007,54 +2007,84 @@ function generateDoNotExamples(logoSVG, brandName) {
         return applyColorToSVG(svgString, color);
     }
     
+    // Ensure SVG has proper dimensions if missing
+    function ensureSVGDimensions(svgString) {
+        if (!svgString || !svgString.trim().startsWith('<svg')) {
+            return svgString;
+        }
+        
+        // Check if SVG has width and height attributes
+        if (!svgString.includes('width=') || !svgString.includes('height=')) {
+            // Try to extract viewBox if available
+            const viewBoxMatch = svgString.match(/viewBox=["']([^"']+)["']/);
+            if (viewBoxMatch) {
+                const viewBoxValues = viewBoxMatch[1].split(/\s+/);
+                if (viewBoxValues.length >= 4) {
+                    const width = viewBoxValues[2];
+                    const height = viewBoxValues[3];
+                    // Add width and height if not present
+                    svgString = svgString.replace(/<svg([^>]*)>/, `<svg$1 width="${width}" height="${height}">`);
+                }
+            } else {
+                // Default dimensions if no viewBox
+                svgString = svgString.replace(/<svg([^>]*)>/, `<svg$1 width="200" height="50">`);
+            }
+        }
+        
+        return svgString;
+    }
+    
+    // Process the base SVG to ensure it's properly formatted
+    const processedSVG = ensureSVGDimensions(logoSVG);
+    
     const doNotExamples = [
         {
             instruction: 'DO NOT CROP THE LOGO',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT CROP THE LOGO</div>
-                <div class="do-not-logo-container do-not-crop">${logoSVG}</div>
+                <div class="do-not-logo-container do-not-crop">${processedSVG}</div>
             </div>`
         },
         {
             instruction: 'DO NOT DISTORT THE LOGO',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT DISTORT THE LOGO</div>
-                <div class="do-not-logo-container do-not-distort">${logoSVG}</div>
+                <div class="do-not-logo-container do-not-distort">${processedSVG}</div>
             </div>`
         },
         {
             instruction: 'DO NOT CHANGE THE TRANSPARENCY OF THE LOGO',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT CHANGE THE TRANSPARENCY OF THE LOGO</div>
-                <div class="do-not-logo-container do-not-transparency">${logoSVG}</div>
+                <div class="do-not-logo-container do-not-transparency">${processedSVG}</div>
             </div>`
         },
         {
             instruction: 'DO NOT USE DROP SHADOWS OR ANY OTHER EFFECTS',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT USE DROP SHADOWS OR ANY OTHER EFFECTS</div>
-                <div class="do-not-logo-container do-not-shadow">${logoSVG}</div>
+                <div class="do-not-logo-container do-not-shadow">${processedSVG}</div>
             </div>`
         },
         {
             instruction: 'DO NOT USE DIFFERENT COLORS',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT USE DIFFERENT COLORS</div>
-                <div class="do-not-logo-container do-not-color">${createColoredSVG(logoSVG, '#eec258')}</div>
+                <div class="do-not-logo-container do-not-color">${createColoredSVG(processedSVG, '#eec258')}</div>
             </div>`
         },
         {
             instruction: 'DO NOT OUTLINE LOGOTYPE',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT OUTLINE LOGOTYPE</div>
-                <div class="do-not-logo-container do-not-outline">${createOutlineSVG(logoSVG)}</div>
+                <div class="do-not-logo-container do-not-outline">${createOutlineSVG(processedSVG)}</div>
             </div>`
         },
         {
             instruction: 'DO NOT SHUFFLE AROUND THE LOGO',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT SHUFFLE AROUND THE LOGO</div>
-                <div class="do-not-logo-container do-not-shuffle">${logoSVG}</div>
+                <div class="do-not-logo-container do-not-shuffle">${processedSVG}</div>
             </div>`
         },
         {
@@ -2069,7 +2099,7 @@ function generateDoNotExamples(logoSVG, brandName) {
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT ADD NEW GRAPHIC ELEMENTS TO THE LOGO.</div>
                 <div class="do-not-logo-container do-not-graphic">
-                    ${logoSVG}
+                    ${processedSVG}
                     <div class="do-not-graphic-element"></div>
                 </div>
             </div>`
@@ -2078,7 +2108,7 @@ function generateDoNotExamples(logoSVG, brandName) {
             instruction: 'DO NOT ROTATE ANY PART OF THE LOGO',
             html: `<div class="do-not-example">
                 <div class="do-not-instruction">DO NOT ROTATE ANY PART OF THE LOGO</div>
-                <div class="do-not-logo-container do-not-rotate">${logoSVG}</div>
+                <div class="do-not-logo-container do-not-rotate">${processedSVG}</div>
             </div>`
         }
     ];

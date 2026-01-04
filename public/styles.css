@@ -943,8 +943,11 @@ body {
 
 .do-not-logo-container svg {
     max-width: 100%;
+    max-height: 80px;
+    width: auto;
     height: auto;
     display: block;
+    flex-shrink: 0;
 }
 
 /* Crop - overflow hidden with smaller height */
