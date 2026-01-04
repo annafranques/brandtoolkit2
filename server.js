@@ -434,6 +434,8 @@ app.get('/api/content', async (req, res) => {
     // Helper to check if an object is empty or has no meaningful content
     function isEmptySection(section) {
       if (!section || typeof section !== 'object') return true;
+      // Arrays are never "empty" in this context - they're valid data structures
+      if (Array.isArray(section)) return false;
       if (Object.keys(section).length === 0) return true;
       // Check if all values are empty strings
       return Object.values(section).every(val => {
@@ -536,10 +538,14 @@ app.get('/api/content', async (req, res) => {
       needsUpdate = true;
     }
     
-    // Initialize applications if empty
+    // Initialize applications if empty (support both array and object formats)
     if (isEmptySection(content.applications)) {
-      content.applications = JSON.parse(JSON.stringify(defaultContent.applications));
+      // Use empty array format (new format) instead of object format
+      content.applications = [];
       needsUpdate = true;
+    } else if (Array.isArray(content.applications)) {
+      // Applications is already an array - that's correct, no migration needed
+      // The client-side code handles migration from object to array format
     }
     
     // Migrate introduction content into frameRebel.aboutTheProject if introduction exists
