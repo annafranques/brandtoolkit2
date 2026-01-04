@@ -1812,8 +1812,8 @@ function addLogotypeSubsectionItemWithTemplate(templateKey) {
                 <label>Subsection Title</label>
                 <input type="text" class="form-control logotype-subsection-title-input" id="${titleId}" value="${(template.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Iconography">
             </div>
-            ${imagesHtml}
             ${contentSection}
+            ${imagesHtml}
         </div>
     `;
     
