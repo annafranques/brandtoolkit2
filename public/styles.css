@@ -839,9 +839,12 @@ body {
     grid-column: 1 / -1;
 }
 
-/* DO NOT grid should span full width in subsections - placed outside subsection-content like subsection-images */
-.subsection .do-not-grid {
+/* DO NOT grid should span full width in subsections - same styling as subsection-images */
+.subsection:not(.logo-usage-section):not(:has(.usage-tabs)) .do-not-grid {
     grid-column: 1 / -1;
+}
+
+.do-not-grid {
     width: calc(100vw - 300px);
     margin: 0;
     padding: 0;
