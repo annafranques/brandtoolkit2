@@ -2614,17 +2614,72 @@ async function deleteAsset(id) {
 
 // Logo preview is now handled inline in populateForm
 
-// Helper to convert file to base64
-function fileToBase64(file) {
+// Helper to compress image using Canvas API
+function compressImage(file, maxWidth = 2400, maxHeight = 2400, quality = 0.85) {
     return new Promise((resolve, reject) => {
-        // Check file size before converting
-        // MongoDB has a 16MB document limit, base64 increases size by ~33%
-        // For videos and images, we allow up to 12MB
-        const isVideo = file.type && file.type.startsWith('video/');
-        const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB for both videos and images
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Calculate new dimensions
+                if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width = width * ratio;
+                    height = height * ratio;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to blob with compression
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error('Failed to compress image'));
+                        return;
+                    }
+                    resolve(blob);
+                }, file.type || 'image/jpeg', quality);
+            };
+            img.onerror = () => reject(new Error('Failed to load image'));
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Helper to convert file to base64
+async function fileToBase64(file) {
+    // Check file size before converting
+    // MongoDB has a 16MB document limit, base64 increases size by ~33%
+    const isVideo = file.type && file.type.startsWith('video/');
+    const isImage = file.type && file.type.startsWith('image/');
+    
+    // For images, compress first to reduce size
+    let fileToConvert = file;
+    if (isImage) {
+        try {
+            // Compress image: max 2400px, quality 0.85
+            fileToConvert = await compressImage(file, 2400, 2400, 0.85);
+        } catch (error) {
+            console.warn('Image compression failed, using original:', error);
+            // Continue with original file if compression fails
+        }
+    }
+    
+    return new Promise((resolve, reject) => {
+        // Check file size after compression (for images) or original (for videos)
+        const MAX_FILE_SIZE = isVideo ? 12 * 1024 * 1024 : 8 * 1024 * 1024; // 12MB for videos, 8MB for compressed images
         
-        if (file.size > MAX_FILE_SIZE) {
-            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        if (fileToConvert.size > MAX_FILE_SIZE) {
+            const fileSizeMB = (fileToConvert.size / (1024 * 1024)).toFixed(2);
             const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
             const fileType = isVideo ? 'video' : 'image';
             reject(new Error(`${fileType.charAt(0).toUpperCase() + fileType.slice(1)} size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the ${fileType}.`));
@@ -2635,17 +2690,17 @@ function fileToBase64(file) {
         reader.onload = () => {
             // Double-check the base64 string size (should be ~33% larger than original)
             const base64Size = reader.result.length;
-            const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+            const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64 (MongoDB limit)
             
             if (base64Size > MAX_BASE64_SIZE) {
-                reject(new Error(`File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.`));
+                reject(new Error(`File is too large after encoding (${(base64Size / (1024 * 1024)).toFixed(2)}MB). Maximum size is 16MB. Please use a smaller file.`));
                 return;
             }
             
             resolve(reader.result);
         };
         reader.onerror = reject;
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(fileToConvert);
     });
 }
 
