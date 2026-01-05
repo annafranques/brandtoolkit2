@@ -459,35 +459,22 @@ function populateForm(content) {
         
     }
     
-    // 05. Applications - Hero Image
+    // 04. Applications
     if (content.applications) {
-        // Hero image for applications section (check if it's an object with image property)
-        if (!Array.isArray(content.applications) && content.applications.image) {
-            // Hero image/video for applications section
-            populateHeroMedia(content.applications.image, 'applications-hero-input', 'applications-hero-url', 'applications-hero-preview', 'applications');
+        // Populate heading and heading text
+        if (content.applications.heading) {
+            setValueSafely('applications-heading', content.applications.heading);
+        }
+        if (content.applications.headingText) {
+            setValueSafely('applications-heading-text', content.applications.headingText);
         }
         
-        // Render as array
-        // Check if it's the new array format or old object format
-        if (Array.isArray(content.applications)) {
-            renderApplicationsSubsectionsList(content.applications);
+        // Render subsections array
+        if (content.applications.subsections && Array.isArray(content.applications.subsections)) {
+            renderApplicationsSubsectionsList(content.applications.subsections);
         } else {
-            // Migrate old format to new array format
-            const applicationsArray = [];
-            const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
-            const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
-            
-            oldSubsections.forEach((subsection, index) => {
-                if (content.applications[subsection]) {
-                    const data = content.applications[subsection];
-                    applicationsArray.push({
-                        title: oldNames[index],
-                        content: typeof data === 'object' ? data.content : data,
-                        image: typeof data === 'object' ? data.image : ''
-                    });
-                }
-            });
-            renderApplicationsSubsectionsList(applicationsArray);
+            // Handle migration from old format or empty
+            renderApplicationsSubsectionsList([]);
         }
     } else {
         renderApplicationsSubsectionsList([]);
@@ -3021,6 +3008,8 @@ async function rebuildContentFromForm() {
             downloadUrl: getValue('typography-download-url', ''),
             },
         applications: {
+            heading: getValue('applications-heading', ''),
+            headingText: getValue('applications-heading-text', ''),
             subsections: await getApplicationsSubsectionsFromForm()
             },
         hiddenSections: currentContent?.hiddenSections || {},

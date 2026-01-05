@@ -684,6 +684,11 @@ function getDefaultContent() {
         content: 'Typography hierarchy creates clear reading levels that guide users through content and establish information priority.\n\n**Reading Levels:**\n1. **Level 1 - Display:** Largest size, used for hero headlines and major statements\n2. **Level 2 - Heading 1:** Primary section headings\n3. **Level 3 - Heading 2:** Subsection headings\n4. **Level 4 - Heading 3:** Minor headings and labels\n5. **Level 5 - Body:** Standard body text\n6. **Level 6 - Small:** Captions, footnotes, and fine print\n\nConsistent application of these levels ensures clarity and professional appearance across all materials.'
       }
     },
+    applications: {
+      heading: '04. Applications',
+      headingText: '',
+      subsections: []
+    },
     hiddenSections: {},
     assets: [],
     updatedAt: new Date().toISOString()

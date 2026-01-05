@@ -742,6 +742,61 @@ async function loadContent() {
             logotypeSection.remove();
         }
         
+        // 04. Applications
+        const applicationsSection = document.getElementById('applications');
+        const applicationsContent = document.getElementById('applications-content');
+        
+        if (applicationsSection && applicationsContent && !hiddenSections['applications'] && content.applications) {
+            let applicationsHtml = '';
+            
+            // Add heading and heading text
+            if (content.applications.heading) {
+                const h2 = applicationsSection.querySelector('h2');
+                if (h2) {
+                    h2.textContent = content.applications.heading;
+                }
+            }
+            
+            if (content.applications.headingText) {
+                applicationsHtml += `<div class="section-intro">${formatContent(content.applications.headingText)}</div>`;
+            }
+            
+            // Render subsections
+            if (content.applications.subsections && Array.isArray(content.applications.subsections)) {
+                content.applications.subsections.forEach((subsection, index) => {
+                    const title = subsection.title || '';
+                    const contentText = subsection.content || '';
+                    const images = subsection.images || (subsection.image ? [subsection.image] : []);
+                    const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
+                    const hasImages = imagesArray.length > 0;
+                    const subsectionId = `applications-subsection-${index}`;
+                    
+                    applicationsHtml += `<div class="subsection" id="${subsectionId}">`;
+                    applicationsHtml += `<div class="subsection-title">${title}</div>`;
+                    
+                    if (contentText) {
+                        applicationsHtml += `<div class="subsection-content">${formatContent(contentText)}</div>`;
+                    }
+                    
+                    if (hasImages) {
+                        applicationsHtml += '<div class="subsection-images">';
+                        imagesArray.forEach((img, idx) => {
+                            applicationsHtml += `<div class="subsection-image"><img src="${img}" alt="${title}${imagesArray.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                        });
+                        applicationsHtml += '</div>';
+                    }
+                    
+                    applicationsHtml += `</div>`;
+                });
+            }
+            
+            applicationsContent.innerHTML = applicationsHtml;
+            sectionIndex++;
+        } else if (applicationsSection && hiddenSections['applications']) {
+            // Remove section if hidden
+            applicationsSection.remove();
+        }
+        
         // 03. Typography section (special handling - has preview)
         const typographySection = document.getElementById('typography');
         const typographyContent = document.getElementById('typography-content');
@@ -912,7 +967,8 @@ async function loadContent() {
             { id: 'frame-rebel', name: content.brandName || 'The Name of the Project', navName: content.brandName || 'The Name of the Project' },
             { id: 'logotype', name: 'Logotype', navName: 'Logotype' },
             { id: 'color', name: 'Color', navName: 'Color' },
-            { id: 'typography', name: 'Typography', navName: 'Typography' }
+            { id: 'typography', name: 'Typography', navName: 'Typography' },
+            { id: 'applications', name: 'Applications', navName: 'Applications' }
         ];
         
         // Build navigation dynamically based on visible sections
@@ -943,8 +999,19 @@ async function loadContent() {
                 'typography': [
                     { id: 'mainTypography', name: 'Main Typography' },
                     { id: 'secondaryTypography', name: 'Secondary Typography' }
-                ]
+                ],
+                'applications': [] // Will be populated dynamically from content.applications.subsections array
             };
+            
+            // Populate applications subsections dynamically from content
+            if (content.applications && content.applications.subsections && Array.isArray(content.applications.subsections)) {
+                sectionSubsections['applications'] = content.applications.subsections
+                    .map((subsection, index) => ({
+                        id: `applications-subsection-${index}`,
+                        name: subsection.title || `Subsection ${index + 1}`
+                    }))
+                    .filter(sub => sub.name); // Only include subsections with titles
+            }
             
             // Populate logotype subsections dynamically from content
             if (content.logotype && content.logotype.subsections && Array.isArray(content.logotype.subsections)) {
@@ -977,9 +1044,9 @@ async function loadContent() {
                         subsections.forEach(subsection => {
                             const subListItem = document.createElement('li');
                             const subNavLink = document.createElement('a');
-                            // For logotype, use the ID directly (already includes prefix)
+                            // For logotype and applications, use the ID directly (already includes prefix)
                             // For other sections, combine section id with subsection id
-                            const subsectionId = (section.id === 'logotype') 
+                            const subsectionId = (section.id === 'logotype' || section.id === 'applications') 
                                 ? subsection.id 
                                 : `${section.id}-${subsection.id}`;
                             subNavLink.href = `#${subsectionId}`;
