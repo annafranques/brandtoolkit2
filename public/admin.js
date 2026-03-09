@@ -277,21 +277,21 @@ function populateForm(content) {
         if (aboutEl && content.frameRebel.aboutTheProject) {
             if (typeof content.frameRebel.aboutTheProject === 'object') {
                 setValueSafely('frame-rebel-about-content', content.frameRebel.aboutTheProject.content || '');
-                const preview = document.getElementById('frame-rebel-about-preview');
+                const preview = document.getElementById('frame-rebel-about-the-project-preview');
                 if (preview && content.frameRebel.aboutTheProject.image) {
                     const input = document.querySelector('[data-section="frameRebel"][data-subsection="aboutTheProject"]');
                     const inputId = input ? input.id || 'frame-rebel-about-input' : 'frame-rebel-about-input';
                     preview.innerHTML = `
                         <div style="position: relative; display: inline-block; margin-top: 1rem;">
                             <img src="${content.frameRebel.aboutTheProject.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="frame-rebel-about-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                            <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="frame-rebel-about-the-project-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
                         </div>
                     `;
                     if (input) {
                         const removeBtn = preview.querySelector('.remove-image-btn');
                         if (removeBtn) {
                             removeBtn.addEventListener('click', function() {
-                                removeImage(input, 'frame-rebel-about-preview');
+                                removeImage(input, 'frame-rebel-about-the-project-preview');
                             });
                         }
                     }
@@ -303,14 +303,14 @@ function populateForm(content) {
             // If introduction still exists (during migration), merge it
             if (typeof content.introduction === 'object') {
                 setValueSafely('frame-rebel-about-content', content.introduction.content || '');
-                const preview = document.getElementById('frame-rebel-about-preview');
+                const preview = document.getElementById('frame-rebel-about-the-project-preview');
                 if (preview && content.introduction.image) {
                     const input = document.querySelector('[data-section="frameRebel"][data-subsection="aboutTheProject"]');
-                    preview.innerHTML = renderImagePreview(content.introduction.image, 'frame-rebel-about-preview', input);
+                    preview.innerHTML = renderImagePreview(content.introduction.image, 'frame-rebel-about-the-project-preview', input);
                     const removeBtn = preview.querySelector('.remove-image-btn');
                     if (removeBtn && input) {
                         removeBtn.addEventListener('click', function() {
-                            removeImage(input, 'frame-rebel-about-preview');
+                            removeImage(input, 'frame-rebel-about-the-project-preview');
                         });
                     }
                 }
@@ -324,21 +324,21 @@ function populateForm(content) {
         if (pillarsEl && content.frameRebel.fundamentalPillars) {
             if (typeof content.frameRebel.fundamentalPillars === 'object') {
                 setValueSafely('frame-rebel-pillars-content', content.frameRebel.fundamentalPillars.content || '');
-                const preview = document.getElementById('frame-rebel-pillars-preview');
+                const preview = document.getElementById('frame-rebel-fundamental-pillars-preview');
                 if (preview && content.frameRebel.fundamentalPillars.image) {
                     const input = document.querySelector('[data-section="frameRebel"][data-subsection="fundamentalPillars"]');
                     const inputId = input ? input.id || 'frame-rebel-pillars-input' : 'frame-rebel-pillars-input';
                     preview.innerHTML = `
                         <div style="position: relative; display: inline-block; margin-top: 1rem;">
                             <img src="${content.frameRebel.fundamentalPillars.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="frame-rebel-pillars-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                            <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="frame-rebel-fundamental-pillars-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
                         </div>
                     `;
                     if (input) {
                         const removeBtn = preview.querySelector('.remove-image-btn');
                         if (removeBtn) {
                             removeBtn.addEventListener('click', function() {
-                                removeImage(input, 'frame-rebel-pillars-preview');
+                                removeImage(input, 'frame-rebel-fundamental-pillars-preview');
                             });
                         }
                     }
@@ -353,21 +353,21 @@ function populateForm(content) {
         if (toneEl && content.frameRebel.toneOfVoice) {
             if (typeof content.frameRebel.toneOfVoice === 'object') {
                 setValueSafely('frame-rebel-tone-content', content.frameRebel.toneOfVoice.content || '');
-                const preview = document.getElementById('frame-rebel-tone-preview');
+                const preview = document.getElementById('frame-rebel-tone-of-voice-preview');
                 if (preview && content.frameRebel.toneOfVoice.image) {
                     const input = document.querySelector('[data-section="frameRebel"][data-subsection="toneOfVoice"]');
                     const inputId = input ? input.id || 'frame-rebel-tone-input' : 'frame-rebel-tone-input';
                     preview.innerHTML = `
                         <div style="position: relative; display: inline-block; margin-top: 1rem;">
                             <img src="${content.frameRebel.toneOfVoice.image}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="frame-rebel-tone-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
+                            <button type="button" class="remove-image-btn" data-input-id="${inputId}" data-preview-id="frame-rebel-tone-of-voice-preview" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 0, 0, 0.8); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remove image">×</button>
                         </div>
                     `;
                     if (input) {
                         const removeBtn = preview.querySelector('.remove-image-btn');
                         if (removeBtn) {
                             removeBtn.addEventListener('click', function() {
-                                removeImage(input, 'frame-rebel-tone-preview');
+                                removeImage(input, 'frame-rebel-tone-of-voice-preview');
                             });
                         }
                     }
