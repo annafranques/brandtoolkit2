@@ -382,21 +382,21 @@ app.get('/api/typography', async (req, res) => {
 
 // Serve static files from public directory (after API routes to ensure they take precedence)
 // Add cache control headers to prevent stale JavaScript files
-app.use(express.static('public', {
-  setHeaders: (res, path) => {
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
     // Force no cache for all static files to prevent caching issues
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     res.setHeader('Last-Modified', new Date().toUTCString());
-    
+
     // Set proper Content-Type for SVG files
-    if (path.endsWith('.svg')) {
+    if (filePath.endsWith('.svg')) {
       res.setHeader('Content-Type', 'image/svg+xml');
     }
   }
 }));
-app.use('/fonts', express.static('public/fonts'));
+app.use('/fonts', express.static(path.join(__dirname, 'public', 'fonts')));
 
 // Change password endpoint removed - authentication completely disabled
 

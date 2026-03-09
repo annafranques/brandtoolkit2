@@ -212,19 +212,59 @@ function populateForm(content) {
         }
     }
     
+    // Helper to update logo preview from SVG string
+    function updateLogoPreview(svgString) {
+        const preview = document.getElementById('logo-preview');
+        if (!preview) return;
+        const trimmed = (svgString || '').trim();
+        if (trimmed.startsWith('<svg')) {
+            preview.innerHTML = `<div style="display:inline-flex; align-items:center; justify-content:center; padding:1.5rem; background:#f9f8f6; border:1px solid rgba(0,0,0,0.08); max-width:240px; max-height:160px; overflow:hidden;">${trimmed}</div>
+            <div style="margin-top:0.5rem; font-size:0.75rem; color:rgba(0,0,0,0.45);">SVG ready — used across color examples in the toolkit</div>`;
+            // Scale the SVG inside preview
+            const svgEl = preview.querySelector('svg');
+            if (svgEl) {
+                svgEl.style.maxWidth = '100%';
+                svgEl.style.maxHeight = '120px';
+                svgEl.style.width = 'auto';
+                svgEl.style.height = 'auto';
+            }
+        } else {
+            preview.innerHTML = '';
+        }
+    }
+
     // Setup logo preview on input change
     if (logoInput) {
         logoInput.addEventListener('input', function() {
-            const preview = document.getElementById('logo-preview');
-            if (preview && this.value.trim().startsWith('<svg')) {
-                try {
-                    preview.innerHTML = `<div style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; padding: 1rem; background: white;">${this.value}</div>`;
-                } catch (error) {
-                    console.warn('Could not update logo preview:', error.message);
+            updateLogoPreview(this.value);
+        });
+        // Initial preview if already populated
+        if (logoInput.value) updateLogoPreview(logoInput.value);
+    }
+
+    // SVG file upload → populate textarea
+    const logoSvgFile = document.getElementById('logo-svg-file');
+    if (logoSvgFile) {
+        logoSvgFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const svgCode = evt.target.result;
+                if (logoInput) {
+                    logoInput.value = svgCode;
+                    updateLogoPreview(svgCode);
+                    // Show filename
+                    const filenameEl = document.getElementById('logo-svg-filename');
+                    if (filenameEl) filenameEl.textContent = file.name;
+                    // Mark section as changed so it saves
+                    if (typeof markSectionChanged === 'function') markSectionChanged('basic');
                 }
-            } else if (preview) {
-                preview.innerHTML = '';
-            }
+            };
+            reader.onerror = function() {
+                console.error('Could not read SVG file');
+            };
+            reader.readAsText(file);
         });
     }
     
@@ -459,27 +499,71 @@ function populateForm(content) {
         
     }
     
-    // 04. Applications
+    // 05. Applications - Hero Image
     if (content.applications) {
-        // Populate heading and heading text
-        if (content.applications.heading) {
-            setValueSafely('applications-heading', content.applications.heading);
-        }
-        if (content.applications.headingText) {
-            setValueSafely('applications-heading-text', content.applications.headingText);
+        // Hero image for applications section (check if it's an object with image property)
+        if (!Array.isArray(content.applications) && content.applications.image) {
+            // Hero image/video for applications section
+            populateHeroMedia(content.applications.image, 'applications-hero-input', 'applications-hero-url', 'applications-hero-preview', 'applications');
         }
         
-        // Render subsections array
-        if (content.applications.subsections && Array.isArray(content.applications.subsections)) {
-            renderApplicationsSubsectionsList(content.applications.subsections);
+        // Render as array
+        // Check if it's the new array format or old object format
+        if (Array.isArray(content.applications)) {
+            renderApplicationsList(content.applications);
         } else {
-            // Handle migration from old format or empty
-            renderApplicationsSubsectionsList([]);
+            // Migrate old format to new array format
+            const applicationsArray = [];
+            const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
+            const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
+            
+            oldSubsections.forEach((subsection, index) => {
+                if (content.applications[subsection]) {
+                    const data = content.applications[subsection];
+                    applicationsArray.push({
+                        title: oldNames[index],
+                        content: typeof data === 'object' ? data.content : data,
+                        image: typeof data === 'object' ? data.image : ''
+                    });
+                }
+            });
+            renderApplicationsList(applicationsArray);
         }
     } else {
-        renderApplicationsSubsectionsList([]);
+        renderApplicationsList([]);
     }
-    
+
+    // Graphic Language
+    if (content.graphicLanguage) {
+        const glData = Array.isArray(content.graphicLanguage) ? content.graphicLanguage : (content.graphicLanguage.items || []);
+        const glHero = Array.isArray(content.graphicLanguage) ? null : (content.graphicLanguage.hero || null);
+        if (glHero) {
+            populateHeroMedia(glHero, 'graphic-language-hero-input', 'graphic-language-hero-url', 'graphic-language-hero-preview', 'graphicLanguage');
+        }
+        renderGraphicLanguageList(glData);
+    } else {
+        renderGraphicLanguageList([]);
+    }
+
+    // Photography
+    if (content.photography) {
+        const phData = Array.isArray(content.photography) ? content.photography : (content.photography.items || []);
+        const phHero = Array.isArray(content.photography) ? null : (content.photography.hero || null);
+        if (phHero) {
+            populateHeroMedia(phHero, 'photography-hero-input', 'photography-hero-url', 'photography-hero-preview', 'photography');
+        }
+        renderPhotographyList(phData);
+    } else {
+        renderPhotographyList([]);
+    }
+
+    // Downloads
+    if (content.downloads && Array.isArray(content.downloads)) {
+        renderDownloadsList(content.downloads);
+    } else {
+        renderDownloadsList([]);
+    }
+
     // Colors - render color list
     renderColorsList(content.colors || []);
     
@@ -507,7 +591,10 @@ function populateForm(content) {
     
     syncColorInputs();
     setupVisibilityControls();
-    setupApplicationsHandlers(); // Setup applications handlers
+    setupApplicationsHandlers();
+    setupGraphicLanguageHandlers();
+    setupPhotographyHandlers();
+    setupDownloadsHandlers();
     setupLogotypeHandlers(); // Setup logotype handlers
     initializeStyledFileUploads();
     setupImageUploadHandlers();
@@ -884,227 +971,112 @@ function getColorsFromForm() {
 }
 
 // Applications repeater functions
-let applicationsCounter = 0;
+let applicationCounter = 0;
 
-// Predefined subsection templates for Applications
-const APPLICATION_SUBSECTION_TEMPLATES = {
-    'blank': {
-        title: 'Blank',
-        content: '',
-        hasTabs: false
-    }
-};
-
-function renderApplicationsSubsectionsList(subsections) {
-    const subsectionsList = document.getElementById('applications-subsections-list');
-    if (!subsectionsList) return;
+function renderApplicationsList(applications) {
+    const applicationsList = document.getElementById('applications-list');
+    if (!applicationsList) return;
     
-    const subsectionsArray = Array.isArray(subsections) ? subsections : [];
+    const applicationsArray = Array.isArray(applications) ? applications : [];
     
-    if (subsectionsArray.length === 0) {
-        subsectionsList.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No application subsections added yet. Click "Add Application Subsection" to get started.</p>';
-        applicationsCounter = 0;
+    if (applicationsArray.length === 0) {
+        applicationsList.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No application subsections added yet. Click "Add Application Subsection" to get started.</p>';
+        applicationCounter = 0;
         return;
     }
     
-    subsectionsList.innerHTML = subsectionsArray.map((subsection, index) => {
-        applicationsCounter = Math.max(applicationsCounter, index);
-        const titleId = `application-subsection-title-${index}`;
-        const contentId = `application-subsection-content-${index}`;
-        const imageInputId = `application-subsection-image-${index}`;
-        const previewId = `application-subsection-preview-${index}`;
+    applicationsList.innerHTML = applicationsArray.map((app, index) => {
+        applicationCounter = Math.max(applicationCounter, index);
+        const appId = `application-${index}`;
+        const titleId = `application-title-${index}`;
+        const contentId = `application-content-${index}`;
+        const imageInputId = `application-image-${index}`;
+        const previewId = `application-preview-${index}`;
         
-        // Handle images array
-        const images = subsection.images || (subsection.image ? [subsection.image] : []);
-        const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
-        const hasImages = imagesArray.length > 0;
-        
-        const imagesHtml = `
+        return `
+            <div class="application-item-admin" data-application-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Application Subsection ${index + 1}</h3>
+                    <button type="button" class="btn btn-danger" onclick="removeApplicationItem(${index})">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Subsection Title</label>
+                    <input type="text" class="form-control application-title-input" id="${titleId}" value="${(app.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Business Cards">
+                </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
-                <label>Images (up to 3)</label>
+                    <label>Image</label>
                     <div class="file-upload-wrapper">
-                    <label for="${imageInputId}" class="file-upload-label ${hasImages ? 'has-file' : ''}">
+                        <label for="${imageInputId}" class="file-upload-label ${app.image ? 'has-file' : ''}">
                             <span class="upload-icon">
                                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
-                        <span class="upload-text">${hasImages ? 'Change Images' : 'Upload images/videos (select multiple)'}</span>
-                        <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
+                            <span class="upload-text">${app.image ? 'Change Image' : 'Upload images/videos'}</span>
+                            <span class="upload-hint">Click to browse, or drag & drop files here</span>
                         </label>
-                    <input type="file" class="file-upload-input application-subsection-image-input" id="${imageInputId}" data-application-subsection-index="${index}" accept="image/*" multiple>
+                        <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${index}" accept="image/*">
                         <div class="file-name-display" id="${imageInputId}-filename"></div>
                     </div>
-                <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
-                    ${imagesArray.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('')}
+                    <div class="image-preview" id="${previewId}" style="margin-top: 1rem;">${app.image ? renderImagePreview(app.image, previewId, null).replace('${previewId}', previewId) : ''}</div>
                 </div>
-            </div>
-        `;
-        
-        return `
-            <div class="application-subsection-item-admin" data-application-subsection-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Application Subsection ${index + 1}</h3>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button type="button" class="btn btn-secondary" onclick="moveApplicationSubsectionUp(${index})" ${index === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : 'style="padding: 0.5rem 0.75rem;"'} title="Move up">↑</button>
-                        <button type="button" class="btn btn-secondary" onclick="moveApplicationSubsectionDown(${index})" ${index === subsectionsArray.length - 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : 'style="padding: 0.5rem 0.75rem;"'} title="Move down">↓</button>
-                        <button type="button" class="btn btn-danger" onclick="removeApplicationSubsectionItem(${index})">Remove</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Subsection Title</label>
-                    <input type="text" class="form-control application-subsection-title-input" id="${titleId}" value="${(subsection.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Business Cards">
-                </div>
-                ${imagesHtml}
                 <div class="form-group" style="margin-top: 1.5rem;">
                     <label>Description/Content</label>
-                    <textarea class="form-control application-subsection-content-input" id="${contentId}" rows="8" placeholder="Enter description/content...">${((subsection.content || '')).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                    <textarea class="form-control application-content-input" id="${contentId}" rows="6" placeholder="Enter description/content...">${(app.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                 </div>
             </div>
         `;
     }).join('');
     
-    // Setup image upload handlers
-    setupApplicationsSubsectionImageHandlers();
+    // Setup image upload handlers for new items
+    setupApplicationImageHandlers();
     
-    // Store base64 data on inputs and attach remove button handlers
+    // Attach remove button handlers for application images (after DOM is updated)
     setTimeout(() => {
-        subsectionsArray.forEach((subsection, index) => {
-            const images = subsection.images || (subsection.image ? [subsection.image] : []);
-            const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
-            
-            const imageInputId = `application-subsection-image-${index}`;
-            const imageInput = document.getElementById(imageInputId);
-            const previewId = `application-subsection-preview-${index}`;
+        applicationsArray.forEach((app, index) => {
+            const previewId = `application-preview-${index}`;
             const preview = document.getElementById(previewId);
-            
-            if (imageInput && imagesArray.length > 0) {
-                imageInput.setAttribute('data-images', JSON.stringify(imagesArray));
-                const label = document.querySelector(`label[for="${imageInputId}"]`);
-                if (label) {
-                    label.classList.add('has-file');
-                    const uploadText = label.querySelector('.upload-text');
-                    if (uploadText) {
-                        uploadText.textContent = imagesArray.length === 1 ? 'Change Image' : `Change Images (${imagesArray.length})`;
-                    }
-                }
-                const filenameDisplay = document.getElementById(`${imageInputId}-filename`);
-                if (filenameDisplay) {
-                    filenameDisplay.textContent = imagesArray.length === 1 ? '1 file selected' : `${imagesArray.length} files selected`;
-                    filenameDisplay.style.display = 'block';
-                }
-            }
-            
-            if (preview && imagesArray.length > 0) {
-                imagesArray.forEach((img, imgIndex) => {
-                    const imgPreviewId = `${previewId}-${imgIndex}`;
-                    const imgPreview = document.getElementById(imgPreviewId);
-                    if (imgPreview) {
-                        const removeBtn = imgPreview.querySelector('.remove-image-btn');
+            if (preview && app.image) {
+                const removeBtn = preview.querySelector('.remove-image-btn');
                 if (removeBtn) {
-                            removeBtn.setAttribute('data-input-id', imageInputId);
-                            removeBtn.setAttribute('data-image-index', imgIndex);
+                    const imageInput = document.getElementById(`application-image-${index}`);
+                    removeBtn.setAttribute('data-input-id', `application-image-${index}`);
+                    removeBtn.setAttribute('data-preview-id', previewId);
+                    // Event delegation will handle the click, but we can also attach directly as backup
                     removeBtn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                                removeImageFromArray(imageInput, previewId, imgIndex);
+                        removeImage(imageInput, previewId);
                     });
                 }
-                    }
-                });
             }
         });
     }, 0);
 }
 
-function addApplicationSubsectionItem() {
-    showApplicationsTemplateSelector();
-}
-
-function showApplicationsTemplateSelector() {
-    const existingOverlay = document.getElementById('application-template-selector-overlay');
-    if (existingOverlay) {
-        existingOverlay.remove();
-    }
+function addApplicationItem() {
+    const applicationsList = document.getElementById('applications-list');
+    if (!applicationsList) return;
     
-    const overlay = document.createElement('div');
-    overlay.id = 'application-template-selector-overlay';
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    applicationCounter++;
+    const appId = `application-${applicationCounter}`;
+    const titleId = `application-title-${applicationCounter}`;
+    const contentId = `application-content-${applicationCounter}`;
+    const imageInputId = `application-image-${applicationCounter}`;
+    const previewId = `application-preview-${applicationCounter}`;
     
-    const modal = document.createElement('div');
-    modal.style.cssText = 'background: white; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);';
-    
-    modal.innerHTML = `
-        <h2 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 600;">Select Subsection Template</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
-            ${Object.keys(APPLICATION_SUBSECTION_TEMPLATES).map(key => {
-                const template = APPLICATION_SUBSECTION_TEMPLATES[key];
-                return `
-                    <button type="button" class="btn btn-secondary" data-template-key="${key}" style="padding: 1.25rem; text-align: center; min-height: 100px; display: flex; align-items: center; justify-content: center; white-space: normal; border-radius: 8px; border: 2px solid #e0e0e0; background: #fff; color: #333; font-weight: 500; transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.borderColor='#000'; this.style.background='#f8f8f8';" onmouseout="this.style.borderColor='#e0e0e0'; this.style.background='#fff';">
-                        ${template.title}
-                    </button>
-                `;
-            }).join('')}
+    const newApplicationHtml = `
+        <div class="application-item-admin" data-application-index="${applicationCounter}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Application Subsection ${applicationCounter + 1}</h3>
+                <button type="button" class="btn btn-danger" onclick="removeApplicationItem(${applicationCounter})">Remove</button>
             </div>
-        <div style="margin-top: 2rem; text-align: right; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
-            <button type="button" class="btn btn-secondary" id="cancel-application-template-selector" style="padding: 0.75rem 1.5rem;">Cancel</button>
+            <div class="form-group">
+                <label>Subsection Title</label>
+                <input type="text" class="form-control application-title-input" id="${titleId}" value="" placeholder="e.g., Business Cards" oninput="updateAdminNavApplications()">
             </div>
-    `;
-    
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    
-    modal.querySelectorAll('[data-template-key]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const templateKey = btn.dataset.templateKey;
-            if (templateKey && typeof addApplicationSubsectionItemWithTemplate === 'function') {
-                overlay.remove();
-                try {
-                    addApplicationSubsectionItemWithTemplate(templateKey);
-                } catch (error) {
-                    console.error('Error adding subsection with template:', error);
-                }
-            }
-        });
-    });
-    
-    const cancelBtn = document.getElementById('cancel-application-template-selector');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            overlay.remove();
-        });
-    }
-    
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            overlay.remove();
-        }
-    });
-}
-
-function addApplicationSubsectionItemWithTemplate(templateKey) {
-    const subsectionsList = document.getElementById('applications-subsections-list');
-    if (!subsectionsList) return;
-    
-    const template = APPLICATION_SUBSECTION_TEMPLATES[templateKey];
-    if (!template) {
-        console.error('Template not found:', templateKey);
-        return;
-    }
-    
-    applicationsCounter++;
-    const titleId = `application-subsection-title-${applicationsCounter}`;
-    const contentId = `application-subsection-content-${applicationsCounter}`;
-    const imageInputId = `application-subsection-image-${applicationsCounter}`;
-    const previewId = `application-subsection-preview-${applicationsCounter}`;
-    
-    const imagesHtml = `
             <div class="form-group" style="margin-top: 1.5rem;">
-            <label>Images (up to 3)</label>
+                <label>Hero Image</label>
                 <div class="file-upload-wrapper">
                     <label for="${imageInputId}" class="file-upload-label">
                         <span class="upload-icon">
@@ -1112,273 +1084,615 @@ function addApplicationSubsectionItemWithTemplate(templateKey) {
                                 <path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </span>
-                    <span class="upload-text">Upload images/videos (select multiple)</span>
-                    <span class="upload-hint">Click to browse, or drag & drop files here (select up to 3)</span>
+                        <span class="upload-text">Upload images/videos</span>
+                        <span class="upload-hint">Click to browse, or drag & drop files here</span>
                     </label>
-                <input type="file" class="file-upload-input application-subsection-image-input" id="${imageInputId}" data-application-subsection-index="${applicationsCounter}" accept="image/*" multiple>
+                    <input type="file" class="file-upload-input application-image-input" id="${imageInputId}" data-application-index="${applicationCounter}" accept="image/*">
                     <div class="file-name-display" id="${imageInputId}-filename"></div>
                 </div>
-            <div class="image-preview" id="${previewId}" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;"></div>
+                <div class="image-preview" id="${previewId}" style="margin-top: 1rem;"></div>
             </div>
-    `;
-    
-    const newSubsectionHtml = `
-        <div class="application-subsection-item-admin" data-application-subsection-index="${applicationsCounter}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Application Subsection ${applicationsCounter + 1}</h3>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button type="button" class="btn btn-secondary" onclick="moveApplicationSubsectionUp(${applicationsCounter})" style="padding: 0.5rem 0.75rem;" title="Move up">↑</button>
-                    <button type="button" class="btn btn-secondary" onclick="moveApplicationSubsectionDown(${applicationsCounter})" style="padding: 0.5rem 0.75rem;" title="Move down">↓</button>
-                    <button type="button" class="btn btn-danger" onclick="removeApplicationSubsectionItem(${applicationsCounter})">Remove</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Subsection Title</label>
-                <input type="text" class="form-control application-subsection-title-input" id="${titleId}" value="${(template.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Business Cards">
-            </div>
-            ${imagesHtml}
             <div class="form-group" style="margin-top: 1.5rem;">
                 <label>Description/Content</label>
-                <textarea class="form-control application-subsection-content-input" id="${contentId}" rows="8">${(template.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                <textarea class="form-control application-content-input" id="${contentId}" rows="6" placeholder="Enter description/content..."></textarea>
             </div>
         </div>
     `;
     
-    if (subsectionsList.innerHTML.includes('No application subsections')) {
-        subsectionsList.innerHTML = newSubsectionHtml;
+    const existingContent = applicationsList.innerHTML;
+    if (existingContent.includes('No application subsections')) {
+        applicationsList.innerHTML = newApplicationHtml;
     } else {
-        subsectionsList.insertAdjacentHTML('beforeend', newSubsectionHtml);
+        applicationsList.insertAdjacentHTML('beforeend', newApplicationHtml);
     }
     
-    setTimeout(() => {
-        const newItem = subsectionsList.querySelector(`[data-application-subsection-index="${applicationsCounter}"]`);
-        if (newItem) {
-            newItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    }, 100);
+    // Setup image upload handler for new item
+    setupApplicationImageHandlers();
+    // Update admin navigation
+    updateAdminNavApplications(getApplicationsFromFormSync());
+}
+
+function removeApplicationItem(index) {
+    const applicationsList = document.getElementById('applications-list');
+    if (!applicationsList) return;
     
-    setupApplicationsSubsectionImageHandlers();
-    trackSectionChange('applications');
-}
-
-async function moveApplicationSubsectionUp(index) {
-    if (index <= 0) return;
-    const subsections = await getApplicationsSubsectionsFromForm();
-    if (index < subsections.length) {
-        [subsections[index - 1], subsections[index]] = [subsections[index], subsections[index - 1]];
-        currentContent.applications = { subsections: subsections };
-        renderApplicationsSubsectionsList(subsections);
-        trackSectionChange('applications');
-    }
-}
-
-async function moveApplicationSubsectionDown(index) {
-    const subsections = await getApplicationsSubsectionsFromForm();
-    if (index < subsections.length - 1) {
-        [subsections[index], subsections[index + 1]] = [subsections[index + 1], subsections[index]];
-        currentContent.applications = { subsections: subsections };
-        renderApplicationsSubsectionsList(subsections);
-        trackSectionChange('applications');
-    }
-}
-
-function removeApplicationSubsectionItem(index) {
-    const subsectionsList = document.getElementById('applications-subsections-list');
-    if (!subsectionsList) return;
-    
-    const item = subsectionsList.querySelector(`[data-application-subsection-index="${index}"]`);
+    const item = applicationsList.querySelector(`[data-application-index="${index}"]`);
     if (item) {
         item.remove();
         
-        const remainingItems = subsectionsList.querySelectorAll('.application-subsection-item-admin');
+        // Reindex remaining items
+        const remainingItems = applicationsList.querySelectorAll('.application-item-admin');
         remainingItems.forEach((item, newIndex) => {
-            item.setAttribute('data-application-subsection-index', newIndex);
-            const titleInput = item.querySelector('.application-subsection-title-input');
-            const contentInput = item.querySelector('.application-subsection-content-input');
-            const imageInput = item.querySelector('.application-subsection-image-input');
+            item.setAttribute('data-application-index', newIndex);
+            const titleInput = item.querySelector('.application-title-input');
+            const contentInput = item.querySelector('.application-content-input');
+            const imageInput = item.querySelector('.application-image-input');
             const preview = item.querySelector('.image-preview');
-            const removeBtn = item.querySelector('button.btn-danger');
+            const removeBtn = item.querySelector('button');
             const heading = item.querySelector('h3');
-            const upBtn = item.querySelector('button[onclick*="moveApplicationSubsectionUp"]');
-            const downBtn = item.querySelector('button[onclick*="moveApplicationSubsectionDown"]');
             
-            if (titleInput) titleInput.id = `application-subsection-title-${newIndex}`;
-            if (contentInput) contentInput.id = `application-subsection-content-${newIndex}`;
-            if (imageInput) {
-                imageInput.id = `application-subsection-image-${newIndex}`;
-                imageInput.setAttribute('data-application-subsection-index', newIndex);
+            if (titleInput) {
+                titleInput.id = `application-title-${newIndex}`;
+                titleInput.setAttribute('oninput', 'updateAdminNavApplications()');
             }
-            if (preview) preview.id = `application-subsection-preview-${newIndex}`;
-            if (removeBtn) removeBtn.setAttribute('onclick', `removeApplicationSubsectionItem(${newIndex})`);
-            if (heading) heading.textContent = `Application Subsection ${newIndex + 1}`;
-            if (upBtn) upBtn.setAttribute('onclick', `moveApplicationSubsectionUp(${newIndex})`);
-            if (downBtn) downBtn.setAttribute('onclick', `moveApplicationSubsectionDown(${newIndex})`);
+            if (contentInput) {
+                contentInput.id = `application-content-${newIndex}`;
+            }
+            if (imageInput) {
+                imageInput.id = `application-image-${newIndex}`;
+                imageInput.setAttribute('data-application-index', newIndex);
+            }
+            if (preview) {
+                preview.id = `application-preview-${newIndex}`;
+            }
+            if (removeBtn) {
+                removeBtn.setAttribute('onclick', `removeApplicationItem(${newIndex})`);
+            }
+            if (heading) {
+                heading.textContent = `Application Subsection ${newIndex + 1}`;
+            }
         });
         
-        if (subsectionsList.children.length === 0) {
-            subsectionsList.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No application subsections added yet. Click "Add Application Subsection" to get started.</p>';
-            applicationsCounter = 0;
+        // If no applications left, show message
+        if (applicationsList.children.length === 0) {
+            applicationsList.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No application subsections added yet. Click "Add Application Subsection" to get started.</p>';
+            applicationCounter = 0;
+            updateAdminNavApplications([]);
         } else {
-            applicationsCounter = remainingItems.length - 1;
+            applicationCounter = remainingItems.length - 1;
+            // Update nav with current applications
+            const currentApps = getApplicationsFromFormSync();
+            updateAdminNavApplications(currentApps);
         }
         
-        getApplicationsSubsectionsFromForm().then(subsections => {
-            currentContent.applications = { subsections: subsections };
-            trackSectionChange('applications');
-        });
-        
-        setupApplicationsSubsectionImageHandlers();
+        // Re-setup image handlers after reindexing
+        setupApplicationImageHandlers();
     }
 }
 
-async function getApplicationsSubsectionsFromForm() {
-    const subsectionsList = document.getElementById('applications-subsections-list');
-    if (!subsectionsList) return [];
+// Synchronous version for getting applications (for nav updates)
+function getApplicationsFromFormSync() {
+    const applicationsList = document.getElementById('applications-list');
+    if (!applicationsList) return [];
     
-    const subsectionItems = subsectionsList.querySelectorAll('.application-subsection-item-admin');
-    const subsections = [];
+    const applicationItems = applicationsList.querySelectorAll('.application-item-admin');
+    const applications = [];
     
-    const existingApplications = currentContent.applications || {};
-    const existingSubsections = existingApplications.subsections || [];
-    
-    for (let index = 0; index < subsectionItems.length; index++) {
-        const item = subsectionItems[index];
-        const titleInput = item.querySelector('.application-subsection-title-input');
-        const contentInput = item.querySelector('.application-subsection-content-input');
-        const imageInput = item.querySelector('.application-subsection-image-input');
+    applicationItems.forEach((item) => {
+        const titleInput = item.querySelector('.application-title-input');
+        const contentInput = item.querySelector('.application-content-input');
+        const preview = item.querySelector('.image-preview img');
         
         const title = titleInput ? titleInput.value.trim() : '';
         const content = contentInput ? contentInput.value.trim() : '';
-        
-        const existingSubsection = existingSubsections[index] || {};
-        const existingImages = existingSubsection.images || (existingSubsection.image ? [existingSubsection.image] : []);
-        const existingImagesArray = Array.isArray(existingImages) ? existingImages : (existingImages ? [existingImages] : []);
-        
-        let images = existingImagesArray;
-        if (imageInput) {
-            const imagesAttr = imageInput.getAttribute('data-images');
-            if (imagesAttr) {
-                try {
-                    images = JSON.parse(imagesAttr);
-                    if (!Array.isArray(images)) images = [images];
-                } catch (error) {
-                    console.error('Error parsing images array:', error);
-                    images = existingImagesArray;
-                }
-            }
-        }
+        const image = preview ? preview.src : '';
         
         if (title) {
-            subsections.push({
+            applications.push({
                 title: title,
                 content: content,
-                images: images
-            });
-        }
-    }
-    
-    return subsections;
-}
-
-function setupApplicationsSubsectionImageHandlers() {
-    const imageInputs = document.querySelectorAll('.application-subsection-image-input');
-    imageInputs.forEach(input => {
-        if (!input.hasAttribute('data-handler-added')) {
-            input.setAttribute('data-handler-added', 'true');
-            input.addEventListener('change', async function(e) {
-                const files = Array.from(e.target.files);
-                if (files.length === 0) return;
-                
-                if (files.length > 3) {
-                    showStatus('You can only select up to 3 images. Please select 3 or fewer images.', 'error');
-                    input.value = '';
-                    return;
-                }
-                
-                const subsectionIndex = this.getAttribute('data-application-subsection-index');
-                const label = document.querySelector(`label[for="${this.id}"]`);
-                const filenameDisplay = document.getElementById(`${this.id}-filename`);
-                const preview = document.getElementById(`application-subsection-preview-${subsectionIndex}`);
-                
-                const imagePromises = files.map(file => {
-                    return fileToBase64(file).catch(error => {
-                        throw new Error(`File "${file.name}": ${error.message}`);
-                    });
-                });
-                
-                try {
-                    const base64Images = await Promise.all(imagePromises);
-                    input.setAttribute('data-images', JSON.stringify(base64Images));
-                
-                    if (label) {
-                        label.classList.add('has-file');
-                        const uploadText = label.querySelector('.upload-text');
-                        if (uploadText) {
-                            uploadText.textContent = base64Images.length === 1 ? 'Change Image' : `Change Images (${base64Images.length})`;
-                        }
-                    }
-                    
-                    if (filenameDisplay) {
-                        filenameDisplay.textContent = files.length === 1 ? files[0].name : `${files.length} files selected`;
-                        filenameDisplay.style.display = 'block';
-                    }
-                    
-                    if (preview) {
-                        const previewId = preview.id;
-                        preview.innerHTML = base64Images.map((img, idx) => renderImagePreview(img, `${previewId}-${idx}`, null)).join('');
-                        
-                        base64Images.forEach((img, idx) => {
-                            const imgPreviewId = `${previewId}-${idx}`;
-                            const imgPreview = document.getElementById(imgPreviewId);
-                            if (imgPreview) {
-                                const removeBtn = imgPreview.querySelector('.remove-image-btn');
-                if (removeBtn) {
-                                    removeBtn.setAttribute('data-input-id', input.id);
-                                    removeBtn.setAttribute('data-image-index', idx);
-                                    removeBtn.addEventListener('click', function(ev) {
-                                        ev.preventDefault();
-                                        ev.stopPropagation();
-                                        removeImageFromArray(input, previewId, idx);
-                                    });
-                                }
-                            }
-                        });
-                    }
-                    
-                    trackSectionChange('applications');
-                } catch (error) {
-                    console.error('Error processing images:', error);
-                    showStatus(error.message || 'Error processing images', 'error');
-                    input.value = '';
-                }
+                image: image
             });
         }
     });
+    
+    return applications;
+}
+
+function getApplicationsFromForm() {
+    const applicationsList = document.getElementById('applications-list');
+    if (!applicationsList) return [];
+    
+    const applicationItems = applicationsList.querySelectorAll('.application-item-admin');
+    const applications = [];
+    
+    applicationItems.forEach((item, index) => {
+        const titleInput = item.querySelector('.application-title-input');
+        const contentInput = item.querySelector('.application-content-input');
+        const imageInput = item.querySelector('.application-image-input');
+        const preview = item.querySelector('.image-preview img');
+        
+        const title = titleInput ? titleInput.value.trim() : '';
+        const content = contentInput ? contentInput.value.trim() : '';
+        const image = preview ? preview.src : '';
+        
+        if (title) {
+            applications.push({
+                title: title,
+                content: content,
+                image: image
+            });
+        }
+    });
+    
+    return applications;
 }
 
 function setupApplicationsHandlers() {
-    const addBtn = document.getElementById('add-application-subsection-btn');
+    const addBtn = document.getElementById('add-application-btn');
     if (addBtn) {
-        if (!addBtn.hasAttribute('data-handler-attached')) {
-            addBtn.setAttribute('data-handler-attached', 'true');
-            addBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                try {
-                    addApplicationSubsectionItem();
-                } catch (error) {
-                    console.error('Error adding application subsection:', error);
-                }
+        addBtn.addEventListener('click', addApplicationItem);
+    }
+}
+
+// ─── Graphic Language repeater ───────────────────────────────────────────────
+let graphicLanguageCounter = 0;
+
+function renderGraphicLanguageList(items) {
+    const list = document.getElementById('graphic-language-list');
+    if (!list) return;
+
+    const arr = Array.isArray(items) ? items : [];
+
+    if (arr.length === 0) {
+        list.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No subsections added yet. Click "+ Add Subsection" to get started.</p>';
+        graphicLanguageCounter = 0;
+        return;
+    }
+
+    list.innerHTML = arr.map((item, index) => {
+        graphicLanguageCounter = Math.max(graphicLanguageCounter, index);
+        return `
+            <div class="application-item-admin" data-gl-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Subsection ${index + 1}</h3>
+                    <button type="button" class="btn btn-danger" onclick="removeGraphicLanguageItem(${index})">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" class="form-control gl-title-input" id="gl-title-${index}" value="${(item.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Pattern System">
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Image</label>
+                    <div class="file-upload-wrapper">
+                        <label for="gl-image-${index}" class="file-upload-label ${item.image ? 'has-file' : ''}">
+                            <span class="upload-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span class="upload-text">${item.image ? 'Change Image' : 'Upload image'}</span>
+                            <span class="upload-hint">Click to browse, or drag & drop</span>
+                        </label>
+                        <input type="file" class="file-upload-input gl-image-input" id="gl-image-${index}" data-gl-index="${index}" accept="image/*">
+                        <div class="file-name-display" id="gl-image-${index}-filename"></div>
+                    </div>
+                    <div class="image-preview" id="gl-preview-${index}" style="margin-top: 1rem;">${item.image ? renderImagePreview(item.image, `gl-preview-${index}`, null) : ''}</div>
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Description / Content</label>
+                    <textarea class="form-control gl-content-input" id="gl-content-${index}" rows="5" placeholder="Describe this element...">${(item.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    setupGraphicLanguageImageHandlers();
+
+    setTimeout(() => {
+        arr.forEach((item, index) => {
+            const previewId = `gl-preview-${index}`;
+            const preview = document.getElementById(previewId);
+            if (preview && item.image) {
+                const removeBtn = preview.querySelector('.remove-image-btn');
+                const imageInput = document.getElementById(`gl-image-${index}`);
+                if (removeBtn && imageInput) {
+                    removeBtn.setAttribute('data-input-id', `gl-image-${index}`);
+                    removeBtn.setAttribute('data-preview-id', previewId);
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        removeImage(imageInput, previewId);
                     });
                 }
             }
-    
-    window.addApplicationSubsectionItem = addApplicationSubsectionItem;
-    window.showApplicationsTemplateSelector = showApplicationsTemplateSelector;
-    window.addApplicationSubsectionItemWithTemplate = addApplicationSubsectionItemWithTemplate;
-    window.moveApplicationSubsectionUp = moveApplicationSubsectionUp;
-    window.moveApplicationSubsectionDown = moveApplicationSubsectionDown;
-    window.removeApplicationSubsectionItem = removeApplicationSubsectionItem;
+        });
+    }, 0);
+}
+
+function addGraphicLanguageItem() {
+    const list = document.getElementById('graphic-language-list');
+    if (!list) return;
+
+    graphicLanguageCounter++;
+    const html = `
+        <div class="application-item-admin" data-gl-index="${graphicLanguageCounter}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Subsection ${graphicLanguageCounter + 1}</h3>
+                <button type="button" class="btn btn-danger" onclick="removeGraphicLanguageItem(${graphicLanguageCounter})">Remove</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" class="form-control gl-title-input" id="gl-title-${graphicLanguageCounter}" value="" placeholder="e.g., Pattern System">
+            </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Image</label>
+                <div class="file-upload-wrapper">
+                    <label for="gl-image-${graphicLanguageCounter}" class="file-upload-label">
+                        <span class="upload-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <span class="upload-text">Upload image</span>
+                        <span class="upload-hint">Click to browse, or drag & drop</span>
+                    </label>
+                    <input type="file" class="file-upload-input gl-image-input" id="gl-image-${graphicLanguageCounter}" data-gl-index="${graphicLanguageCounter}" accept="image/*">
+                    <div class="file-name-display" id="gl-image-${graphicLanguageCounter}-filename"></div>
+                </div>
+                <div class="image-preview" id="gl-preview-${graphicLanguageCounter}" style="margin-top: 1rem;"></div>
+            </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Description / Content</label>
+                <textarea class="form-control gl-content-input" id="gl-content-${graphicLanguageCounter}" rows="5" placeholder="Describe this element..."></textarea>
+            </div>
+        </div>
+    `;
+
+    if (list.innerHTML.includes('No subsections added yet')) {
+        list.innerHTML = html;
+    } else {
+        list.insertAdjacentHTML('beforeend', html);
+    }
+    setupGraphicLanguageImageHandlers();
+}
+
+function removeGraphicLanguageItem(index) {
+    const list = document.getElementById('graphic-language-list');
+    if (!list) return;
+
+    const item = list.querySelector(`[data-gl-index="${index}"]`);
+    if (item) {
+        item.remove();
+        const remaining = list.querySelectorAll('[data-gl-index]');
+        remaining.forEach((el, newIndex) => {
+            el.setAttribute('data-gl-index', newIndex);
+            const h3 = el.querySelector('h3');
+            const btn = el.querySelector('button');
+            const titleInput = el.querySelector('.gl-title-input');
+            const contentInput = el.querySelector('.gl-content-input');
+            const imageInput = el.querySelector('.gl-image-input');
+            const preview = el.querySelector('.image-preview');
+            if (h3) h3.textContent = `Subsection ${newIndex + 1}`;
+            if (btn) btn.setAttribute('onclick', `removeGraphicLanguageItem(${newIndex})`);
+            if (titleInput) titleInput.id = `gl-title-${newIndex}`;
+            if (contentInput) contentInput.id = `gl-content-${newIndex}`;
+            if (imageInput) { imageInput.id = `gl-image-${newIndex}`; imageInput.setAttribute('data-gl-index', newIndex); }
+            if (preview) preview.id = `gl-preview-${newIndex}`;
+        });
+        if (list.children.length === 0) {
+            list.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No subsections added yet. Click "+ Add Subsection" to get started.</p>';
+            graphicLanguageCounter = 0;
+        } else {
+            graphicLanguageCounter = remaining.length - 1;
+        }
+        setupGraphicLanguageImageHandlers();
+    }
+}
+
+function getGraphicLanguageFromForm() {
+    const list = document.getElementById('graphic-language-list');
+    if (!list) return [];
+    const items = [];
+    list.querySelectorAll('[data-gl-index]').forEach(el => {
+        const title = el.querySelector('.gl-title-input')?.value.trim() || '';
+        const content = el.querySelector('.gl-content-input')?.value.trim() || '';
+        const image = el.querySelector('.image-preview img')?.src || '';
+        if (title) items.push({ title, content, image });
+    });
+    return items;
+}
+
+function setupGraphicLanguageHandlers() {
+    const addBtn = document.getElementById('add-graphic-language-btn');
+    if (addBtn) addBtn.addEventListener('click', addGraphicLanguageItem);
+}
+
+// ─── Photography repeater ─────────────────────────────────────────────────────
+let photographyCounter = 0;
+
+function renderPhotographyList(items) {
+    const list = document.getElementById('photography-list');
+    if (!list) return;
+
+    const arr = Array.isArray(items) ? items : [];
+
+    if (arr.length === 0) {
+        list.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No subsections added yet. Click "+ Add Subsection" to get started.</p>';
+        photographyCounter = 0;
+        return;
+    }
+
+    list.innerHTML = arr.map((item, index) => {
+        photographyCounter = Math.max(photographyCounter, index);
+        return `
+            <div class="application-item-admin" data-ph-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Subsection ${index + 1}</h3>
+                    <button type="button" class="btn btn-danger" onclick="removePhotographyItem(${index})">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" class="form-control ph-title-input" id="ph-title-${index}" value="${(item.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Editorial Style">
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Image</label>
+                    <div class="file-upload-wrapper">
+                        <label for="ph-image-${index}" class="file-upload-label ${item.image ? 'has-file' : ''}">
+                            <span class="upload-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            <span class="upload-text">${item.image ? 'Change Image' : 'Upload image'}</span>
+                            <span class="upload-hint">Click to browse, or drag & drop</span>
+                        </label>
+                        <input type="file" class="file-upload-input ph-image-input" id="ph-image-${index}" data-ph-index="${index}" accept="image/*">
+                        <div class="file-name-display" id="ph-image-${index}-filename"></div>
+                    </div>
+                    <div class="image-preview" id="ph-preview-${index}" style="margin-top: 1rem;">${item.image ? renderImagePreview(item.image, `ph-preview-${index}`, null) : ''}</div>
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Description / Content</label>
+                    <textarea class="form-control ph-content-input" id="ph-content-${index}" rows="5" placeholder="Describe this photography direction...">${(item.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    setupPhotographyImageHandlers();
+
+    setTimeout(() => {
+        arr.forEach((item, index) => {
+            const previewId = `ph-preview-${index}`;
+            const preview = document.getElementById(previewId);
+            if (preview && item.image) {
+                const removeBtn = preview.querySelector('.remove-image-btn');
+                const imageInput = document.getElementById(`ph-image-${index}`);
+                if (removeBtn && imageInput) {
+                    removeBtn.setAttribute('data-input-id', `ph-image-${index}`);
+                    removeBtn.setAttribute('data-preview-id', previewId);
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        removeImage(imageInput, previewId);
+                    });
+                }
+            }
+        });
+    }, 0);
+}
+
+function addPhotographyItem() {
+    const list = document.getElementById('photography-list');
+    if (!list) return;
+
+    photographyCounter++;
+    const html = `
+        <div class="application-item-admin" data-ph-index="${photographyCounter}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Subsection ${photographyCounter + 1}</h3>
+                <button type="button" class="btn btn-danger" onclick="removePhotographyItem(${photographyCounter})">Remove</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" class="form-control ph-title-input" id="ph-title-${photographyCounter}" value="" placeholder="e.g., Editorial Style">
+            </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Image</label>
+                <div class="file-upload-wrapper">
+                    <label for="ph-image-${photographyCounter}" class="file-upload-label">
+                        <span class="upload-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15V3M12 3L8 7M12 3L16 7M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19L22 17" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <span class="upload-text">Upload image</span>
+                        <span class="upload-hint">Click to browse, or drag & drop</span>
+                    </label>
+                    <input type="file" class="file-upload-input ph-image-input" id="ph-image-${photographyCounter}" data-ph-index="${photographyCounter}" accept="image/*">
+                    <div class="file-name-display" id="ph-image-${photographyCounter}-filename"></div>
+                </div>
+                <div class="image-preview" id="ph-preview-${photographyCounter}" style="margin-top: 1rem;"></div>
+            </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Description / Content</label>
+                <textarea class="form-control ph-content-input" id="ph-content-${photographyCounter}" rows="5" placeholder="Describe this photography direction..."></textarea>
+            </div>
+        </div>
+    `;
+
+    if (list.innerHTML.includes('No subsections added yet')) {
+        list.innerHTML = html;
+    } else {
+        list.insertAdjacentHTML('beforeend', html);
+    }
+    setupPhotographyImageHandlers();
+}
+
+function removePhotographyItem(index) {
+    const list = document.getElementById('photography-list');
+    if (!list) return;
+
+    const item = list.querySelector(`[data-ph-index="${index}"]`);
+    if (item) {
+        item.remove();
+        const remaining = list.querySelectorAll('[data-ph-index]');
+        remaining.forEach((el, newIndex) => {
+            el.setAttribute('data-ph-index', newIndex);
+            const h3 = el.querySelector('h3');
+            const btn = el.querySelector('button');
+            const titleInput = el.querySelector('.ph-title-input');
+            const contentInput = el.querySelector('.ph-content-input');
+            const imageInput = el.querySelector('.ph-image-input');
+            const preview = el.querySelector('.image-preview');
+            if (h3) h3.textContent = `Subsection ${newIndex + 1}`;
+            if (btn) btn.setAttribute('onclick', `removePhotographyItem(${newIndex})`);
+            if (titleInput) titleInput.id = `ph-title-${newIndex}`;
+            if (contentInput) contentInput.id = `ph-content-${newIndex}`;
+            if (imageInput) { imageInput.id = `ph-image-${newIndex}`; imageInput.setAttribute('data-ph-index', newIndex); }
+            if (preview) preview.id = `ph-preview-${newIndex}`;
+        });
+        if (list.children.length === 0) {
+            list.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No subsections added yet. Click "+ Add Subsection" to get started.</p>';
+            photographyCounter = 0;
+        } else {
+            photographyCounter = remaining.length - 1;
+        }
+        setupPhotographyImageHandlers();
+    }
+}
+
+function getPhotographyFromForm() {
+    const list = document.getElementById('photography-list');
+    if (!list) return [];
+    const items = [];
+    list.querySelectorAll('[data-ph-index]').forEach(el => {
+        const title = el.querySelector('.ph-title-input')?.value.trim() || '';
+        const content = el.querySelector('.ph-content-input')?.value.trim() || '';
+        const image = el.querySelector('.image-preview img')?.src || '';
+        if (title) items.push({ title, content, image });
+    });
+    return items;
+}
+
+function setupPhotographyHandlers() {
+    const addBtn = document.getElementById('add-photography-btn');
+    if (addBtn) addBtn.addEventListener('click', addPhotographyItem);
+}
+
+// ─── Downloads repeater ───────────────────────────────────────────────────────
+let downloadsCounter = 0;
+
+function renderDownloadsList(items) {
+    const list = document.getElementById('downloads-list');
+    if (!list) return;
+
+    const arr = Array.isArray(items) ? items : [];
+
+    if (arr.length === 0) {
+        list.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No downloads added yet. Click "+ Add Download" to get started.</p>';
+        downloadsCounter = 0;
+        return;
+    }
+
+    list.innerHTML = arr.map((item, index) => {
+        downloadsCounter = Math.max(downloadsCounter, index);
+        return `
+            <div class="application-item-admin" data-dl-index="${index}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Download ${index + 1}</h3>
+                    <button type="button" class="btn btn-danger" onclick="removeDownloadItem(${index})">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" class="form-control dl-title-input" id="dl-title-${index}" value="${(item.title || '').replace(/"/g, '&quot;')}" placeholder="e.g., Brand Guidelines PDF">
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>File Type Badge <small style="color:#999;">(e.g., PDF, ZIP, AI, PNG)</small></label>
+                    <input type="text" class="form-control dl-filetype-input" id="dl-filetype-${index}" value="${(item.fileType || '').replace(/"/g, '&quot;')}" placeholder="PDF">
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Download URL</label>
+                    <input type="url" class="form-control dl-url-input" id="dl-url-${index}" value="${(item.downloadUrl || '').replace(/"/g, '&quot;')}" placeholder="https://drive.google.com/...">
+                </div>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Description <small style="color:#999;">(optional)</small></label>
+                    <textarea class="form-control dl-content-input" id="dl-content-${index}" rows="3" placeholder="Brief description of this download...">${(item.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function addDownloadItem() {
+    const list = document.getElementById('downloads-list');
+    if (!list) return;
+
+    downloadsCounter++;
+    const html = `
+        <div class="application-item-admin" data-dl-index="${downloadsCounter}" style="margin-bottom: 3rem; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; font-size: 1.125rem; font-weight: normal;">Download ${downloadsCounter + 1}</h3>
+                <button type="button" class="btn btn-danger" onclick="removeDownloadItem(${downloadsCounter})">Remove</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" class="form-control dl-title-input" id="dl-title-${downloadsCounter}" value="" placeholder="e.g., Brand Guidelines PDF">
+            </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>File Type Badge <small style="color:#999;">(e.g., PDF, ZIP, AI, PNG)</small></label>
+                <input type="text" class="form-control dl-filetype-input" id="dl-filetype-${downloadsCounter}" value="" placeholder="PDF">
+            </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Download URL</label>
+                <input type="url" class="form-control dl-url-input" id="dl-url-${downloadsCounter}" value="" placeholder="https://drive.google.com/...">
+            </div>
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Description <small style="color:#999;">(optional)</small></label>
+                <textarea class="form-control dl-content-input" id="dl-content-${downloadsCounter}" rows="3" placeholder="Brief description of this download..."></textarea>
+            </div>
+        </div>
+    `;
+
+    if (list.innerHTML.includes('No downloads added yet')) {
+        list.innerHTML = html;
+    } else {
+        list.insertAdjacentHTML('beforeend', html);
+    }
+}
+
+function removeDownloadItem(index) {
+    const list = document.getElementById('downloads-list');
+    if (!list) return;
+
+    const item = list.querySelector(`[data-dl-index="${index}"]`);
+    if (item) {
+        item.remove();
+        const remaining = list.querySelectorAll('[data-dl-index]');
+        remaining.forEach((el, newIndex) => {
+            el.setAttribute('data-dl-index', newIndex);
+            const h3 = el.querySelector('h3');
+            const btn = el.querySelector('button');
+            const titleInput = el.querySelector('.dl-title-input');
+            const fileTypeInput = el.querySelector('.dl-filetype-input');
+            const urlInput = el.querySelector('.dl-url-input');
+            const contentInput = el.querySelector('.dl-content-input');
+            if (h3) h3.textContent = `Download ${newIndex + 1}`;
+            if (btn) btn.setAttribute('onclick', `removeDownloadItem(${newIndex})`);
+            if (titleInput) titleInput.id = `dl-title-${newIndex}`;
+            if (fileTypeInput) fileTypeInput.id = `dl-filetype-${newIndex}`;
+            if (urlInput) urlInput.id = `dl-url-${newIndex}`;
+            if (contentInput) contentInput.id = `dl-content-${newIndex}`;
+        });
+        if (list.children.length === 0) {
+            list.innerHTML = '<p style="color: #999; margin-bottom: 1rem;">No downloads added yet. Click "+ Add Download" to get started.</p>';
+            downloadsCounter = 0;
+        } else {
+            downloadsCounter = remaining.length - 1;
+        }
+    }
+}
+
+function getDownloadsFromForm() {
+    const list = document.getElementById('downloads-list');
+    if (!list) return [];
+    const items = [];
+    list.querySelectorAll('[data-dl-index]').forEach(el => {
+        const title = el.querySelector('.dl-title-input')?.value.trim() || '';
+        const fileType = el.querySelector('.dl-filetype-input')?.value.trim() || '';
+        const downloadUrl = el.querySelector('.dl-url-input')?.value.trim() || '';
+        const content = el.querySelector('.dl-content-input')?.value.trim() || '';
+        if (title) items.push({ title, fileType, downloadUrl, content });
+    });
+    return items;
+}
+
+function setupDownloadsHandlers() {
+    const addBtn = document.getElementById('add-download-btn');
+    if (addBtn) addBtn.addEventListener('click', addDownloadItem);
 }
 
 // Logotype repeater functions
@@ -1469,6 +1783,68 @@ Guidelines:
         content: '',
         hasTabs: false
     },
+    'do-not': {
+        title: 'DO NOT',
+        content: `This section demonstrates incorrect logo usage. Examples are automatically generated from the logo SVG to show common mistakes that should be avoided.`,
+        hasTabs: false,
+        generateDoNotExamples: true
+    },
+    'usage': {
+        title: 'Usage',
+        content: '',
+        hasTabs: true,
+        tabs: {
+            light: {
+                label: 'Light',
+                content: `Description:
+The light version of the logotype uses dark text on light backgrounds for optimal readability and contrast.
+
+Usage Guidelines:
+• Use on white or light-colored backgrounds
+• Suitable for light photographs and imagery
+• Ideal for print materials on light stock
+• Ensure sufficient contrast for readability
+
+Best Practices:
+• Test visibility before final use
+• Avoid busy or complex backgrounds
+• Maintain minimum size requirements`
+            },
+            dark: {
+                label: 'Dark',
+                content: `Description:
+The dark version (negative) of the logotype uses light or white elements on dark backgrounds for strong visual impact.
+
+Usage Guidelines:
+• Use on dark or black backgrounds
+• Suitable for dark photographs and imagery
+• Ideal for digital displays with dark themes
+• Ensure minimum 4.5:1 contrast ratio
+
+Best Practices:
+• Always verify contrast for accessibility
+• Avoid light backgrounds that reduce visibility
+• Test on various dark backgrounds before use`
+            },
+            color: {
+                label: 'Color',
+                content: `Description:
+The color version of the logotype incorporates brand colors while maintaining legibility and visual impact.
+
+Usage Guidelines:
+• Use brand colors as specified in the color palette
+• Maintain contrast with background
+• Ensure accessibility compliance
+• Use sparingly for emphasis
+
+Best Practices:
+• Follow brand color specifications exactly
+• Test color combinations for readability
+• Consider color blindness accessibility
+• Use full-color version on neutral backgrounds`
+            }
+        }
+    }
 };
 
 function renderLogotypeSubsectionsList(subsections) {
@@ -2548,6 +2924,161 @@ function setupLogotypeHandlers() {
     }
 }
 
+async function setupGraphicLanguageImageHandlers() {
+    document.querySelectorAll('.gl-image-input').forEach(input => {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        const inputId = newInput.id;
+        const label = document.querySelector(`label[for="${inputId}"]`);
+        const filenameDisplay = document.getElementById(`${inputId}-filename`);
+        const previewId = `gl-preview-${newInput.getAttribute('data-gl-index')}`;
+        const preview = document.getElementById(previewId);
+
+        newInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const MAX_FILE_SIZE = 12 * 1024 * 1024;
+            if (file.size > MAX_FILE_SIZE) {
+                showStatus('File too large (max 12MB)', 'error');
+                newInput.value = '';
+                return;
+            }
+            if (label) { label.classList.add('has-file'); const ut = label.querySelector('.upload-text'); if (ut) ut.textContent = 'Change Image'; }
+            if (filenameDisplay) { filenameDisplay.textContent = file.name; filenameDisplay.style.display = 'block'; }
+            if (preview) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.innerHTML = renderImagePreview(ev.target.result, previewId, newInput);
+                    const removeBtn = preview.querySelector('.remove-image-btn');
+                    if (removeBtn) {
+                        removeBtn.setAttribute('data-input-id', newInput.id);
+                        removeBtn.setAttribute('data-preview-id', previewId);
+                        removeBtn.addEventListener('click', function(ev2) { ev2.preventDefault(); ev2.stopPropagation(); removeImage(newInput, previewId); });
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+}
+
+async function setupPhotographyImageHandlers() {
+    document.querySelectorAll('.ph-image-input').forEach(input => {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        const inputId = newInput.id;
+        const label = document.querySelector(`label[for="${inputId}"]`);
+        const filenameDisplay = document.getElementById(`${inputId}-filename`);
+        const previewId = `ph-preview-${newInput.getAttribute('data-ph-index')}`;
+        const preview = document.getElementById(previewId);
+
+        newInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const MAX_FILE_SIZE = 12 * 1024 * 1024;
+            if (file.size > MAX_FILE_SIZE) {
+                showStatus('File too large (max 12MB)', 'error');
+                newInput.value = '';
+                return;
+            }
+            if (label) { label.classList.add('has-file'); const ut = label.querySelector('.upload-text'); if (ut) ut.textContent = 'Change Image'; }
+            if (filenameDisplay) { filenameDisplay.textContent = file.name; filenameDisplay.style.display = 'block'; }
+            if (preview) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    preview.innerHTML = renderImagePreview(ev.target.result, previewId, newInput);
+                    const removeBtn = preview.querySelector('.remove-image-btn');
+                    if (removeBtn) {
+                        removeBtn.setAttribute('data-input-id', newInput.id);
+                        removeBtn.setAttribute('data-preview-id', previewId);
+                        removeBtn.addEventListener('click', function(ev2) { ev2.preventDefault(); ev2.stopPropagation(); removeImage(newInput, previewId); });
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+}
+
+async function setupApplicationImageHandlers() {
+    const imageInputs = document.querySelectorAll('.application-image-input');
+    imageInputs.forEach(input => {
+        // Remove existing listeners by cloning
+        const newInput = input.cloneNode(true);
+        const parent = input.parentNode;
+        parent.replaceChild(newInput, input);
+        
+        // Find associated label and filename display
+        const inputId = newInput.id;
+        const label = document.querySelector(`label[for="${inputId}"]`);
+        const filenameDisplay = document.getElementById(`${inputId}-filename`);
+        const preview = document.getElementById(`application-preview-${newInput.getAttribute('data-application-index')}`);
+        
+        newInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Check file size before processing
+            const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12MB
+            if (file.size > MAX_FILE_SIZE) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                showStatus(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB. Please use a smaller file or compress the image.`, 'error');
+                newInput.value = '';
+                return;
+            }
+            
+            // Update label to show file selected
+            if (label) {
+                label.classList.add('has-file');
+                const uploadText = label.querySelector('.upload-text');
+                if (uploadText) {
+                    uploadText.textContent = 'Change Image';
+                }
+                const uploadIcon = label.querySelector('.upload-icon');
+                if (uploadIcon) {
+                    uploadIcon.style.display = 'none';
+                }
+            }
+            
+            // Update filename display
+            if (filenameDisplay) {
+                filenameDisplay.textContent = file.name;
+                filenameDisplay.style.display = 'block';
+            }
+            
+            // Update preview
+            if (preview) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result;
+                    // Double-check the base64 string size
+                    const MAX_BASE64_SIZE = 16 * 1024 * 1024; // 16MB for base64
+                    if (base64Data.length > MAX_BASE64_SIZE) {
+                        showStatus('File is too large after encoding. Maximum size is approximately 12MB. Please use a smaller file.', 'error');
+                        newInput.value = '';
+                        return;
+                    }
+                    const previewId = preview.id;
+                    preview.innerHTML = renderImagePreview(base64Data, previewId, newInput);
+                    
+                    // Attach remove handler
+                    const removeBtn = preview.querySelector('.remove-image-btn');
+                    if (removeBtn) {
+                        removeBtn.setAttribute('data-input-id', newInput.id);
+                        removeBtn.setAttribute('data-preview-id', previewId);
+                        removeBtn.addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            removeImage(newInput, previewId);
+                        });
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+}
 
 // Handle Figma JSON file upload
 async function handleFigmaFileUpload(event) {
@@ -3006,12 +3537,17 @@ async function rebuildContentFromForm() {
         typographySection: {
             image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
             downloadUrl: getValue('typography-download-url', ''),
-            },
-        applications: {
-            heading: getValue('applications-heading', ''),
-            headingText: getValue('applications-heading-text', ''),
-            subsections: await getApplicationsSubsectionsFromForm()
-            },
+        },
+        applications: await getApplicationsFromForm(),
+        graphicLanguage: {
+            hero: getHeroImageFromInput(document.getElementById('graphic-language-hero-input'), getExistingImage('graphicLanguage.hero')),
+            items: getGraphicLanguageFromForm()
+        },
+        photography: {
+            hero: getHeroImageFromInput(document.getElementById('photography-hero-input'), getExistingImage('photography.hero')),
+            items: getPhotographyFromForm()
+        },
+        downloads: getDownloadsFromForm(),
         hiddenSections: currentContent?.hiddenSections || {},
         assets: currentContent?.assets || []
     };
@@ -3100,7 +3636,31 @@ async function saveContent() {
                 data: currentContent.applications || []
             });
         }
-        
+
+        // Check graphic language
+        if (hasSectionChanged('graphicLanguage')) {
+            sectionsToSave.push({
+                path: 'graphicLanguage',
+                data: currentContent.graphicLanguage || { hero: '', items: [] }
+            });
+        }
+
+        // Check photography
+        if (hasSectionChanged('photography')) {
+            sectionsToSave.push({
+                path: 'photography',
+                data: currentContent.photography || { hero: '', items: [] }
+            });
+        }
+
+        // Check downloads
+        if (hasSectionChanged('downloads')) {
+            sectionsToSave.push({
+                path: 'downloads',
+                data: currentContent.downloads || []
+            });
+        }
+
         // Check top-level fields
         if (hasSectionChanged('brandName')) {
             sectionsToSave.push({
@@ -3123,7 +3683,7 @@ async function saveContent() {
         
         // If only a few sections changed, use batch PATCH
         // If many sections changed, use full PUT
-        if (sectionsToSave.length <= 5) {
+        if (sectionsToSave.length <= 10) {
             // Use batch PATCH endpoint
             const response = await fetch('/api/content/sections', {
                 method: 'PATCH',
@@ -3249,14 +3809,21 @@ async function saveContentFull() {
             },
             typographySection: {
                 image: getHeroImageFromInput(document.getElementById('typography-hero-input') || document.querySelector('[data-section="typographySection"].section-hero-image-input'), getExistingImage('typographySection.image')),
-                },
-            applications: {
-            subsections: await getApplicationsSubsectionsFromForm()
-                },
+            },
+            applications: await getApplicationsFromForm(),
+            graphicLanguage: {
+                hero: getHeroImageFromInput(document.getElementById('graphic-language-hero-input'), getExistingImage('graphicLanguage.hero')),
+                items: getGraphicLanguageFromForm()
+            },
+            photography: {
+                hero: getHeroImageFromInput(document.getElementById('photography-hero-input'), getExistingImage('photography.hero')),
+                items: getPhotographyFromForm()
+            },
+            downloads: getDownloadsFromForm(),
             hiddenSections: currentContent?.hiddenSections || {},
             assets: currentContent?.assets || []
         };
-        
+
         const response = await fetch('/api/content', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -3475,7 +4042,10 @@ const SECTION_ORDER = [
     { id: 'logotype', name: 'Logotype' },
     { id: 'color', name: 'Color' },
     { id: 'typography', name: 'Typography' },
-    { id: 'applications', name: 'Applications' }
+    { id: 'graphic-language', name: 'Graphic Language' },
+    { id: 'photography', name: 'Photography' },
+    { id: 'applications', name: 'Brand in Use' },
+    { id: 'downloads', name: 'Downloads' }
 ];
 
 // Renumber sections based on visibility

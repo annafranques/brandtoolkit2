@@ -62,10 +62,19 @@
                         <a href="#section-typography" class="admin-nav-link" data-section="typography">03. Typography</a>
                     </li>
                     <li>
-                        <a href="#section-applications" class="admin-nav-link" data-section="applications">04. Applications</a>
+                        <a href="#section-graphic-language" class="admin-nav-link" data-section="graphic-language">04. Graphic Language</a>
+                    </li>
+                    <li>
+                        <a href="#section-photography" class="admin-nav-link" data-section="photography">05. Photography</a>
+                    </li>
+                    <li>
+                        <a href="#section-applications" class="admin-nav-link" data-section="applications">06. Brand in Use</a>
                         <ul id="admin-applications-subsections" style="list-style: none; margin-left: 0; padding-left: 0; margin-top: 0.25rem;">
                             <!-- Subsections will be populated dynamically -->
                         </ul>
+                    </li>
+                    <li>
+                        <a href="#section-downloads" class="admin-nav-link" data-section="downloads">07. Downloads</a>
                     </li>
                     <li><a href="#section-figma-sync" class="admin-nav-link" data-section="figma-sync">Figma Sync</a></li>
                     <li><a href="#section-assets" class="admin-nav-link" data-section="assets">Assets</a></li>
@@ -100,9 +109,17 @@
                         <input type="text" id="brand-name" class="form-control" placeholder="e.g., DIRTT">
                     </div>
                     <div class="form-group">
-                        <label for="logo-upload">Logo (SVG - Paste inline SVG code)</label>
-                        <textarea id="logo-upload" class="form-control" rows="8" placeholder="Paste your SVG code here..."></textarea>
-                        <small>Paste the inline SVG code. This will be used in color application examples.</small>
+                        <label for="logo-upload">Logo (SVG)</label>
+                        <div style="display:flex; gap:0.75rem; align-items:center; margin-bottom:0.75rem;">
+                            <label for="logo-svg-file" class="btn-upload-svg" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 1rem; background:#1A1A1A; color:#fff; font-family:inherit; font-size:0.8125rem; letter-spacing:0.06em; text-transform:uppercase; border:none; border-radius:0;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Upload SVG file
+                            </label>
+                            <input type="file" id="logo-svg-file" accept=".svg,image/svg+xml" style="display:none;">
+                            <span id="logo-svg-filename" style="font-size:0.8125rem; color:rgba(0,0,0,0.45); font-style:italic;"></span>
+                        </div>
+                        <textarea id="logo-upload" class="form-control" rows="6" placeholder="Paste SVG code here, or upload an SVG file above..."></textarea>
+                        <small>Upload an SVG file or paste inline SVG code. This is used across color application examples throughout the toolkit.</small>
                         <div id="logo-preview" class="image-preview" style="margin-top: 1rem;"></div>
                     </div>
                 </div>
@@ -314,35 +331,100 @@
                     
                 </div>
                 
-                <!-- 04. Applications Section -->
+                <!-- 04. Graphic Language Section -->
+                <div class="admin-section" id="section-graphic-language">
+                    <div class="admin-section-header">
+                        <h2>04. Graphic Language</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-graphic-language" data-section="graphic-language">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 2rem; margin-bottom: 2rem;">
+                        <label>Hero Image / Video</label>
+                        <input type="file" class="section-hero-image-input" id="graphic-language-hero-input" data-section="graphicLanguage" accept="image/*,video/*">
+                        <small style="display: block; margin-top: 0.5rem; margin-bottom: 0.5rem; color: #666;">OR paste a Vimeo URL:</small>
+                        <input type="url" class="form-control section-hero-url-input" id="graphic-language-hero-url" data-section="graphicLanguage" placeholder="https://vimeo.com/123456789">
+                        <div class="image-preview" id="graphic-language-hero-preview"></div>
+                    </div>
+
+                    <div id="graphic-language-list"></div>
+
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <button type="button" id="add-graphic-language-btn" class="btn btn-secondary">+ Add Subsection</button>
+                    </div>
+                </div>
+
+                <!-- 05. Photography Section -->
+                <div class="admin-section" id="section-photography">
+                    <div class="admin-section-header">
+                        <h2>05. Photography</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-photography" data-section="photography">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 2rem; margin-bottom: 2rem;">
+                        <label>Hero Image / Video</label>
+                        <input type="file" class="section-hero-image-input" id="photography-hero-input" data-section="photography" accept="image/*,video/*">
+                        <small style="display: block; margin-top: 0.5rem; margin-bottom: 0.5rem; color: #666;">OR paste a Vimeo URL:</small>
+                        <input type="url" class="form-control section-hero-url-input" id="photography-hero-url" data-section="photography" placeholder="https://vimeo.com/123456789">
+                        <div class="image-preview" id="photography-hero-preview"></div>
+                    </div>
+
+                    <div id="photography-list"></div>
+
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <button type="button" id="add-photography-btn" class="btn btn-secondary">+ Add Subsection</button>
+                    </div>
+                </div>
+
+                <!-- 06. Brand in Use Section -->
                 <div class="admin-section" id="section-applications">
                     <div class="admin-section-header">
-                        <h2>04. Applications</h2>
+                        <h2>06. Brand in Use</h2>
                         <label class="visibility-toggle">
                             <input type="checkbox" id="visibility-applications" data-section="applications">
                             <span>Visible on frontend</span>
                         </label>
                     </div>
                     
+                    <div class="form-group" style="margin-top: 2rem; margin-bottom: 2rem;">
+                        <label>Hero Image / Video</label>
+                        <input type="file" class="section-hero-image-input" id="applications-hero-input" data-section="applications" accept="image/*,video/*">
+                        <small style="display: block; margin-top: 0.5rem; margin-bottom: 0.5rem; color: #666;">OR paste a Vimeo URL:</small>
+                        <input type="url" class="form-control section-hero-url-input" id="applications-hero-url" data-section="applications" placeholder="https://vimeo.com/123456789">
+                        <div class="image-preview" id="applications-hero-preview"></div>
+                    </div>
+                    
+                    <div id="applications-list"></div>
+
                     <div class="form-group" style="margin-top: 2rem;">
-                        <label for="applications-heading">Section Heading</label>
-                        <input type="text" id="applications-heading" class="form-control" placeholder="e.g., Applications">
-                    </div>
-                    
-                    <div class="form-group" style="margin-top: 1.5rem;">
-                        <label for="applications-heading-text">Heading Text / Description</label>
-                        <textarea id="applications-heading-text" class="form-control" rows="4" placeholder="Enter a description or introduction text for the applications section..."></textarea>
-                    </div>
-                    
-                    <div style="margin-top: 3rem;">
-                        <h3 style="margin: 0 0 1.5rem 0; font-size: 1.125rem; font-weight: normal;">Application Subsections</h3>
-                        <div id="applications-subsections-list"></div>
-                        <div style="margin-top: 2rem;">
-                            <button type="button" class="btn btn-primary" id="add-applications-subsection-btn">Add Subsection</button>
-                        </div>
+                        <button type="button" id="add-application-btn" class="btn btn-secondary">+ Add Application Subsection</button>
                     </div>
                 </div>
-                
+
+                <!-- 07. Downloads Section -->
+                <div class="admin-section" id="section-downloads">
+                    <div class="admin-section-header">
+                        <h2>07. Downloads</h2>
+                        <label class="visibility-toggle">
+                            <input type="checkbox" id="visibility-downloads" data-section="downloads">
+                            <span>Visible on frontend</span>
+                        </label>
+                    </div>
+
+                    <p class="section-description" style="margin-top: 1.5rem; margin-bottom: 2rem;">Add downloadable assets. Each card shows a title, optional description, file type badge, and a download link.</p>
+
+                    <div id="downloads-list"></div>
+
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <button type="button" id="add-download-btn" class="btn btn-secondary">+ Add Download</button>
+                    </div>
+                </div>
+
                 <!-- Figma Import Section -->
                 <div class="admin-section" id="section-figma-sync">
                     <div class="admin-section-header">
@@ -387,6 +469,6 @@
         <div id="save-status" class="save-status"></div>
     </div>
     
-    <script src="admin.js?v=20251226_221800"></script>
+    <script src="admin.js?v=20260308_001"></script>
 </body>
 </html>

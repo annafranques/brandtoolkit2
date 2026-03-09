@@ -269,9 +269,11 @@ async function loadContent() {
             contentDiv.className = 'content-section-content';
             
             // Apply light brand color as background (alternating through light colors)
+            // Apply to the full section (not just content) so heading area is also tinted
             const colorIndex = sectionIndex % sectionColors.length;
             const bgColor = sectionColors[colorIndex] || '#ffffff';
-            contentDiv.style.backgroundColor = bgColor;
+            section.style.backgroundColor = bgColor;
+            contentDiv.style.backgroundColor = 'transparent';
             section.setAttribute('data-section-index', sectionIndex);
             
             if (sectionData && typeof sectionData === 'object') {
@@ -423,12 +425,10 @@ async function loadContent() {
                 logotypeSection.classList.remove('has-hero');
             }
             
-            // Add download button for logotype if URL is provided
-            if (content.logotype && content.logotype.downloadUrl) {
-                setTimeout(() => {
-                    addDownloadButtonToHeading(logotypeSection, content.logotype.downloadUrl, 'Download Logo');
-                }, 0);
-            }
+            // Add download button for logotype (always visible)
+            setTimeout(() => {
+                addDownloadButtonToHeading(logotypeSection, (content.logotype && content.logotype.downloadUrl) || '', 'Download Logo');
+            }, 0);
             
             let logoHtml = '';
             
@@ -676,7 +676,8 @@ async function loadContent() {
                                 logoHtml += `</div>`;
                             });
                             
-                            logoHtml += '</div>';
+                            logoHtml += '</div>'; // Close logo-usage-right
+                            logoHtml += '</div>'; // Close logo-usage-section
                         }
                     } else {
                         // Regular subsection
@@ -742,61 +743,6 @@ async function loadContent() {
             logotypeSection.remove();
         }
         
-        // 04. Applications
-        const applicationsSection = document.getElementById('applications');
-        const applicationsContent = document.getElementById('applications-content');
-        
-        if (applicationsSection && applicationsContent && !hiddenSections['applications'] && content.applications) {
-            let applicationsHtml = '';
-            
-            // Add heading and heading text
-            if (content.applications.heading) {
-                const h2 = applicationsSection.querySelector('h2');
-                if (h2) {
-                    h2.textContent = content.applications.heading;
-                }
-            }
-            
-            if (content.applications.headingText) {
-                applicationsHtml += `<div class="section-intro">${formatContent(content.applications.headingText)}</div>`;
-            }
-            
-            // Render subsections
-            if (content.applications.subsections && Array.isArray(content.applications.subsections)) {
-                content.applications.subsections.forEach((subsection, index) => {
-                    const title = subsection.title || '';
-                    const contentText = subsection.content || '';
-                    const images = subsection.images || (subsection.image ? [subsection.image] : []);
-                    const imagesArray = Array.isArray(images) ? images : (images ? [images] : []);
-                    const hasImages = imagesArray.length > 0;
-                    const subsectionId = `applications-subsection-${index}`;
-                    
-                    applicationsHtml += `<div class="subsection" id="${subsectionId}">`;
-                    applicationsHtml += `<div class="subsection-title">${title}</div>`;
-                    
-                    if (contentText) {
-                        applicationsHtml += `<div class="subsection-content">${formatContent(contentText)}</div>`;
-                    }
-                    
-                    if (hasImages) {
-                        applicationsHtml += '<div class="subsection-images">';
-                        imagesArray.forEach((img, idx) => {
-                            applicationsHtml += `<div class="subsection-image"><img src="${img}" alt="${title}${imagesArray.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
-                        });
-                        applicationsHtml += '</div>';
-                    }
-                    
-                    applicationsHtml += `</div>`;
-                });
-            }
-            
-            applicationsContent.innerHTML = applicationsHtml;
-            sectionIndex++;
-        } else if (applicationsSection && hiddenSections['applications']) {
-            // Remove section if hidden
-            applicationsSection.remove();
-        }
-        
         // 03. Typography section (special handling - has preview)
         const typographySection = document.getElementById('typography');
         const typographyContent = document.getElementById('typography-content');
@@ -818,10 +764,8 @@ async function loadContent() {
             setTimeout(() => {
                 loadFontsDownloadButtons();
                 
-                // Add download button for typography if URL is provided (after font buttons to ensure it appears)
-                if (content.typographySection && content.typographySection.downloadUrl) {
-                    addDownloadButtonToHeading(typographySection, content.typographySection.downloadUrl, 'Download Fonts');
-                }
+                // Add download button for typography (always visible)
+                addDownloadButtonToHeading(typographySection, (content.typographySection && content.typographySection.downloadUrl) || '', 'Download Fonts');
             }, 0);
             
         }
@@ -961,14 +905,195 @@ async function loadContent() {
             }, 0);
         }
         
+        // 04. Applications
+        const applicationsSection = document.getElementById('applications');
+        const applicationsContent = document.getElementById('applications-content');
+        if (applicationsSection && applicationsContent && !hiddenSections['applications'] && content.applications) {
+            // Check if it's array format (new) or object format (old)
+            let applicationsArray = [];
+            if (Array.isArray(content.applications)) {
+                applicationsArray = content.applications;
+            } else {
+                // Migrate old format to array
+                const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
+                const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
+                oldSubsections.forEach((subsection, index) => {
+                    if (content.applications[subsection]) {
+                        const data = content.applications[subsection];
+                        applicationsArray.push({
+                            title: oldNames[index],
+                            content: typeof data === 'object' ? data.content : data,
+                            image: typeof data === 'object' ? data.image : ''
+                        });
+                    }
+                });
+            }
+            
+            // Check for hero image (use content.applications.image if available, otherwise first application image)
+            let applicationsHeroImage = null;
+            if (content.applications && content.applications.image) {
+                applicationsHeroImage = content.applications.image;
+            } else if (applicationsArray.length > 0 && applicationsArray[0].image) {
+                const firstAppImage = applicationsArray[0].image;
+                applicationsHeroImage = Array.isArray(firstAppImage) ? firstAppImage[0] : firstAppImage;
+            }
+            
+            const h2Applications = applicationsSection.querySelector('h2');
+            if (applicationsHeroImage && h2Applications) {
+                addSectionHero(applicationsSection, applicationsHeroImage, 'Applications');
+            } else if (h2Applications) {
+                applicationsSection.classList.remove('has-hero');
+            }
+            
+            // Background will be handled by CSS :not(.has-hero) selector
+            let html = '';
+            applicationsArray.forEach((app, index) => {
+                if (!app.title) return; // Skip if no title
+                const subsectionId = `applications-${index}`;
+                html += `<div class="subsection" id="${subsectionId}"><div class="subsection-title">${app.title}</div>`;
+                html += `<div class="subsection-content">${formatContent(app.content || '')}</div>`;
+                
+                // Render images (handle both single and array, excluding hero image)
+                const appImages = app.image || app.images;
+                if (appImages) {
+                    const appImagesArray = Array.isArray(appImages) ? appImages : [appImages];
+                    const filteredImages = appImagesArray.filter(img => img !== applicationsHeroImage);
+                    if (filteredImages.length > 0) {
+                        html += '<div class="subsection-images">';
+                        filteredImages.forEach((img, idx) => {
+                            html += `<div class="subsection-image"><img src="${img}" alt="${app.title}${filteredImages.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                        });
+                        html += '</div>';
+                    }
+                }
+                
+                html += `</div>`;
+            });
+            
+            applicationsContent.className = 'content-section-content';
+            applicationsContent.innerHTML = html;
+            sectionIndex++;
+        }
         
+        // Helper: render a generic dynamic-subsection section (Graphic Language, Photography)
+        function renderDynamicSection(sectionId, dataArray, heroImage) {
+            const section = document.getElementById(sectionId);
+            const contentDiv = document.getElementById(`${sectionId}-content`);
+            if (!section || !contentDiv) return;
+
+            const h2 = section.querySelector('h2');
+            if (heroImage && h2) {
+                addSectionHero(section, heroImage, sectionId);
+            } else if (h2) {
+                section.classList.remove('has-hero');
+            }
+
+            let html = '';
+            dataArray.forEach((item, index) => {
+                if (!item.title) return;
+                const subsectionId = `${sectionId}-${index}`;
+                html += `<div class="subsection" id="${subsectionId}">`;
+                html += `<div class="subsection-title">${item.title}</div>`;
+                html += `<div class="subsection-content">${formatContent(item.content || '')}</div>`;
+
+                const images = item.image || item.images;
+                if (images) {
+                    const imgArray = Array.isArray(images) ? images : [images];
+                    const filtered = imgArray.filter(img => img !== heroImage);
+                    if (filtered.length > 0) {
+                        html += '<div class="subsection-images">';
+                        filtered.forEach((img, idx) => {
+                            html += `<div class="subsection-image"><img src="${img}" alt="${item.title}${filtered.length > 1 ? ` - ${idx + 1}` : ''}"></div>`;
+                        });
+                        html += '</div>';
+                    }
+                }
+                html += '</div>';
+            });
+
+            contentDiv.className = 'content-section-content';
+            contentDiv.innerHTML = html || '<p style="padding:3rem 5rem">No content yet. Edit via admin panel.</p>';
+            sectionIndex++;
+        }
+
+        // 04. Graphic Language
+        {
+            const glRaw = content.graphicLanguage;
+            const glItems = Array.isArray(glRaw) ? glRaw : (glRaw?.items || []);
+            const glHero = Array.isArray(glRaw)
+                ? (glRaw.find(i => i.image)?.image || null)
+                : (glRaw?.hero || null);
+            if (!hiddenSections['graphic-language'] && glItems.length > 0) {
+                renderDynamicSection('graphic-language', glItems, glHero);
+            } else if (document.getElementById('graphic-language') && hiddenSections['graphic-language']) {
+                document.getElementById('graphic-language').remove();
+            }
+        }
+
+        // 05. Photography
+        {
+            const phRaw = content.photography;
+            const phItems = Array.isArray(phRaw) ? phRaw : (phRaw?.items || []);
+            const phHero = Array.isArray(phRaw)
+                ? (phRaw.find(i => i.image)?.image || null)
+                : (phRaw?.hero || null);
+            if (!hiddenSections['photography'] && phItems.length > 0) {
+                renderDynamicSection('photography', phItems, phHero);
+            } else if (document.getElementById('photography') && hiddenSections['photography']) {
+                document.getElementById('photography').remove();
+            }
+        }
+
+        // 07. Downloads
+        const downloadsSection = document.getElementById('downloads');
+        const downloadsContent = document.getElementById('downloads-content');
+        if (downloadsSection && downloadsContent && !hiddenSections['downloads'] && content.downloads && Array.isArray(content.downloads) && content.downloads.length > 0) {
+            const h2Downloads = downloadsSection.querySelector('h2');
+            if (h2Downloads) downloadsSection.classList.remove('has-hero');
+
+            let dlHtml = '<div class="downloads-grid">';
+            content.downloads.forEach((item, index) => {
+                if (!item.title) return;
+                dlHtml += `<div class="download-card" id="download-${index}">`;
+                dlHtml += `<div class="download-card-header">
+                    <div class="download-card-title">${item.title}</div>
+                    ${item.fileType ? `<span class="download-card-type">${item.fileType}</span>` : ''}
+                </div>`;
+                if (item.content) dlHtml += `<div class="download-card-desc">${formatContent(item.content)}</div>`;
+                if (item.image) dlHtml += `<img class="download-card-preview" src="${item.image}" alt="${item.title}">`;
+                if (item.downloadUrl) dlHtml += `<a class="download-card-btn" href="${item.downloadUrl}" target="_blank" rel="noopener noreferrer">Download</a>`;
+                dlHtml += '</div>';
+            });
+            dlHtml += '</div>';
+
+            downloadsContent.className = 'content-section-content';
+            downloadsContent.innerHTML = dlHtml;
+            sectionIndex++;
+        } else if (downloadsSection && hiddenSections['downloads']) {
+            downloadsSection.remove();
+        }
+
+        // Apply alternating brand background colors to ALL non-hero sections
+        // Use DOM order for alternation — skip sections with hero images (they handle their own bg)
+        let nonHeroIdx = 0;
+        document.querySelectorAll('.content-section').forEach(sec => {
+            if (!sec.classList.contains('has-hero') && sectionColors.length > 0) {
+                const color = sectionColors[nonHeroIdx % sectionColors.length];
+                sec.style.backgroundColor = color;
+                nonHeroIdx++;
+            }
+        });
+
         // Frontend section order mapping (matching new structure)
         const FRONTEND_SECTION_ORDER = [
-            { id: 'frame-rebel', name: content.brandName || 'The Name of the Project', navName: content.brandName || 'The Name of the Project' },
-            { id: 'logotype', name: 'Logotype', navName: 'Logotype' },
-            { id: 'color', name: 'Color', navName: 'Color' },
+            { id: 'frame-rebel', name: content.brandName || 'Brand Story', navName: content.brandName || 'Brand Story' },
+            { id: 'logotype', name: 'Logo', navName: 'Logo' },
+            { id: 'color', name: 'Colour', navName: 'Colour' },
             { id: 'typography', name: 'Typography', navName: 'Typography' },
-            { id: 'applications', name: 'Applications', navName: 'Applications' }
+            { id: 'graphic-language', name: 'Graphic Language', navName: 'Graphic Language' },
+            { id: 'photography', name: 'Photography', navName: 'Photography' },
+            { id: 'applications', name: 'Brand in Use', navName: 'Brand in Use' },
+            { id: 'downloads', name: 'Downloads', navName: 'Downloads' }
         ];
         
         // Build navigation dynamically based on visible sections
@@ -1000,18 +1125,11 @@ async function loadContent() {
                     { id: 'mainTypography', name: 'Main Typography' },
                     { id: 'secondaryTypography', name: 'Secondary Typography' }
                 ],
-                'applications': [] // Will be populated dynamically from content.applications.subsections array
+                'graphic-language': [], // Will be populated dynamically
+                'photography': [],      // Will be populated dynamically
+                'applications': [],     // Will be populated dynamically from content.applications array
+                'downloads': []         // Will be populated dynamically
             };
-            
-            // Populate applications subsections dynamically from content
-            if (content.applications && content.applications.subsections && Array.isArray(content.applications.subsections)) {
-                sectionSubsections['applications'] = content.applications.subsections
-                    .map((subsection, index) => ({
-                        id: `applications-subsection-${index}`,
-                        name: subsection.title || `Subsection ${index + 1}`
-                    }))
-                    .filter(sub => sub.name); // Only include subsections with titles
-            }
             
             // Populate logotype subsections dynamically from content
             if (content.logotype && content.logotype.subsections && Array.isArray(content.logotype.subsections)) {
@@ -1023,6 +1141,58 @@ async function loadContent() {
                         id: `logotype-subsection-${originalIndex}`, // Use originalIndex to match rendered HTML IDs
                         name: subsection.title || `Logotype Subsection ${originalIndex + 1}`
                     }));
+            }
+            
+            // Populate applications subsections dynamically from content
+            if (content.applications) {
+                let applicationsArray = [];
+                if (Array.isArray(content.applications)) {
+                    applicationsArray = content.applications;
+                } else {
+                    // Migrate old format
+                    const oldSubsections = ['businessCards', 'deckSlides', 'socialPosts', 'badgesAndTape', 'capAndTshirt', 'cardAndTape', 'stick'];
+                    const oldNames = ['Business Cards', 'Deck Slides', 'Social Posts', 'Badges & Tape', 'Cap & T-shirt', 'Card & Tape', 'Stick'];
+                    oldSubsections.forEach((subsection, index) => {
+                        if (content.applications[subsection]) {
+                            applicationsArray.push({
+                                title: oldNames[index],
+                                content: typeof content.applications[subsection] === 'object' ? content.applications[subsection].content : content.applications[subsection],
+                                image: typeof content.applications[subsection] === 'object' ? content.applications[subsection].image : ''
+                            });
+                        }
+                    });
+                }
+
+                // Build subsections array for navigation
+                sectionSubsections['applications'] = applicationsArray
+                    .filter(app => app.title) // Only include items with titles
+                    .map((app, index) => ({
+                        id: index.toString(),
+                        name: app.title
+                    }));
+            }
+
+            // Populate graphic-language subsections
+            const glNavItems = Array.isArray(content.graphicLanguage) ? content.graphicLanguage : (content.graphicLanguage?.items || []);
+            if (glNavItems.length > 0) {
+                sectionSubsections['graphic-language'] = glNavItems
+                    .filter(item => item.title)
+                    .map((item, index) => ({ id: `graphic-language-${index}`, name: item.title }));
+            }
+
+            // Populate photography subsections
+            const phNavItems = Array.isArray(content.photography) ? content.photography : (content.photography?.items || []);
+            if (phNavItems.length > 0) {
+                sectionSubsections['photography'] = phNavItems
+                    .filter(item => item.title)
+                    .map((item, index) => ({ id: `photography-${index}`, name: item.title }));
+            }
+
+            // Populate downloads subsections
+            if (content.downloads && Array.isArray(content.downloads)) {
+                sectionSubsections['downloads'] = content.downloads
+                    .filter(item => item.title)
+                    .map((item, index) => ({ id: `download-${index}`, name: item.title }));
             }
             
             let visibleNumber = 0; // Start at 0 for "00. Introduction"
@@ -1046,7 +1216,7 @@ async function loadContent() {
                             const subNavLink = document.createElement('a');
                             // For logotype and applications, use the ID directly (already includes prefix)
                             // For other sections, combine section id with subsection id
-                            const subsectionId = (section.id === 'logotype' || section.id === 'applications') 
+                            const subsectionId = (section.id === 'applications' || section.id === 'logotype') 
                                 ? subsection.id 
                                 : `${section.id}-${subsection.id}`;
                             subNavLink.href = `#${subsectionId}`;
@@ -1069,42 +1239,27 @@ async function loadContent() {
         // Renumber section headers on frontend
         function renumberFrontendSections() {
             let visibleNumber = 0; // Start at 0 for "00. Introduction"
-            
+
             FRONTEND_SECTION_ORDER.forEach(section => {
                 const isHidden = hiddenSections[section.id];
                 if (!isHidden) {
                     const sectionElement = document.getElementById(section.id);
                     if (sectionElement) {
-                        // Get both regular h2 and hero h2 (if exists)
                         const h2 = sectionElement.querySelector('h2:not(.content-section-hero h2)');
                         const heroH2 = sectionElement.querySelector('.content-section-hero h2');
-                        
-                        // Determine the text content
-                        let sectionText;
-                        if (section.id === 'frame-rebel') {
-                            sectionText = `${String(visibleNumber).padStart(2, '0')}. ${brandName}`;
-                        } else {
-                            sectionText = `${String(visibleNumber).padStart(2, '0')}. ${section.name}`;
-                        }
-                        
-                        // Update regular h2 if it exists
+
+                        const numStr = String(visibleNumber).padStart(2, '0');
+                        const nameStr = section.id === 'frame-rebel' ? brandName : section.name;
+                        const headingHTML = `<span class="section-num">${numStr}.</span><span class="section-name">${nameStr}</span>`;
+
                         if (h2) {
-                            h2.textContent = sectionText;
+                            h2.innerHTML = headingHTML;
                         }
-                        
-                        // Update hero h2 if it exists (this is the one that displays in hero sections)
+
                         if (heroH2) {
-                            // Preserve any button containers that might exist
                             const buttonsContainer = heroH2.querySelector('.download-buttons-container, .font-download-buttons-container');
-                            if (buttonsContainer) {
-                                heroH2.innerHTML = '';
-                                const textSpan = document.createElement('span');
-                                textSpan.textContent = sectionText;
-                                heroH2.appendChild(textSpan);
-                                heroH2.appendChild(buttonsContainer);
-                            } else {
-                                heroH2.textContent = sectionText;
-                            }
+                            heroH2.innerHTML = headingHTML;
+                            if (buttonsContainer) heroH2.appendChild(buttonsContainer);
                         }
                     }
                     visibleNumber++;
@@ -2287,7 +2442,7 @@ function downloadFont(fontPath, fontName) {
 
 // Add download button to section heading in hero
 function addDownloadButtonToHeading(section, downloadUrl, buttonText = 'Download') {
-    if (!section || !downloadUrl) return;
+    if (!section) return;
     
     // Find the h2 heading (either in hero or in section)
     let h2 = section.querySelector('.content-section-hero h2');
@@ -2380,9 +2535,14 @@ function addDownloadButtonToHeading(section, downloadUrl, buttonText = 'Download
     const downloadBtn = document.createElement('button');
     downloadBtn.className = 'download-asset-btn section-download-btn';
     downloadBtn.textContent = buttonText;
-    downloadBtn.setAttribute('data-download-url', downloadUrl);
-    downloadBtn.title = buttonText;
-    
+    if (downloadUrl) downloadBtn.setAttribute('data-download-url', downloadUrl);
+    downloadBtn.title = downloadUrl ? buttonText : 'No download URL configured — add one in admin';
+    if (!downloadUrl) {
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = '0.35';
+        downloadBtn.style.cursor = 'not-allowed';
+    }
+
     // Add click handler
     downloadBtn.addEventListener('click', function() {
         const url = this.getAttribute('data-download-url');
