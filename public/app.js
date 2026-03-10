@@ -2451,11 +2451,12 @@ function addDownloadButtonToHeading(section, downloadUrl, buttonText = 'Download
     }
     if (!h2) return;
     
-    // Ensure h2 has flex layout for proper alignment
-    h2.style.display = 'flex';
-    h2.style.alignItems = 'center';
-    h2.style.justifyContent = 'space-between';
-    h2.style.gap = '1.5rem';
+    // Ensure h2 has grid layout: num on top row, title + button on bottom row
+    h2.style.display = 'grid';
+    h2.style.gridTemplateColumns = '1fr auto';
+    h2.style.gridTemplateRows = 'auto auto';
+    h2.style.alignItems = 'end';
+    h2.style.gap = '0';
     
     // Get existing button containers
     let buttonsContainer = h2.querySelector('.font-download-buttons-container');
