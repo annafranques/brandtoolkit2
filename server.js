@@ -1680,55 +1680,106 @@ app.post('/api/figma/import', async (req, res) => {
       return res.status(400).json({ error: 'Invalid JSON data: ' + parseError.message });
     }
     
-    // Extract colors from collections
+    // ── Helper: normalise a hex string ──────────────────────────
+    function normaliseHex(raw) {
+      if (!raw) return null;
+      const h = String(raw).trim().replace(/^#/, '');
+      // Accept 6-char or 8-char (strip alpha)
+      if (h.length === 8) return '#' + h.slice(0, 6).toLowerCase();
+      if (h.length === 6) return '#' + h.toLowerCase();
+      return null;
+    }
+
     const colors = [];
     const colorMap = new Map();
-    
-    if (figmaData.collections && figmaData.collections.Color && figmaData.collections.Color.variables) {
-      const colorVariables = figmaData.collections.Color.variables.colors || [];
-      colorVariables.forEach((color, index) => {
-        if (color.value && !colorMap.has(color.value)) {
-          const colorName = color.name || color.token || `color-${index + 1}`;
-          colorMap.set(color.value, {
-            id: `color-${Date.now()}-${index}`,
-            name: colorName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), // Format name nicely
-            hex: color.value,
-            type: index === 0 ? 'primary' : 'secondary' // First color is primary, rest secondary
-          });
-          colors.push(colorMap.get(color.value));
-        }
-      });
-    }
-    
-    // Also check styles.colors if they exist
-    if (figmaData.styles && figmaData.styles.colors) {
-      figmaData.styles.colors.forEach((colorStyle, index) => {
-        // This might reference a variable, but we'll skip for now as we already have the actual colors
-      });
-    }
-    
-    // Extract typography from text styles
     const typography = [];
     const typographyMap = new Map();
-    
-    if (figmaData.styles && figmaData.styles.textStyles) {
-      figmaData.styles.textStyles.forEach((textStyle, index) => {
-        if (textStyle.fontFamily) {
-          const key = `${textStyle.fontFamily}-${textStyle.fontWeight || 'normal'}`;
-          if (!typographyMap.has(key)) {
-            typographyMap.set(key, {
-              fontFamily: textStyle.fontFamily,
-              fontSize: parseFloat(textStyle.fontSize) || null,
-              fontWeight: textStyle.fontWeight || 'normal',
-              lineHeight: textStyle.lineHeight || null,
-              letterSpacing: textStyle.letterSpacing || null,
-              name: textStyle.name || textStyle.token || `style-${index + 1}`,
-              isGoogleFont: isGoogleFont(textStyle.fontFamily)
+
+    // ── FORMAT 1: flat token export ──────────────────────────────
+    // { "Color Name": { name, hex, type:"SOLID", rgb, ... }, ... }
+    const values = Object.values(figmaData);
+    const isFlatTokenExport = values.length > 0 && values.every(
+      v => v && typeof v === 'object' && (v.hex || v.hex8 || v.value)
+        && !Array.isArray(v)
+    );
+
+    if (isFlatTokenExport) {
+      Object.entries(figmaData).forEach(([key, token], index) => {
+        // Colour token
+        if (token.type === 'SOLID' || token.hex || token.hex8) {
+          const hex = normaliseHex(token.hex || token.hex8 || token.value);
+          if (hex && !colorMap.has(hex)) {
+            const rawName = token.name || key;
+            colorMap.set(hex, {
+              id: `color-${Date.now()}-${index}`,
+              name: rawName,
+              hex,
+              type: index === 0 ? 'primary' : 'secondary'
             });
-            typography.push(typographyMap.get(key));
+            colors.push(colorMap.get(hex));
+          }
+        }
+        // Typography token
+        if (token.fontFamily || token.fontName) {
+          const family = token.fontFamily || token.fontName;
+          const wt = token.fontWeight || token.weight || 'normal';
+          const tKey = `${family}-${wt}`;
+          if (!typographyMap.has(tKey)) {
+            typographyMap.set(tKey, {
+              fontFamily: family,
+              fontSize: token.fontSize || null,
+              fontWeight: wt,
+              lineHeight: token.lineHeight || null,
+              letterSpacing: token.letterSpacing || null,
+              name: token.name || key,
+              isGoogleFont: isGoogleFont(family)
+            });
+            typography.push(typographyMap.get(tKey));
           }
         }
       });
+
+    } else {
+      // ── FORMAT 2: nested Figma export (collections + styles) ──
+
+      // Colors from collections
+      if (figmaData.collections && figmaData.collections.Color && figmaData.collections.Color.variables) {
+        const colorVariables = figmaData.collections.Color.variables.colors || [];
+        colorVariables.forEach((color, index) => {
+          const hex = normaliseHex(color.value);
+          if (hex && !colorMap.has(hex)) {
+            const colorName = color.name || color.token || `color-${index + 1}`;
+            colorMap.set(hex, {
+              id: `color-${Date.now()}-${index}`,
+              name: colorName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              hex,
+              type: index === 0 ? 'primary' : 'secondary'
+            });
+            colors.push(colorMap.get(hex));
+          }
+        });
+      }
+
+      // Typography from text styles
+      if (figmaData.styles && figmaData.styles.textStyles) {
+        figmaData.styles.textStyles.forEach((textStyle, index) => {
+          if (textStyle.fontFamily) {
+            const key = `${textStyle.fontFamily}-${textStyle.fontWeight || 'normal'}`;
+            if (!typographyMap.has(key)) {
+              typographyMap.set(key, {
+                fontFamily: textStyle.fontFamily,
+                fontSize: parseFloat(textStyle.fontSize) || null,
+                fontWeight: textStyle.fontWeight || 'normal',
+                lineHeight: textStyle.lineHeight || null,
+                letterSpacing: textStyle.letterSpacing || null,
+                name: textStyle.name || textStyle.token || `style-${index + 1}`,
+                isGoogleFont: isGoogleFont(textStyle.fontFamily)
+              });
+              typography.push(typographyMap.get(key));
+            }
+          }
+        });
+      }
     }
     
     // If autoApply is true, update the content
