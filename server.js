@@ -366,16 +366,51 @@ app.get('/api/typography', async (req, res) => {
       }
     }
     
+    // Default typographyShowcase if not set
+    if (!content.typographyShowcase) {
+      const primaryFont = content.typography?.primary || 'Work Sans';
+      content.typographyShowcase = {
+        fontName: primaryFont,
+        description: content.typographySection?.mainTypography?.content || '',
+        weights: [
+          { name: 'Light', weight: 300, style: 'normal' },
+          { name: 'Regular', weight: 400, style: 'normal' },
+          { name: 'Bold', weight: 700, style: 'normal' },
+          { name: 'Bold Oblique', weight: 700, style: 'italic' }
+        ],
+        hierarchy: [
+          { role: 'HEADER', weight: 700, style: 'normal',
+            sizes: { desktop: '60px', tablet: '48px', mobile: '36px' },
+            lineHeight: '110%', letterSpacing: '-0.01em',
+            sample: 'The Quick Brown Fox Jumps Over The Lazy Dog' },
+          { role: 'SUBTITLE', weight: 400, style: 'normal',
+            sizes: { desktop: '28px', tablet: '24px', mobile: '20px' },
+            lineHeight: '130%', letterSpacing: '0',
+            sample: 'A secondary heading or supporting line of text' },
+          { role: 'TAG', weight: 500, style: 'normal',
+            sizes: { desktop: '12px', tablet: '12px', mobile: '12px' },
+            lineHeight: '140%', letterSpacing: '0.08em',
+            sample: 'Category Label' },
+          { role: 'BODY TEXT', weight: 300, style: 'normal',
+            sizes: { desktop: '16px', tablet: '15px', mobile: '14px' },
+            lineHeight: '155%', letterSpacing: '0',
+            sample: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.' }
+        ]
+      };
+    }
+
     res.json({
       fonts: content.fonts || [],
-      typography: content.typographyStyles || {}
+      typography: content.typographyStyles || {},
+      showcase: content.typographyShowcase || {}
     });
   } catch (error) {
     console.error('Error getting typography:', error);
     // Return empty structure instead of 500 error
     res.json({
       fonts: [],
-      typography: {}
+      typography: {},
+      showcase: {}
     });
   }
 });

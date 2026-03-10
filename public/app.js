@@ -1677,14 +1677,11 @@ async function loadTypographyPreview() {
 async function renderTypographyPreview(typographyData, contentData = null) {
     const previewArea = document.getElementById('typography-preview');
     if (!previewArea) return;
-    
+
     let primaryFontName = '';
-    let secondaryFontName = '';
-    
-    // Use cached content data if available, otherwise fetch
+
     if (contentData) {
         primaryFontName = contentData.typography?.primary || '';
-        secondaryFontName = contentData.typography?.secondary || '';
     } else {
         try {
             const contentResponse = await fetch('/api/content');
@@ -1692,235 +1689,100 @@ async function renderTypographyPreview(typographyData, contentData = null) {
                 const content = await contentResponse.json();
                 cachedContentData = content;
                 primaryFontName = content.typography?.primary || '';
-                secondaryFontName = content.typography?.secondary || '';
             }
         } catch (error) {
             console.error('Error loading content for typography preview:', error);
         }
     }
 
-    // Dynamically load Google Fonts if they are set
     if (primaryFontName) loadGoogleFontIfNeeded(primaryFontName);
-    if (secondaryFontName) loadGoogleFontIfNeeded(secondaryFontName);
-    
-    const { fonts = [] } = typographyData;
-    
-    // Typography style specifications
-    const styleSpecs = {
-        desktop: {
-            display: { fontSize: '96px', lineHeight: '100%', letterSpacing: '-0.02em' },
-            heading1: { fontSize: '60px', lineHeight: '100%', letterSpacing: '-0.01em' },
-            heading2: { fontSize: '42px', lineHeight: '110%', letterSpacing: '-0.01em' },
-            heading3: { fontSize: '32px', lineHeight: '120%', letterSpacing: '-0.01em' },
-            heading4: { fontSize: '24px', lineHeight: '120%', letterSpacing: '0' },
-            body1: { fontSize: '20px', lineHeight: '124%', letterSpacing: '0' },
-            body2: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0' },
-            button: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0.01em' },
-            tag: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0.01em' },
-            caption: { fontSize: '12px', lineHeight: '140%', letterSpacing: '0.04em' }
-        },
-        tablet: {
-            display: { fontSize: '72px', lineHeight: '100%', letterSpacing: '-0.02em' },
-            heading1: { fontSize: '48px', lineHeight: '100%', letterSpacing: '-0.01em' },
-            heading2: { fontSize: '36px', lineHeight: '110%', letterSpacing: '-0.01em' },
-            heading3: { fontSize: '28px', lineHeight: '120%', letterSpacing: '-0.01em' },
-            heading4: { fontSize: '20px', lineHeight: '120%', letterSpacing: '0' },
-            body1: { fontSize: '18px', lineHeight: '124%', letterSpacing: '0' },
-            body2: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0' },
-            button: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
-            tag: { fontSize: '15px', lineHeight: '124%', letterSpacing: '0.01em' },
-            caption: { fontSize: '11px', lineHeight: '140%', letterSpacing: '0.04em' }
-        },
-        mobile: {
-            display: { fontSize: '48px', lineHeight: '100%', letterSpacing: '-0.02em' },
-            heading1: { fontSize: '36px', lineHeight: '100%', letterSpacing: '-0.01em' },
-            heading2: { fontSize: '28px', lineHeight: '110%', letterSpacing: '-0.01em' },
-            heading3: { fontSize: '24px', lineHeight: '120%', letterSpacing: '-0.01em' },
-            heading4: { fontSize: '18px', lineHeight: '120%', letterSpacing: '0' },
-            body1: { fontSize: '16px', lineHeight: '124%', letterSpacing: '0' },
-            body2: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0' },
-            button: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' },
-            tag: { fontSize: '14px', lineHeight: '124%', letterSpacing: '0.01em' },
-            caption: { fontSize: '10px', lineHeight: '140%', letterSpacing: '0.04em' }
-        }
-    };
-    
-    const specs = styleSpecs[currentDevice] || styleSpecs.desktop;
-    
-    // Use primary and secondary font names directly
-    let displayFont = primaryFontName || '';
-    let headingFont = primaryFontName || '';
-    let bodyFont = secondaryFontName || primaryFontName || '';
-    
-    // Store uppercase state per section
-    if (!previewArea.uppercaseStates) {
-        previewArea.uppercaseStates = {
-            display: false,
-            heading: false,
-            body: false,
-            button: false,
-            tag: false,
-            caption: false
-        };
-    }
-    
+
+    const showcase = typographyData.showcase || {};
+    const fontName = showcase.fontName || primaryFontName || 'Sans-Serif';
+    const description = showcase.description || '';
+    const weights = showcase.weights || [
+        { name: 'Light', weight: 300, style: 'normal' },
+        { name: 'Regular', weight: 400, style: 'normal' },
+        { name: 'Bold', weight: 700, style: 'normal' }
+    ];
+    const hierarchy = showcase.hierarchy || [
+        { role: 'HEADER', weight: 700, style: 'normal',
+          sizes: { desktop: '60px', tablet: '48px', mobile: '36px' },
+          lineHeight: '110%', letterSpacing: '-0.01em',
+          sample: 'The Quick Brown Fox Jumps Over The Lazy Dog' },
+        { role: 'BODY TEXT', weight: 300, style: 'normal',
+          sizes: { desktop: '16px', tablet: '15px', mobile: '14px' },
+          lineHeight: '155%', letterSpacing: '0',
+          sample: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' }
+    ];
+
+    const device = currentDevice || 'desktop';
+
+    // Full character set for showcase
+    const charSet = 'Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz';
+    const figures = '0 1 2 3 4 5 6 7 8 9  !  ?  &';
+
+    // Build weight rows HTML
+    const weightRowsHTML = weights.map((w, i) => `
+        <div class="typo-weight-row" style="--row-bg: ${i % 2 === 0 ? '#1A1A1A' : '#111'}">
+            <div class="typo-weight-label">
+                <span class="typo-weight-fontname">${fontName.toUpperCase()}</span>
+                <span class="typo-weight-name">${w.name}</span>
+            </div>
+            <div class="typo-weight-specimen" style="font-family:'${fontName}',sans-serif;font-weight:${w.weight};font-style:${w.style};">
+                AaBbCcDd
+            </div>
+        </div>
+    `).join('');
+
+    // Build hierarchy table rows HTML
+    const hierarchyRowsHTML = hierarchy.map((h, i) => {
+        const fontSize = h.sizes?.[device] || h.sizes?.desktop || '16px';
+        const specs = `${fontName}, ${fontSize}, ${h.lineHeight}`;
+        return `
+        <div class="typo-hierarchy-row" data-row="${i}">
+            <div class="typo-hier-role">${h.role}</div>
+            <div class="typo-hier-specs">${specs}</div>
+            <div class="typo-hier-sample"
+                 contenteditable="true"
+                 spellcheck="false"
+                 data-placeholder="${h.sample}"
+                 style="font-family:'${fontName}',sans-serif;font-weight:${h.weight};font-style:${h.style};font-size:${fontSize};line-height:${h.lineHeight};letter-spacing:${h.letterSpacing};"
+            >${h.sample}</div>
+        </div>`;
+    }).join('');
+
     previewArea.innerHTML = `
-        <!-- Display Section -->
-        <div class="preview-section" data-section="display">
-            <div class="preview-section-header">
-                <h4 class="preview-section-title">Display</h4>
-                <div class="preview-section-specs">
-                    <div class="preview-section-spec">
-                        <span>Letter Spacing:</span>
-                        <span>${specs.display.letterSpacing}</span>
-                    </div>
-                    <div class="preview-section-spec">
-                        <span>Line Height:</span>
-                        <span>${specs.display.lineHeight}</span>
-                    </div>
-                </div>
-                <a href="#" class="uppercase-toggle-link" data-section="display" onclick="toggleSectionUppercase('display'); return false;">Uppercase</a>
+        <!-- Font Showcase Panel -->
+        <div class="typo-showcase">
+            <div class="typo-showcase-meta">
+                <span class="typo-showcase-fontname">${fontName.toUpperCase()}</span>
+                ${description ? `<p class="typo-showcase-desc">${description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').split('\n\n')[0]}</p>` : ''}
             </div>
-            <p class="preview-text preview-display" style="font-family: '${displayFont || 'inherit'}' !important; font-size: ${specs.display.fontSize} !important; line-height: ${specs.display.lineHeight} !important; letter-spacing: ${specs.display.letterSpacing} !important; ${previewArea.uppercaseStates.display ? 'text-transform: uppercase;' : ''}">
-                The Quick Brown Fox
-            </p>
-        </div>
-        
-        <!-- Heading Section -->
-        <div class="preview-section" data-section="heading">
-            <div class="preview-section-header">
-                <h4 class="preview-section-title">Heading</h4>
-                <div class="preview-section-specs">
-                    <div class="preview-section-spec">
-                        <span>Letter Spacing:</span>
-                        <span>${specs.heading1.letterSpacing}</span>
-                    </div>
-                    <div class="preview-section-spec">
-                        <span>Line Height:</span>
-                        <span>${specs.heading1.lineHeight}</span>
-                    </div>
-                </div>
-                <a href="#" class="uppercase-toggle-link" data-section="heading" onclick="toggleSectionUppercase('heading'); return false;">Uppercase</a>
-            </div>
-            <h1 class="preview-text preview-heading" style="font-family: '${headingFont || 'inherit'}' !important; font-size: ${specs.heading1.fontSize} !important; line-height: ${specs.heading1.lineHeight} !important; letter-spacing: ${specs.heading1.letterSpacing} !important; ${previewArea.uppercaseStates.heading ? 'text-transform: uppercase;' : ''}">
-                The Quick Brown Fox Jumps Over The Lazy Dog
-            </h1>
-        </div>
-        
-        <!-- Body Section -->
-        <div class="preview-section" data-section="body">
-            <div class="preview-section-header">
-                <h4 class="preview-section-title">Body</h4>
-                <div class="preview-section-specs">
-                    <div class="preview-section-spec">
-                        <span>Letter Spacing:</span>
-                        <span>${specs.body1.letterSpacing}</span>
-                    </div>
-                    <div class="preview-section-spec">
-                        <span>Line Height:</span>
-                        <span>${specs.body1.lineHeight}</span>
-                    </div>
-                </div>
-                <a href="#" class="uppercase-toggle-link" data-section="body" onclick="toggleSectionUppercase('body'); return false;">Uppercase</a>
-            </div>
-            <div class="preview-body-columns">
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
-                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                </p>
-                <p class="preview-text preview-body" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.body1.fontSize} !important; line-height: ${specs.body1.lineHeight} !important; letter-spacing: ${specs.body1.letterSpacing} !important; ${previewArea.uppercaseStates.body ? 'text-transform: uppercase;' : ''}">
-                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                </p>
+            <div class="typo-showcase-specimen">
+                <div class="typo-showcase-aa" style="font-family:'${fontName}',sans-serif;">Aa</div>
+                <div class="typo-showcase-charset" style="font-family:'${fontName}',sans-serif;">${charSet}</div>
+                <div class="typo-showcase-figures" style="font-family:'${fontName}',sans-serif;">${figures}</div>
             </div>
         </div>
-        
-        <!-- Button Section -->
-        <div class="preview-section" data-section="button">
-            <div class="preview-section-header">
-                <h4 class="preview-section-title">Button</h4>
-                <div class="preview-section-specs">
-                    <div class="preview-section-spec">
-                        <span>Letter Spacing:</span>
-                        <span>${specs.button.letterSpacing}</span>
-                    </div>
-                    <div class="preview-section-spec">
-                        <span>Line Height:</span>
-                        <span>${specs.button.lineHeight}</span>
-                    </div>
-                </div>
-                <a href="#" class="uppercase-toggle-link" data-section="button" onclick="toggleSectionUppercase('button'); return false;">Uppercase</a>
-            </div>
-            <div class="preview-button" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.button.fontSize} !important; line-height: ${specs.button.lineHeight} !important; letter-spacing: ${specs.button.letterSpacing} !important; ${previewArea.uppercaseStates.button ? 'text-transform: uppercase;' : ''}">
-                Button Text
-            </div>
+
+        <!-- Font Weight Rows -->
+        <div class="typo-weights">
+            ${weightRowsHTML}
         </div>
-        
-        <!-- Tag Section -->
-        <div class="preview-section" data-section="tag">
-            <div class="preview-section-header">
-                <h4 class="preview-section-title">Tag</h4>
-                <div class="preview-section-specs">
-                    <div class="preview-section-spec">
-                        <span>Letter Spacing:</span>
-                        <span>${specs.tag.letterSpacing}</span>
-                    </div>
-                    <div class="preview-section-spec">
-                        <span>Line Height:</span>
-                        <span>${specs.tag.lineHeight}</span>
-                    </div>
-                </div>
-                <a href="#" class="uppercase-toggle-link" data-section="tag" onclick="toggleSectionUppercase('tag'); return false;">Uppercase</a>
+
+        <!-- Typography Hierarchy Table -->
+        <div class="typo-hierarchy">
+            <div class="typo-hierarchy-header">
+                <span>Style</span>
+                <span>Specs</span>
+                <span>Example — click to type</span>
             </div>
-            <div>
-                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${previewArea.uppercaseStates.tag ? 'text-transform: uppercase;' : ''}">
-                    Cardboard Box
-                </span>
-                <span class="preview-tag" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.tag.fontSize} !important; line-height: ${specs.tag.lineHeight} !important; letter-spacing: ${specs.tag.letterSpacing} !important; ${previewArea.uppercaseStates.tag ? 'text-transform: uppercase;' : ''}">
-                    Rolex Booklet
-                </span>
-            </div>
-        </div>
-        
-        <!-- Caption Section -->
-        <div class="preview-section" data-section="caption">
-            <div class="preview-section-header">
-                <h4 class="preview-section-title">Caption</h4>
-                <div class="preview-section-specs">
-                    <div class="preview-section-spec">
-                        <span>Letter Spacing:</span>
-                        <span>${specs.caption.letterSpacing}</span>
-                    </div>
-                    <div class="preview-section-spec">
-                        <span>Line Height:</span>
-                        <span>${specs.caption.lineHeight}</span>
-                    </div>
-                </div>
-                <a href="#" class="uppercase-toggle-link" data-section="caption" onclick="toggleSectionUppercase('caption'); return false;">Uppercase</a>
-            </div>
-            <p class="preview-text preview-caption" style="font-family: '${bodyFont || 'inherit'}' !important; font-size: ${specs.caption.fontSize} !important; line-height: ${specs.caption.lineHeight} !important; letter-spacing: ${specs.caption.letterSpacing} !important; ${previewArea.uppercaseStates.caption ? 'text-transform: uppercase;' : ''}">
-                This is a caption text example showing how small text appears.
-            </p>
+            ${hierarchyRowsHTML}
         </div>
     `;
-    
-    previewArea.setAttribute('data-device', currentDevice);
-    
-    // Update toggle link states
-    document.querySelectorAll('.uppercase-toggle-link').forEach(link => {
-        const section = link.getAttribute('data-section');
-        if (previewArea.uppercaseStates[section]) {
-            link.classList.add('active');
-            link.textContent = 'Uppercase (ON)';
-        } else {
-            link.classList.remove('active');
-            link.textContent = 'Uppercase';
-        }
-    });
+
+    previewArea.setAttribute('data-device', device);
 }
 
 // Toggle uppercase for a specific section
@@ -1979,7 +1841,7 @@ function loadGoogleFontIfNeeded(fontFamily) {
     // Create a new link element for the Google Font
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;500;600;700&display=swap`;
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,700&display=swap`;
     document.head.appendChild(link);
     console.log(`Dynamically loaded Google Font: ${fontFamily}`);
 }

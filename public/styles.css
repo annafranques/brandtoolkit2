@@ -1173,10 +1173,10 @@ body {
 /* ─── Typography Preview ──────────────────────────────────── */
 .typography-preview-container {
     margin-bottom: 3rem;
-    background: #fff;
-    border: 1px solid rgba(0,0,0,0.07);
+    background: transparent;
+    border: none;
     border-radius: 0;
-    padding: 1rem;
+    padding: 0;
 }
 
 #typography-content .typography-item { padding: 1.5rem 1rem; }
@@ -1184,12 +1184,12 @@ body {
 
 .preview-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid rgba(0,0,0,0.07);
-    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 0;
+    border-bottom: none;
+    margin-top: 0;
 }
 
 .device-switcher { display: flex; gap: 0.5rem; }
@@ -1293,6 +1293,223 @@ body {
 
 .typography-preview-area[data-device="tablet"] .preview-body-columns { grid-template-columns: repeat(2, 1fr); }
 .typography-preview-area[data-device="mobile"] .preview-body-columns { grid-template-columns: 1fr; }
+
+/* ─── Typography Showcase (new editorial layout) ──────────── */
+
+/* Thin border wrap around the whole preview area */
+.typography-preview-area {
+    padding: 0 !important;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* ── Font Showcase Panel ── */
+.typo-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    background: #1A1A1A;
+    color: #F5F1EC;
+    min-height: 260px;
+}
+
+.typo-showcase-meta {
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.typo-showcase-fontname {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.5625rem;
+    letter-spacing: 0.2em;
+    color: rgba(245,241,236,0.45);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: auto;
+}
+
+.typo-showcase-desc {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.75rem;
+    line-height: 1.65;
+    color: rgba(245,241,236,0.55);
+    margin: 0;
+    margin-top: 1rem;
+    max-width: 30ch;
+}
+
+.typo-showcase-specimen {
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.75rem;
+    overflow: hidden;
+}
+
+.typo-showcase-aa {
+    font-size: clamp(80px, 10vw, 140px);
+    line-height: 1;
+    color: #F5F1EC;
+    letter-spacing: -0.03em;
+    font-weight: 400;
+}
+
+.typo-showcase-charset {
+    font-size: clamp(11px, 1.1vw, 14px);
+    line-height: 1.8;
+    color: rgba(245,241,236,0.55);
+    letter-spacing: 0.04em;
+    font-weight: 300;
+    word-spacing: 0.5em;
+}
+
+.typo-showcase-figures {
+    font-size: clamp(11px, 1.1vw, 14px);
+    line-height: 1.8;
+    color: rgba(245,241,236,0.35);
+    letter-spacing: 0.12em;
+    font-weight: 300;
+    word-spacing: 0.5em;
+}
+
+/* ── Font Weight Rows ── */
+.typo-weights {
+    display: flex;
+    flex-direction: column;
+}
+
+.typo-weight-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    align-items: center;
+    background: var(--row-bg, #1A1A1A);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 1.5rem 2rem 1.5rem 2.5rem;
+    gap: 2rem;
+    min-height: 100px;
+    overflow: hidden;
+}
+
+.typo-weight-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.typo-weight-fontname {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.22em;
+    color: rgba(245,241,236,0.3);
+    text-transform: uppercase;
+}
+
+.typo-weight-name {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.625rem;
+    letter-spacing: 0.15em;
+    color: rgba(245,241,236,0.65);
+    text-transform: uppercase;
+}
+
+.typo-weight-specimen {
+    font-size: clamp(36px, 5.5vw, 72px);
+    line-height: 1;
+    color: #F5F1EC;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ── Hierarchy Table ── */
+.typo-hierarchy {
+    border-top: 1px solid rgba(0,0,0,0.08);
+    background: #fff;
+}
+
+.typo-hierarchy-header {
+    display: grid;
+    grid-template-columns: 140px 220px 1fr;
+    padding: 0.75rem 2.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.28);
+    gap: 2rem;
+}
+
+.typo-hierarchy-row {
+    display: grid;
+    grid-template-columns: 140px 220px 1fr;
+    align-items: baseline;
+    padding: 1.5rem 2.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    gap: 2rem;
+    transition: background 0.15s;
+}
+.typo-hierarchy-row:last-child { border-bottom: none; }
+.typo-hierarchy-row:hover { background: rgba(0,0,0,0.015); }
+
+.typo-hier-role {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.38);
+    padding-top: 0.2em;
+    white-space: nowrap;
+}
+
+.typo-hier-specs {
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.625rem;
+    letter-spacing: 0.04em;
+    color: rgba(0,0,0,0.4);
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.typo-hier-sample {
+    color: #1A1A1A;
+    outline: none;
+    border: none;
+    cursor: text;
+    min-height: 1em;
+    word-break: break-word;
+    transition: opacity 0.15s;
+    -webkit-user-modify: read-write;
+}
+.typo-hier-sample:focus {
+    opacity: 0.85;
+}
+.typo-hier-sample:empty::before {
+    content: attr(data-placeholder);
+    color: rgba(0,0,0,0.25);
+    pointer-events: none;
+}
+
+/* Responsive adjustments for showcase */
+@media (max-width: 900px) {
+    .typo-showcase { grid-template-columns: 1fr; }
+    .typo-showcase-meta { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .typo-hierarchy-header,
+    .typo-hierarchy-row { grid-template-columns: 100px 1fr; padding: 1rem 1.25rem; gap: 1rem; }
+    .typo-hierarchy-header span:nth-child(2),
+    .typo-hier-specs { display: none; }
+    .typo-weight-row { grid-template-columns: 140px 1fr; padding: 1.25rem; }
+    .typo-weight-specimen { font-size: clamp(28px, 8vw, 52px); }
+}
+
+@media (max-width: 600px) {
+    .typo-showcase-aa { font-size: clamp(60px, 18vw, 100px); }
+    .typo-hierarchy-header,
+    .typo-hierarchy-row { grid-template-columns: 80px 1fr; }
+    .typo-weight-row { grid-template-columns: 100px 1fr; }
+}
 
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1200px) {
