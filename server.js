@@ -380,6 +380,41 @@ app.get('/api/typography', async (req, res) => {
   }
 });
 
+// Dynamic index.html with OG meta tags injected
+app.get('/', async (req, res) => {
+  try {
+    const content = await getContent();
+    const brandName = content.projectName || content.frameRebel?.title || 'Brand Toolkit';
+    const tagline = content.tagline || content.frameRebel?.tagline || 'Brand Guidelines';
+    const siteUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Use cover image if it's a URL (not base64 — too large for OG)
+    let ogImage = '';
+    const coverImg = content.frameRebel?.image || '';
+    if (coverImg && !coverImg.startsWith('data:')) {
+      ogImage = coverImg.startsWith('http') ? coverImg : `${siteUrl}${coverImg}`;
+    }
+
+    const ogTags = `
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${siteUrl}">
+    <meta property="og:title" content="${brandName} — Brand Guidelines">
+    <meta property="og:description" content="${tagline}">
+    ${ogImage ? `<meta property="og:image" content="${ogImage}">` : ''}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${brandName} — Brand Guidelines">
+    <meta name="twitter:description" content="${tagline}">
+    ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ''}
+    <meta name="description" content="${tagline}">`;
+
+    let html = fsSync.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+    html = html.replace('</head>', `${ogTags}\n</head>`);
+    res.send(html);
+  } catch (err) {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+});
+
 // Serve static files from public directory (after API routes to ensure they take precedence)
 // Add cache control headers to prevent stale JavaScript files
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -1821,6 +1856,90 @@ app.post('/api/figma/sync/:fileKey', async (req, res) => {
   } catch (error) {
     console.error('Error syncing from Figma:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── Figma Frame Import ──────────────────────────────────────────────────────
+
+// Helper: make a Figma API request with a specific token
+function figmaRequestWithToken(endpoint, token) {
+  return new Promise((resolve, reject) => {
+    const url = `${FIGMA_API_BASE}${endpoint}`;
+    const options = { headers: { 'X-Figma-Token': token } };
+    https.get(url, options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (res.statusCode === 200) resolve(json);
+          else reject(new Error(`Figma API error: ${res.statusCode} - ${json.err || data}`));
+        } catch (e) { reject(new Error(`Failed to parse response: ${e.message}`)); }
+      });
+    }).on('error', reject);
+  });
+}
+
+// List all top-level frames in a Figma file
+app.post('/api/figma/list-frames', async (req, res) => {
+  try {
+    const { fileKey, token } = req.body;
+    if (!fileKey) return res.status(400).json({ error: 'fileKey required' });
+    const figmaToken = token || FIGMA_TOKEN;
+    if (!figmaToken) return res.status(400).json({ error: 'Figma token required. Set FIGMA_TOKEN env var or pass token in request.' });
+
+    const file = await figmaRequestWithToken(`/files/${fileKey}?depth=2`, figmaToken);
+    const frames = [];
+    (file.document?.children || []).forEach(page => {
+      (page.children || []).forEach(node => {
+        if (node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
+          frames.push({ id: node.id, name: node.name, page: page.name });
+        }
+      });
+    });
+    res.json({ frames, fileName: file.name });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Export specific Figma frames as base64 PNG images
+app.post('/api/figma/export-frames', async (req, res) => {
+  try {
+    const { fileKey, frameIds, token, scale = 2 } = req.body;
+    if (!fileKey || !frameIds?.length) return res.status(400).json({ error: 'fileKey and frameIds required' });
+    const figmaToken = token || FIGMA_TOKEN;
+    if (!figmaToken) return res.status(400).json({ error: 'Figma token required' });
+
+    // Get image export URLs from Figma
+    const ids = frameIds.join(',');
+    const imageData = await figmaRequestWithToken(`/images/${fileKey}?ids=${ids}&format=png&scale=${scale}`, figmaToken);
+
+    if (imageData.err) return res.status(500).json({ error: imageData.err });
+
+    // Download each image and convert to base64
+    const result = {};
+    await Promise.all(
+      Object.entries(imageData.images || {}).map(([nodeId, imageUrl]) =>
+        new Promise((resolve) => {
+          if (!imageUrl) { result[nodeId] = null; return resolve(); }
+          const urlObj = new URL(imageUrl);
+          const proto = urlObj.protocol === 'https:' ? require('https') : require('http');
+          proto.get(imageUrl, (imgRes) => {
+            const chunks = [];
+            imgRes.on('data', c => chunks.push(c));
+            imgRes.on('end', () => {
+              result[nodeId] = `data:image/png;base64,${Buffer.concat(chunks).toString('base64')}`;
+              resolve();
+            });
+            imgRes.on('error', () => { result[nodeId] = null; resolve(); });
+          }).on('error', () => { result[nodeId] = null; resolve(); });
+        })
+      )
+    );
+    res.json({ images: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

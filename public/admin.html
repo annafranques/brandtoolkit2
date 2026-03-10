@@ -450,6 +450,26 @@
                     </div>
                     
                     <div id="figma-sync-results" style="margin-top: 2rem;"></div>
+
+                    <hr style="margin: 3rem 0; border: none; border-top: 1px solid rgba(0,0,0,0.08);">
+
+                    <h3 style="margin-bottom: 0.5rem;">Import Frames as Images</h3>
+                    <p class="section-description" style="margin-bottom: 1.5rem;">
+                        Paste your Figma file URL and a Personal Access Token. Frames whose names match your section names will be imported automatically as section images.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="figma-file-url">Figma File URL</label>
+                        <input type="text" id="figma-file-url" class="form-control" placeholder="https://www.figma.com/file/XXXXX/My-Brand">
+                    </div>
+                    <div class="form-group">
+                        <label for="figma-access-token">Personal Access Token</label>
+                        <input type="password" id="figma-access-token" class="form-control" placeholder="figd_XXXXXXXX (leave blank to use server token)">
+                        <small>Generate in Figma → Settings → Personal access tokens. Only stored in memory during this session.</small>
+                    </div>
+                    <button class="btn btn-secondary" onclick="loadFigmaFrames()" id="figma-load-btn">Load Frames</button>
+
+                    <div id="figma-frames-list" style="margin-top: 2rem;"></div>
                 </div>
                 
                 <!-- Assets Section -->

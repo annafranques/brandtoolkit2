@@ -1677,3 +1677,26 @@ video { object-fit: cover !important; }
     .subsection:not(:has(.usage-tabs)) { grid-template-columns: 100%; }
     .subsection-title { margin-bottom: 0.25rem; }
 }
+
+/* ─── Copy toast ──────────────────────────────────────────── */
+#copy-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(1rem);
+    background: #1A1A1A;
+    color: #fff;
+    font-family: 'Favorit', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    padding: 0.6rem 1.25rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 9999;
+    white-space: nowrap;
+}
+#copy-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}

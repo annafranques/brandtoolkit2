@@ -2392,11 +2392,32 @@ window.copyColorValue = copyColorValue;
 // Copy to clipboard function - Attached to window for global access
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        // Show feedback (you can add a toast notification here)
-        console.log('Copied to clipboard:', text);
+        showCopyToast(text);
     }).catch(err => {
-        console.error('Failed to copy:', err);
+        // Fallback for older browsers
+        const el = document.createElement('textarea');
+        el.value = text;
+        el.style.position = 'fixed';
+        el.style.opacity = '0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showCopyToast(text);
     });
+}
+
+function showCopyToast(value) {
+    let toast = document.getElementById('copy-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'copy-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = `Copied ${value}`;
+    toast.classList.add('visible');
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.classList.remove('visible'), 2000);
 }
 window.copyToClipboard = copyToClipboard;
 

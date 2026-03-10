@@ -768,3 +768,35 @@ input[type="file"].form-control {
     .admin-section-header h2 { font-size: 2.5rem; }
     .preview-body-columns { grid-template-columns: 1fr; }
 }
+
+/* ─── Figma Frame Import ──────────────────────────────────── */
+.figma-frames-grid {
+    border-top: 1px solid var(--border);
+}
+.figma-frame-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8125rem;
+}
+.figma-frame-check {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+}
+.figma-frame-name {
+    font-weight: 500;
+}
+.figma-frame-page {
+    color: var(--muted);
+    font-size: 0.75rem;
+}
+.figma-frame-match {
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+}

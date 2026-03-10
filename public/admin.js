@@ -5347,3 +5347,160 @@ function initScrollAnimations() {
     });
 }
 
+
+// ─── Figma Frame Import ───────────────────────────────────────────────────────
+
+// Map of section IDs to possible Figma frame name matches
+const SECTION_NAME_MAP = {
+  'frame-rebel': ['cover', 'hero', 'brand', 'intro', 'identity', 'overview'],
+  'logotype':    ['logo', 'logotype', 'logomark', 'symbol', 'wordmark'],
+  'typography':  ['typography', 'type', 'fonts', 'typeface'],
+  'color':       ['color', 'colour', 'colors', 'colours', 'palette', 'brand colors'],
+  'photography': ['photography', 'photo', 'photos', 'images', 'imagery'],
+  'stickers':    ['stickers', 'sticker', 'illustrations', 'icons'],
+  'applications':['applications', 'mockups', 'usage', 'in use'],
+};
+
+function extractFigmaFileKey(input) {
+  const match = input.match(/figma\.com\/(?:file|design)\/([a-zA-Z0-9]+)/);
+  return match ? match[1] : input.trim();
+}
+
+function normalizeName(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function matchSectionId(frameName) {
+  const norm = normalizeName(frameName);
+  for (const [sectionId, aliases] of Object.entries(SECTION_NAME_MAP)) {
+    if (normalizeName(sectionId) === norm) return sectionId;
+    if (aliases.some(a => normalizeName(a) === norm)) return sectionId;
+  }
+  // Partial match fallback
+  for (const [sectionId, aliases] of Object.entries(SECTION_NAME_MAP)) {
+    if (norm.includes(normalizeName(sectionId)) || normalizeName(sectionId).includes(norm)) return sectionId;
+    if (aliases.some(a => norm.includes(normalizeName(a)) || normalizeName(a).includes(norm))) return sectionId;
+  }
+  return null;
+}
+
+async function loadFigmaFrames() {
+  const urlInput = document.getElementById('figma-file-url').value.trim();
+  const token = document.getElementById('figma-access-token').value.trim();
+  const listDiv = document.getElementById('figma-frames-list');
+
+  if (!urlInput) {
+    listDiv.innerHTML = '<p style="color:red">Please enter a Figma file URL.</p>';
+    return;
+  }
+  const fileKey = extractFigmaFileKey(urlInput);
+  const btn = document.getElementById('figma-load-btn');
+  btn.textContent = 'Loading…';
+  btn.disabled = true;
+  listDiv.innerHTML = '';
+
+  try {
+    const res = await fetch('/api/figma/list-frames', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileKey, token })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    if (!data.frames.length) {
+      listDiv.innerHTML = '<p>No top-level frames found in this file.</p>';
+      return;
+    }
+
+    // Render frame list with section matching
+    let html = `<p style="margin-bottom:1rem;opacity:0.6;font-size:0.8125rem">${data.frames.length} frames found in <strong>${data.fileName}</strong></p>`;
+    html += `<div class="figma-frames-grid">`;
+    data.frames.forEach(frame => {
+      const matched = matchSectionId(frame.name);
+      html += `
+        <div class="figma-frame-row" data-frame-id="${frame.id}" data-frame-name="${frame.name}">
+          <label class="figma-frame-check">
+            <input type="checkbox" class="figma-frame-checkbox" value="${frame.id}" data-name="${frame.name}" ${matched ? 'checked' : ''}>
+            <span class="figma-frame-name">${frame.name}</span>
+          </label>
+          <span class="figma-frame-page">${frame.page}</span>
+          <span class="figma-frame-match">${matched ? `→ ${matched}` : '<span style="opacity:0.35">no match</span>'}</span>
+        </div>`;
+    });
+    html += `</div>`;
+    html += `<div style="margin-top:1.5rem;display:flex;gap:1rem;align-items:center">
+      <button class="btn btn-primary" onclick="importFigmaFrames('${fileKey}', '${token}')">Import Selected</button>
+      <span id="figma-import-status" style="font-size:0.8125rem;opacity:0.6"></span>
+    </div>`;
+    listDiv.innerHTML = html;
+  } catch (err) {
+    listDiv.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+  } finally {
+    btn.textContent = 'Load Frames';
+    btn.disabled = false;
+  }
+}
+
+async function importFigmaFrames(fileKey, token) {
+  const checkboxes = document.querySelectorAll('.figma-frame-checkbox:checked');
+  const statusEl = document.getElementById('figma-import-status');
+  if (!checkboxes.length) { statusEl.textContent = 'No frames selected.'; return; }
+
+  const frameIds = Array.from(checkboxes).map(cb => cb.value);
+  const frameNames = {};
+  checkboxes.forEach(cb => { frameNames[cb.value] = cb.dataset.name; });
+
+  statusEl.textContent = `Exporting ${frameIds.length} frame(s)…`;
+  document.querySelector('[onclick^="importFigmaFrames"]').disabled = true;
+
+  try {
+    const res = await fetch('/api/figma/export-frames', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileKey, frameIds, token, scale: 2 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // Load current content and update matching sections
+    const contentRes = await fetch('/api/content');
+    const content = await contentRes.json();
+    let imported = 0;
+
+    for (const [nodeId, base64] of Object.entries(data.images || {})) {
+      if (!base64) continue;
+      const frameName = frameNames[nodeId];
+      const sectionId = matchSectionId(frameName);
+
+      if (sectionId === 'frame-rebel') {
+        if (!content.frameRebel) content.frameRebel = {};
+        content.frameRebel.image = base64;
+        imported++;
+      } else if (sectionId && content[sectionId] !== undefined) {
+        if (typeof content[sectionId] === 'object') {
+          content[sectionId].image = base64;
+        }
+        imported++;
+      } else if (sectionId) {
+        // Section exists as key — create if needed
+        content[sectionId] = { image: base64 };
+        imported++;
+      }
+    }
+
+    // Save content
+    await fetch('/api/content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(content)
+    });
+
+    statusEl.textContent = `✓ ${imported} image(s) imported successfully. Reload the page to see changes.`;
+  } catch (err) {
+    statusEl.textContent = `Error: ${err.message}`;
+  } finally {
+    const btn = document.querySelector('[onclick^="importFigmaFrames"]');
+    if (btn) btn.disabled = false;
+  }
+}
