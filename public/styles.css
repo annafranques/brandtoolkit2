@@ -1306,9 +1306,10 @@ body {
 .typo-showcase {
     display: grid;
     grid-template-columns: 1fr 1.6fr;
-    background: #1A1A1A;
-    color: #F5F1EC;
-    min-height: 260px;
+    background: #fff;
+    color: #1A1A1A;
+    min-height: 240px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
 }
 
 .typo-showcase-meta {
@@ -1316,14 +1317,14 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border-right: 1px solid rgba(255,255,255,0.08);
+    border-right: 1px solid rgba(0,0,0,0.07);
 }
 
 .typo-showcase-fontname {
     font-family: 'Favorit', sans-serif;
     font-size: 0.5625rem;
     letter-spacing: 0.2em;
-    color: rgba(245,241,236,0.45);
+    color: rgba(0,0,0,0.35);
     text-transform: uppercase;
     display: block;
     margin-bottom: auto;
@@ -1333,9 +1334,9 @@ body {
     font-family: 'Favorit', sans-serif;
     font-size: 0.75rem;
     line-height: 1.65;
-    color: rgba(245,241,236,0.55);
+    color: rgba(0,0,0,0.45);
     margin: 0;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     max-width: 30ch;
 }
 
@@ -1351,7 +1352,7 @@ body {
 .typo-showcase-aa {
     font-size: clamp(80px, 10vw, 140px);
     line-height: 1;
-    color: #F5F1EC;
+    color: #1A1A1A;
     letter-spacing: -0.03em;
     font-weight: 400;
 }
@@ -1359,7 +1360,7 @@ body {
 .typo-showcase-charset {
     font-size: clamp(11px, 1.1vw, 14px);
     line-height: 1.8;
-    color: rgba(245,241,236,0.55);
+    color: rgba(0,0,0,0.35);
     letter-spacing: 0.04em;
     font-weight: 300;
     word-spacing: 0.5em;
@@ -1368,7 +1369,7 @@ body {
 .typo-showcase-figures {
     font-size: clamp(11px, 1.1vw, 14px);
     line-height: 1.8;
-    color: rgba(245,241,236,0.35);
+    color: rgba(0,0,0,0.2);
     letter-spacing: 0.12em;
     font-weight: 300;
     word-spacing: 0.5em;
@@ -1384,25 +1385,28 @@ body {
     display: grid;
     grid-template-columns: 220px 1fr;
     align-items: center;
-    background: var(--row-bg, #1A1A1A);
-    border-top: 1px solid rgba(255,255,255,0.06);
+    background: #fff;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
     padding: 1.5rem 2rem 1.5rem 2.5rem;
     gap: 2rem;
-    min-height: 100px;
+    min-height: 90px;
     overflow: hidden;
+    transition: background 0.15s;
 }
+.typo-weight-row:last-child { border-bottom: none; }
+.typo-weight-row:hover { background: rgba(0,0,0,0.015); }
 
 .typo-weight-label {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.35rem;
 }
 
 .typo-weight-fontname {
     font-family: 'Favorit', sans-serif;
     font-size: 0.5rem;
     letter-spacing: 0.22em;
-    color: rgba(245,241,236,0.3);
+    color: rgba(0,0,0,0.25);
     text-transform: uppercase;
 }
 
@@ -1410,14 +1414,14 @@ body {
     font-family: 'Favorit', sans-serif;
     font-size: 0.625rem;
     letter-spacing: 0.15em;
-    color: rgba(245,241,236,0.65);
+    color: rgba(0,0,0,0.45);
     text-transform: uppercase;
 }
 
 .typo-weight-specimen {
-    font-size: clamp(36px, 5.5vw, 72px);
+    font-size: clamp(28px, 4vw, 56px);
     line-height: 1;
-    color: #F5F1EC;
+    color: #1A1A1A;
     letter-spacing: -0.02em;
     white-space: nowrap;
     overflow: hidden;
@@ -1425,7 +1429,7 @@ body {
 
 /* ── Hierarchy Table ── */
 .typo-hierarchy {
-    border-top: 1px solid rgba(0,0,0,0.08);
+    border-top: 1px solid rgba(0,0,0,0.07);
     background: #fff;
 }
 
@@ -1433,7 +1437,7 @@ body {
     display: grid;
     grid-template-columns: 140px 220px 1fr;
     padding: 0.75rem 2.5rem;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
     font-family: 'Favorit', sans-serif;
     font-size: 0.5rem;
     letter-spacing: 0.2em;
@@ -1446,7 +1450,7 @@ body {
     display: grid;
     grid-template-columns: 140px 220px 1fr;
     align-items: baseline;
-    padding: 1.5rem 2.5rem;
+    padding: 1.75rem 2.5rem;
     border-bottom: 1px solid rgba(0,0,0,0.06);
     gap: 2rem;
     transition: background 0.15s;
@@ -1468,7 +1472,7 @@ body {
     font-family: 'Favorit', sans-serif;
     font-size: 0.625rem;
     letter-spacing: 0.04em;
-    color: rgba(0,0,0,0.4);
+    color: rgba(0,0,0,0.35);
     line-height: 1.5;
     white-space: nowrap;
 }
@@ -1483,25 +1487,23 @@ body {
     transition: opacity 0.15s;
     -webkit-user-modify: read-write;
 }
-.typo-hier-sample:focus {
-    opacity: 0.85;
-}
+.typo-hier-sample:focus { opacity: 0.7; }
 .typo-hier-sample:empty::before {
     content: attr(data-placeholder);
-    color: rgba(0,0,0,0.25);
+    color: rgba(0,0,0,0.2);
     pointer-events: none;
 }
 
 /* Responsive adjustments for showcase */
 @media (max-width: 900px) {
     .typo-showcase { grid-template-columns: 1fr; }
-    .typo-showcase-meta { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .typo-showcase-meta { border-right: none; border-bottom: 1px solid rgba(0,0,0,0.07); }
     .typo-hierarchy-header,
     .typo-hierarchy-row { grid-template-columns: 100px 1fr; padding: 1rem 1.25rem; gap: 1rem; }
     .typo-hierarchy-header span:nth-child(2),
     .typo-hier-specs { display: none; }
     .typo-weight-row { grid-template-columns: 140px 1fr; padding: 1.25rem; }
-    .typo-weight-specimen { font-size: clamp(28px, 8vw, 52px); }
+    .typo-weight-specimen { font-size: clamp(24px, 7vw, 44px); }
 }
 
 @media (max-width: 600px) {
