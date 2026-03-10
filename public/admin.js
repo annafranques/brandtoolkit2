@@ -5397,6 +5397,86 @@ const SECTION_OPTIONS = [
   { id: 'applications',label: 'Applications' },
 ];
 
+async function fetchFigmaStyles() {
+  const urlInput = document.getElementById('figma-file-url');
+  const tokenInput = document.getElementById('figma-access-token');
+  const resultsDiv = document.getElementById('figma-styles-results');
+  const btn = document.getElementById('figma-fetch-styles-btn');
+
+  const rawUrl = urlInput?.value?.trim();
+  const token = tokenInput?.value?.trim();
+
+  if (!rawUrl) {
+    resultsDiv.innerHTML = `<p style="color:#c00;">Paste your Figma file URL above first.</p>`;
+    return;
+  }
+
+  const fileKeyMatch = rawUrl.match(/figma\.com\/(?:file|design|slides)\/([a-zA-Z0-9]+)/);
+  const fileKey = fileKeyMatch ? fileKeyMatch[1] : rawUrl.trim();
+
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+  resultsDiv.innerHTML = `<p style="opacity:.5;font-size:.8125rem;">Reading styles from Figma…</p>`;
+
+  try {
+    const res = await fetch('/api/figma/fetch-styles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileKey, token: token || undefined, autoApply: true })
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      resultsDiv.innerHTML = `<p style="color:#c00;">Error: ${data.error || 'Unknown error'}</p>`;
+      return;
+    }
+
+    const { colors = [], typography = [] } = data;
+
+    // Refresh UI
+    if (colors.length > 0) renderColorsList(colors);
+    if (typography.length > 0) {
+      const primary = typography[0]?.fontFamily || '';
+      const primEl = document.getElementById('font-primary');
+      const secEl = document.getElementById('font-secondary');
+      if (primEl) primEl.value = primary;
+      if (secEl) secEl.value = primary;
+    }
+
+    resultsDiv.innerHTML = `
+      <div style="padding:1rem 1.25rem;border:1px solid rgba(0,0,0,0.08);margin-bottom:1rem;">
+        <p style="font-size:.8125rem;margin:0 0 .75rem;opacity:.5;text-transform:uppercase;letter-spacing:.12em;">Imported</p>
+        ${colors.length > 0 ? `
+          <p style="font-size:.875rem;margin:0 0 .5rem;"><strong>${colors.length} colour${colors.length > 1 ? 's' : ''}</strong></p>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;">
+            ${colors.map(c => `
+              <div style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;">
+                <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${c.hex};border:1px solid rgba(0,0,0,0.1);"></span>
+                ${c.name}
+              </div>`).join('')}
+          </div>` : '<p style="font-size:.875rem;opacity:.5;">No colour styles found.</p>'}
+        ${typography.length > 0 ? `
+          <p style="font-size:.875rem;margin:0 0 .5rem;"><strong>${typography.length} text style${typography.length > 1 ? 's' : ''}</strong></p>
+          <div style="display:flex;flex-direction:column;gap:.35rem;">
+            ${typography.map(t => `
+              <div style="font-size:.75rem;opacity:.65;">
+                <strong>${t.name}</strong> — ${t.fontFamily}, ${t.fontSize}px / ${t.lineHeight || '—'}, w${t.fontWeight}
+              </div>`).join('')}
+          </div>` : '<p style="font-size:.875rem;opacity:.5;">No text styles found.</p>'}
+        <p style="font-size:.75rem;margin:.75rem 0 0;color:#2a7a2a;">✓ Applied to brand toolkit</p>
+      </div>`;
+
+    showStatus(`Fetched ${colors.length} colours and ${typography.length} text styles from Figma`, 'success');
+
+  } catch (err) {
+    resultsDiv.innerHTML = `<p style="color:#c00;">Error: ${err.message}</p>`;
+    showStatus('Error fetching Figma styles', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Fetch Colors + Text Styles';
+  }
+}
+
 async function loadFigmaFrames() {
   const urlInput = document.getElementById('figma-file-url').value.trim();
   const token = document.getElementById('figma-access-token').value.trim();

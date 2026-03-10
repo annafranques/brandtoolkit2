@@ -1966,6 +1966,145 @@ function figmaRequestWithToken(endpoint, token) {
   });
 }
 
+// ─── Fetch Local Styles (colors + text) directly from a Figma file ──────────
+app.post('/api/figma/fetch-styles', async (req, res) => {
+  try {
+    const { fileKey, token, autoApply = false } = req.body;
+    if (!fileKey) return res.status(400).json({ error: 'fileKey required' });
+    const figmaToken = token || FIGMA_TOKEN;
+    if (!figmaToken) return res.status(400).json({ error: 'Figma token required' });
+
+    // 1. Get file metadata — styles map lives here
+    const file = await figmaRequestWithToken(`/files/${fileKey}?depth=1`, figmaToken);
+    const stylesMap = file.styles || {};   // { nodeId: { name, styleType, key } }
+    const styleIds = Object.keys(stylesMap);
+
+    if (!styleIds.length) {
+      return res.json({ success: true, colors: [], typography: [], message: 'No local styles found in this file.' });
+    }
+
+    // 2. Fetch the actual style-defining nodes in one request
+    const chunk = styleIds.slice(0, 50).join(',');   // Figma limit: 50 nodes per request
+    const nodesData = await figmaRequestWithToken(
+      `/files/${fileKey}/nodes?ids=${encodeURIComponent(chunk)}`,
+      figmaToken
+    );
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
+    }
+
+    const colors = [];
+    const colorMap = new Map();
+    const typography = [];
+    const typographyMap = new Map();
+
+    Object.entries(nodesData.nodes || {}).forEach(([nodeId, nodeWrapper]) => {
+      const node = nodeWrapper?.document;
+      const meta = stylesMap[nodeId];
+      if (!node || !meta) return;
+
+      if (meta.styleType === 'FILL') {
+        const fill = (node.fills || [])[0];
+        if (fill && fill.type === 'SOLID' && fill.color) {
+          const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
+          if (!colorMap.has(hex)) {
+            colorMap.set(hex, true);
+            colors.push({
+              id: `color-${Date.now()}-${colors.length}`,
+              name: meta.name,
+              hex,
+              type: colors.length === 0 ? 'primary' : 'secondary'
+            });
+          }
+        }
+
+      } else if (meta.styleType === 'TEXT') {
+        const s = node.style || {};
+        if (s.fontFamily) {
+          const key = `${s.fontFamily}-${s.fontWeight || 400}`;
+          if (!typographyMap.has(key)) {
+            typographyMap.set(key, true);
+            const lh = s.lineHeightUnit === 'PERCENT'
+              ? (s.lineHeightPercentFontSize ? Math.round(s.lineHeightPercentFontSize) + '%' : null)
+              : (s.lineHeightPx ? Math.round(s.lineHeightPx) + 'px' : null);
+            typography.push({
+              name: meta.name,
+              fontFamily: s.fontFamily,
+              fontSize: s.fontSize || null,
+              fontWeight: s.fontWeight || 400,
+              fontStyle: (s.italic || s.fontPostScriptName?.toLowerCase().includes('italic')) ? 'italic' : 'normal',
+              lineHeight: lh,
+              letterSpacing: s.letterSpacing || 0,
+              isGoogleFont: isGoogleFont(s.fontFamily)
+            });
+          }
+        }
+      }
+    });
+
+    // 3. Optionally apply to content
+    if (autoApply && (colors.length > 0 || typography.length > 0)) {
+      const content = await getContent();
+
+      if (colors.length > 0) content.colors = colors;
+
+      if (typography.length > 0) {
+        if (!content.typography) content.typography = {};
+        // Pick primary = most common font family
+        const familyCounts = {};
+        typography.forEach(t => { familyCounts[t.fontFamily] = (familyCounts[t.fontFamily] || 0) + 1; });
+        const primary = Object.entries(familyCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || typography[0].fontFamily;
+        content.typography.primary = primary;
+        content.typography.secondary = primary;
+
+        // Build typographyShowcase
+        const fontName = primary;
+        const weights = [...new Map(
+          typography
+            .filter(t => t.fontFamily === primary)
+            .map(t => [`${t.fontWeight}-${t.fontStyle}`, { name: weightName(t.fontWeight, t.fontStyle), weight: t.fontWeight, style: t.fontStyle }])
+        ).values()].slice(0, 6);
+
+        const hierarchy = typography.map(t => ({
+          role: t.name.toUpperCase(),
+          weight: t.fontWeight,
+          style: t.fontStyle || 'normal',
+          sizes: { desktop: `${t.fontSize}px`, tablet: `${Math.round(t.fontSize * 0.85)}px`, mobile: `${Math.round(t.fontSize * 0.7)}px` },
+          lineHeight: t.lineHeight || '120%',
+          letterSpacing: t.letterSpacing ? `${t.letterSpacing}px` : '0',
+          sample: sampleText(t.name)
+        }));
+
+        content.typographyShowcase = { fontName, description: '', weights, hierarchy };
+        await generateTypographyCSSFromPrimarySecondary(content);
+      }
+
+      await saveContent(content);
+    }
+
+    res.json({ success: true, colors, typography, autoApplied: autoApply });
+  } catch (err) {
+    console.error('Error fetching Figma styles:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+function weightName(weight, style) {
+  const names = { 100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black' };
+  const base = names[weight] || `W${weight}`;
+  return style === 'italic' ? base + ' Italic' : base;
+}
+
+function sampleText(styleName) {
+  const name = styleName.toLowerCase();
+  if (name.includes('heading') || name.includes('header') || name.includes('display')) return 'The Quick Brown Fox Jumps Over The Lazy Dog';
+  if (name.includes('subtitle') || name.includes('sub')) return 'A secondary heading or supporting line of text';
+  if (name.includes('tag') || name.includes('label') || name.includes('caption')) return 'Category Label';
+  if (name.includes('body') || name.includes('text') || name.includes('paragraph')) return 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.';
+  return 'The quick brown fox jumps over the lazy dog';
+}
+
 // List all top-level frames in a Figma file
 app.post('/api/figma/list-frames', async (req, res) => {
   try {

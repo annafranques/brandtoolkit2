@@ -467,8 +467,12 @@
                         <input type="password" id="figma-access-token" class="form-control" placeholder="figd_XXXXXXXX (leave blank to use server token)">
                         <small>Generate in Figma → Settings → Personal access tokens. Only stored in memory during this session.</small>
                     </div>
-                    <button class="btn btn-secondary" onclick="loadFigmaFrames()" id="figma-load-btn">Load Slides / Frames</button>
+                    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.25rem;">
+                        <button class="btn btn-primary" onclick="fetchFigmaStyles()" id="figma-fetch-styles-btn">Fetch Colors + Text Styles</button>
+                        <button class="btn btn-secondary" onclick="loadFigmaFrames()" id="figma-load-btn">Load Frames / Slides</button>
+                    </div>
 
+                    <div id="figma-styles-results" style="margin-top:1.5rem;"></div>
                     <div id="figma-frames-list" style="margin-top: 2rem;"></div>
                 </div>
                 
