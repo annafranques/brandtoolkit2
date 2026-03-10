@@ -5362,7 +5362,8 @@ const SECTION_NAME_MAP = {
 };
 
 function extractFigmaFileKey(input) {
-  const match = input.match(/figma\.com\/(?:file|design)\/([a-zA-Z0-9]+)/);
+  // Supports figma.com/file/, /design/, and /slides/ URLs
+  const match = input.match(/figma\.com\/(?:file|design|slides)\/([a-zA-Z0-9]+)/);
   return match ? match[1] : input.trim();
 }
 
@@ -5384,6 +5385,18 @@ function matchSectionId(frameName) {
   return null;
 }
 
+// Section options for dropdown picker
+const SECTION_OPTIONS = [
+  { id: '',            label: '— skip —' },
+  { id: 'frame-rebel', label: 'Cover / Hero' },
+  { id: 'logotype',   label: 'Logo' },
+  { id: 'typography', label: 'Typography' },
+  { id: 'color',      label: 'Colors' },
+  { id: 'photography',label: 'Photography' },
+  { id: 'stickers',   label: 'Stickers / Illustrations' },
+  { id: 'applications',label: 'Applications' },
+];
+
 async function loadFigmaFrames() {
   const urlInput = document.getElementById('figma-file-url').value.trim();
   const token = document.getElementById('figma-access-token').value.trim();
@@ -5400,107 +5413,131 @@ async function loadFigmaFrames() {
   listDiv.innerHTML = '';
 
   try {
-    const res = await fetch('/api/figma/list-frames', {
+    // 1. Get frame list
+    const listRes = await fetch('/api/figma/list-frames', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileKey, token })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-
-    if (!data.frames.length) {
-      listDiv.innerHTML = '<p>No top-level frames found in this file.</p>';
+    const listData = await listRes.json();
+    if (!listRes.ok) throw new Error(listData.error);
+    if (!listData.frames.length) {
+      listDiv.innerHTML = '<p>No slides/frames found in this file.</p>';
       return;
     }
 
-    // Render frame list with section matching
-    let html = `<p style="margin-bottom:1rem;opacity:0.6;font-size:0.8125rem">${data.frames.length} frames found in <strong>${data.fileName}</strong></p>`;
-    html += `<div class="figma-frames-grid">`;
-    data.frames.forEach(frame => {
-      const matched = matchSectionId(frame.name);
+    // 2. Get low-res thumbnails (scale 0.5) for preview
+    const thumbRes = await fetch('/api/figma/export-frames', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileKey, frameIds: listData.frames.map(f => f.id), token, scale: 0.5 })
+    });
+    const thumbData = await thumbRes.json();
+    const thumbs = thumbData.images || {};
+
+    // 3. Render visual grid with section dropdowns
+    const sectionOpts = SECTION_OPTIONS.map(o =>
+      `<option value="${o.id}">${o.label}</option>`
+    ).join('');
+
+    let html = `<p style="margin-bottom:1.5rem;opacity:0.6;font-size:0.8125rem">${listData.frames.length} slides in <strong>${listData.fileName}</strong> — pick a section for each one you want to import</p>`;
+    html += `<div class="figma-slides-grid">`;
+
+    listData.frames.forEach(frame => {
+      const thumb = thumbs[frame.id];
+      const autoMatch = matchSectionId(frame.name);
+      const opts = SECTION_OPTIONS.map(o =>
+        `<option value="${o.id}" ${o.id === (autoMatch || '') ? 'selected' : ''}>${o.label}</option>`
+      ).join('');
+
       html += `
-        <div class="figma-frame-row" data-frame-id="${frame.id}" data-frame-name="${frame.name}">
-          <label class="figma-frame-check">
-            <input type="checkbox" class="figma-frame-checkbox" value="${frame.id}" data-name="${frame.name}" ${matched ? 'checked' : ''}>
-            <span class="figma-frame-name">${frame.name}</span>
-          </label>
-          <span class="figma-frame-page">${frame.page}</span>
-          <span class="figma-frame-match">${matched ? `→ ${matched}` : '<span style="opacity:0.35">no match</span>'}</span>
+        <div class="figma-slide-card" data-frame-id="${frame.id}">
+          <div class="figma-slide-thumb">
+            ${thumb ? `<img src="${thumb}" alt="${frame.name}">` : '<div class="figma-slide-thumb-placeholder"></div>'}
+          </div>
+          <div class="figma-slide-meta">
+            <span class="figma-slide-name">${frame.name}</span>
+            <select class="figma-slide-section form-control" data-frame-id="${frame.id}">
+              ${opts}
+            </select>
+          </div>
         </div>`;
     });
+
     html += `</div>`;
-    html += `<div style="margin-top:1.5rem;display:flex;gap:1rem;align-items:center">
-      <button class="btn btn-primary" onclick="importFigmaFrames('${fileKey}', '${token}')">Import Selected</button>
+    html += `<div style="margin-top:2rem;display:flex;gap:1rem;align-items:center">
+      <button class="btn btn-primary" id="figma-import-btn" onclick="importFigmaFrames('${fileKey}', '${token}')">Import Selected</button>
       <span id="figma-import-status" style="font-size:0.8125rem;opacity:0.6"></span>
     </div>`;
     listDiv.innerHTML = html;
+
   } catch (err) {
     listDiv.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
   } finally {
-    btn.textContent = 'Load Frames';
+    btn.textContent = 'Load Slides';
     btn.disabled = false;
   }
 }
 
 async function importFigmaFrames(fileKey, token) {
-  const checkboxes = document.querySelectorAll('.figma-frame-checkbox:checked');
   const statusEl = document.getElementById('figma-import-status');
-  if (!checkboxes.length) { statusEl.textContent = 'No frames selected.'; return; }
+  const importBtn = document.getElementById('figma-import-btn');
 
-  const frameIds = Array.from(checkboxes).map(cb => cb.value);
-  const frameNames = {};
-  checkboxes.forEach(cb => { frameNames[cb.value] = cb.dataset.name; });
+  // Collect all slides that have a section selected (not "skip")
+  const selects = document.querySelectorAll('.figma-slide-section');
+  const toImport = [];
+  selects.forEach(sel => {
+    if (sel.value) toImport.push({ frameId: sel.dataset.frameId, sectionId: sel.value });
+  });
 
-  statusEl.textContent = `Exporting ${frameIds.length} frame(s)…`;
-  document.querySelector('[onclick^="importFigmaFrames"]').disabled = true;
+  if (!toImport.length) { statusEl.textContent = 'No sections selected.'; return; }
+
+  statusEl.textContent = `Exporting ${toImport.length} slide(s) at full resolution…`;
+  if (importBtn) importBtn.disabled = true;
 
   try {
-    const res = await fetch('/api/figma/export-frames', {
+    // Export at full resolution (scale 2)
+    const exportRes = await fetch('/api/figma/export-frames', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileKey, frameIds, token, scale: 2 })
+      body: JSON.stringify({ fileKey, frameIds: toImport.map(t => t.frameId), token, scale: 2 })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+    const exportData = await exportRes.json();
+    if (!exportRes.ok) throw new Error(exportData.error);
 
-    // Load current content and update matching sections
+    const images = exportData.images || {};
+
+    // Load current content
     const contentRes = await fetch('/api/content');
     const content = await contentRes.json();
     let imported = 0;
 
-    for (const [nodeId, base64] of Object.entries(data.images || {})) {
+    for (const { frameId, sectionId } of toImport) {
+      const base64 = images[frameId];
       if (!base64) continue;
-      const frameName = frameNames[nodeId];
-      const sectionId = matchSectionId(frameName);
 
       if (sectionId === 'frame-rebel') {
         if (!content.frameRebel) content.frameRebel = {};
         content.frameRebel.image = base64;
-        imported++;
-      } else if (sectionId && content[sectionId] !== undefined) {
-        if (typeof content[sectionId] === 'object') {
-          content[sectionId].image = base64;
+      } else {
+        if (!content[sectionId] || typeof content[sectionId] !== 'object') {
+          content[sectionId] = {};
         }
-        imported++;
-      } else if (sectionId) {
-        // Section exists as key — create if needed
-        content[sectionId] = { image: base64 };
-        imported++;
+        content[sectionId].image = base64;
       }
+      imported++;
     }
 
-    // Save content
     await fetch('/api/content', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(content)
     });
 
-    statusEl.textContent = `✓ ${imported} image(s) imported successfully. Reload the page to see changes.`;
+    statusEl.textContent = `✓ ${imported} slide(s) imported. Reload the frontend to see them.`;
   } catch (err) {
     statusEl.textContent = `Error: ${err.message}`;
   } finally {
-    const btn = document.querySelector('[onclick^="importFigmaFrames"]');
-    if (btn) btn.disabled = false;
+    if (importBtn) importBtn.disabled = false;
   }
 }
