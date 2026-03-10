@@ -1974,22 +1974,6 @@ app.post('/api/figma/fetch-styles', async (req, res) => {
     const figmaToken = token || FIGMA_TOKEN;
     if (!figmaToken) return res.status(400).json({ error: 'Figma token required' });
 
-    // 1. Get file metadata — styles map lives here
-    const file = await figmaRequestWithToken(`/files/${fileKey}?depth=1`, figmaToken);
-    const stylesMap = file.styles || {};   // { nodeId: { name, styleType, key } }
-    const styleIds = Object.keys(stylesMap);
-
-    if (!styleIds.length) {
-      return res.json({ success: true, colors: [], typography: [], message: 'No local styles found in this file.' });
-    }
-
-    // 2. Fetch the actual style-defining nodes in one request
-    const chunk = styleIds.slice(0, 50).join(',');   // Figma limit: 50 nodes per request
-    const nodesData = await figmaRequestWithToken(
-      `/files/${fileKey}/nodes?ids=${encodeURIComponent(chunk)}`,
-      figmaToken
-    );
-
     function rgbToHex(r, g, b) {
       return '#' + [r, g, b].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
     }
@@ -1999,49 +1983,106 @@ app.post('/api/figma/fetch-styles', async (req, res) => {
     const typography = [];
     const typographyMap = new Map();
 
-    Object.entries(nodesData.nodes || {}).forEach(([nodeId, nodeWrapper]) => {
-      const node = nodeWrapper?.document;
-      const meta = stylesMap[nodeId];
-      if (!node || !meta) return;
+    // 1. Get file — styles map + full document for fallback traversal
+    const file = await figmaRequestWithToken(`/files/${fileKey}`, figmaToken);
 
-      if (meta.styleType === 'FILL') {
-        const fill = (node.fills || [])[0];
-        if (fill && fill.type === 'SOLID' && fill.color) {
-          const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
-          if (!colorMap.has(hex)) {
-            colorMap.set(hex, true);
-            colors.push({
-              id: `color-${Date.now()}-${colors.length}`,
-              name: meta.name,
-              hex,
-              type: colors.length === 0 ? 'primary' : 'secondary'
-            });
+    if (file.err || file.status === 403) {
+      return res.status(403).json({ error: 'Figma API error: ' + (file.err || 'Access denied. Check your token has read access to this file.') });
+    }
+
+    const stylesMap = file.styles || {};
+    const styleIds = Object.keys(stylesMap);
+
+    console.log(`[Figma] Found ${styleIds.length} style IDs in file:`, styleIds.slice(0, 10));
+
+    // 2a. If the file has a styles map, fetch those specific nodes
+    if (styleIds.length > 0) {
+      // Do NOT encodeURIComponent — commas and colons are fine in query strings for Figma API
+      const chunk = styleIds.slice(0, 50).join(',');
+      const nodesData = await figmaRequestWithToken(
+        `/files/${fileKey}/nodes?ids=${chunk}`,
+        figmaToken
+      );
+
+      console.log(`[Figma] Nodes response keys:`, Object.keys(nodesData.nodes || {}).slice(0, 5));
+
+      Object.entries(nodesData.nodes || {}).forEach(([nodeId, nodeWrapper]) => {
+        const node = nodeWrapper?.document;
+        const meta = stylesMap[nodeId];
+        if (!node || !meta) return;
+
+        if (meta.styleType === 'FILL') {
+          const fill = (node.fills || [])[0];
+          if (fill && fill.type === 'SOLID' && fill.color) {
+            const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
+            if (!colorMap.has(hex)) {
+              colorMap.set(hex, true);
+              colors.push({ id: `color-${Date.now()}-${colors.length}`, name: meta.name, hex, type: colors.length === 0 ? 'primary' : 'secondary' });
+            }
+          }
+        } else if (meta.styleType === 'TEXT') {
+          const s = node.style || {};
+          if (s.fontFamily) {
+            const key = `${s.fontFamily}-${s.fontWeight || 400}`;
+            if (!typographyMap.has(key)) {
+              typographyMap.set(key, true);
+              const lhPct = s.lineHeightPercentFontSize;
+              const lhPx  = s.lineHeightPx;
+              const lh = lhPct ? Math.round(lhPct) + '%' : (lhPx ? Math.round(lhPx) + 'px' : null);
+              typography.push({
+                name: meta.name, fontFamily: s.fontFamily,
+                fontSize: s.fontSize || null, fontWeight: s.fontWeight || 400,
+                fontStyle: s.italic ? 'italic' : 'normal',
+                lineHeight: lh, letterSpacing: s.letterSpacing || 0,
+                isGoogleFont: isGoogleFont(s.fontFamily)
+              });
+            }
           }
         }
+      });
+    }
 
-      } else if (meta.styleType === 'TEXT') {
-        const s = node.style || {};
-        if (s.fontFamily) {
+    // 2b. Fallback: traverse the document tree (catches styles not in the map)
+    if (colors.length === 0 && typography.length === 0) {
+      console.log('[Figma] styles map empty — falling back to document traversal');
+      function traverse(node) {
+        if (!node) return;
+        // Color from fills
+        if (node.fills) {
+          node.fills.forEach(fill => {
+            if (fill.type === 'SOLID' && fill.color) {
+              const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
+              const name = node.name || '';
+              // Only keep nodes that look like colour swatches (small rectangles / named colours)
+              if (!colorMap.has(hex) && (node.type === 'RECTANGLE' || node.type === 'ELLIPSE' || name.match(/colour|color|swatch|palette/i))) {
+                colorMap.set(hex, true);
+                colors.push({ id: `color-${Date.now()}-${colors.length}`, name, hex, type: colors.length === 0 ? 'primary' : 'secondary' });
+              }
+            }
+          });
+        }
+        // Typography from text nodes
+        if (node.type === 'TEXT' && node.style?.fontFamily) {
+          const s = node.style;
           const key = `${s.fontFamily}-${s.fontWeight || 400}`;
           if (!typographyMap.has(key)) {
             typographyMap.set(key, true);
-            const lh = s.lineHeightUnit === 'PERCENT'
-              ? (s.lineHeightPercentFontSize ? Math.round(s.lineHeightPercentFontSize) + '%' : null)
-              : (s.lineHeightPx ? Math.round(s.lineHeightPx) + 'px' : null);
+            const lh = s.lineHeightPercentFontSize ? Math.round(s.lineHeightPercentFontSize) + '%' : (s.lineHeightPx ? Math.round(s.lineHeightPx) + 'px' : null);
             typography.push({
-              name: meta.name,
-              fontFamily: s.fontFamily,
-              fontSize: s.fontSize || null,
-              fontWeight: s.fontWeight || 400,
-              fontStyle: (s.italic || s.fontPostScriptName?.toLowerCase().includes('italic')) ? 'italic' : 'normal',
-              lineHeight: lh,
-              letterSpacing: s.letterSpacing || 0,
+              name: node.name || s.fontFamily, fontFamily: s.fontFamily,
+              fontSize: s.fontSize || null, fontWeight: s.fontWeight || 400,
+              fontStyle: s.italic ? 'italic' : 'normal',
+              lineHeight: lh, letterSpacing: s.letterSpacing || 0,
               isGoogleFont: isGoogleFont(s.fontFamily)
             });
           }
         }
+        (node.children || []).forEach(traverse);
       }
-    });
+      (file.document?.children || []).forEach(page => traverse(page));
+    }
+
+    console.log(`[Figma] Result: ${colors.length} colors, ${typography.length} typography styles`);
 
     // 3. Optionally apply to content
     if (autoApply && (colors.length > 0 || typography.length > 0)) {

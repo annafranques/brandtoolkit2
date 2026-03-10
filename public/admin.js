@@ -5427,11 +5427,18 @@ async function fetchFigmaStyles() {
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      resultsDiv.innerHTML = `<p style="color:#c00;">Error: ${data.error || 'Unknown error'}</p>`;
+      resultsDiv.innerHTML = `<p style="color:#c00;font-size:.875rem;">Error: ${data.error || 'Unknown error'}<br><small style="opacity:.6;">Make sure your token has "Read" access and the file URL is correct.</small></p>`;
       return;
     }
 
     const { colors = [], typography = [] } = data;
+
+    if (colors.length === 0 && typography.length === 0) {
+      resultsDiv.innerHTML = `<p style="font-size:.875rem;opacity:.6;">No local styles found in this file.<br><br>
+        This usually means the styles (Northern Dusk, Heading etc.) live in a <strong>library file</strong>, not this design file.<br>
+        Try pasting the URL of the file where those styles are actually defined — not a file that just uses them.</p>`;
+      return;
+    }
 
     // Refresh UI
     if (colors.length > 0) renderColorsList(colors);
