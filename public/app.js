@@ -1393,50 +1393,60 @@ async function loadContent() {
 }
 
 // Format content - convert newlines to paragraphs, handle subsections
+// Convert an array of text lines into HTML, grouping "- item" lines into styled lists
+function renderLines(lines) {
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i];
+        if (!line) { i++; continue; }
+
+        // Group consecutive dash-prefixed lines into a <ul>
+        if (line.startsWith('- ')) {
+            html += '<ul class="content-list">';
+            while (i < lines.length && lines[i].startsWith('- ')) {
+                html += `<li>${parseMarkdownBold(lines[i].slice(2))}</li>`;
+                i++;
+            }
+            html += '</ul>';
+            continue;
+        }
+
+        // Regular paragraph (bold-only paragraphs get styled via CSS :has selector)
+        html += `<p>${parseMarkdownBold(line)}</p>`;
+        i++;
+    }
+    return html;
+}
+
 function formatContent(text) {
     if (!text) return '<p>No content yet. Edit via admin panel.</p>';
-    
+
     const lines = text.trim().split('\n').filter(line => line.trim());
     let html = '';
     let currentSubsection = null;
     let currentContent = [];
-    
-    lines.forEach((line, index) => {
+
+    lines.forEach((line) => {
         const trimmed = line.trim();
-        
+
         // Check if line is a subsection header (e.g., "01.1 Our Proposition:" or "01.1 Our Proposition")
         const subsectionMatch = trimmed.match(/^(\d+\.\d+)\s+(.+?)(:)?$/);
         if (subsectionMatch) {
-            // Close previous subsection if any
-            if (currentSubsection) {
-                html += renderSubsection(currentSubsection, currentContent);
-            }
-            // Start new subsection
-            currentSubsection = {
-                number: subsectionMatch[1],
-                title: subsectionMatch[2]
-            };
+            if (currentSubsection) html += renderSubsection(currentSubsection, currentContent);
+            currentSubsection = { number: subsectionMatch[1], title: subsectionMatch[2] };
             currentContent = [];
         } else {
-            // Regular content line
             currentContent.push(trimmed);
         }
     });
-    
-    // Close last subsection if any
+
     if (currentSubsection) {
         html += renderSubsection(currentSubsection, currentContent);
     } else if (currentContent.length > 0) {
-        // No subsections, just render as paragraphs
-        currentContent.forEach(line => {
-            if (line.trim()) {
-                // Apply markdown bold parsing
-                const processedLine = parseMarkdownBold(line.trim());
-                html += `<p>${processedLine}</p>`;
-            }
-        });
+        html += renderLines(currentContent);
     }
-    
+
     return html;
 }
 
@@ -1445,15 +1455,8 @@ function renderSubsection(subsection, content) {
     let html = '<div class="subsection">';
     html += `<div class="subsection-number">${subsection.number}</div>`;
     html += `<div class="subsection-title">${subsection.title}</div>`;
-    html += '<div class="subsection-content">';
-    content.forEach(line => {
-        if (line.trim()) {
-            // Apply markdown bold parsing
-            const processedLine = parseMarkdownBold(line.trim());
-            html += `<p>${processedLine}</p>`;
-        }
-    });
-    html += '</div></div>';
+    html += `<div class="subsection-content">${renderLines(content)}</div>`;
+    html += '</div>';
     return html;
 }
 
