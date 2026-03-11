@@ -1947,7 +1947,9 @@ app.post('/api/figma/sync/:fileKey', async (req, res) => {
 
 // ─── Figma Frame Import ──────────────────────────────────────────────────────
 
-// Helper: make a Figma API request with a specific token
+// Helper: make a Figma API request with a specific token.
+// Always resolves — non-200 responses resolve with { __status: N, __err: '...' }
+// so callers can check the status code and show appropriate messages.
 function figmaRequestWithToken(endpoint, token) {
   return new Promise((resolve, reject) => {
     const url = `${FIGMA_API_BASE}${endpoint}`;
@@ -1959,8 +1961,8 @@ function figmaRequestWithToken(endpoint, token) {
         try {
           const json = JSON.parse(data);
           if (res.statusCode === 200) resolve(json);
-          else reject(new Error(`Figma API error: ${res.statusCode} - ${json.err || data}`));
-        } catch (e) { reject(new Error(`Failed to parse response: ${e.message}`)); }
+          else resolve({ __status: res.statusCode, __err: json.err || json.message || data });
+        } catch (e) { reject(new Error(`Failed to parse Figma response: ${e.message}`)); }
       });
     }).on('error', reject);
   });
@@ -1983,28 +1985,49 @@ app.post('/api/figma/fetch-styles', async (req, res) => {
     const typography = [];
     const typographyMap = new Map();
 
-    // 1. Get file — styles map + full document for fallback traversal
-    const file = await figmaRequestWithToken(`/files/${fileKey}`, figmaToken);
+    // 1. Use the dedicated /styles endpoint — returns ONLY the style list (fast),
+    //    no document tree download needed.
+    const stylesRes = await figmaRequestWithToken(`/files/${fileKey}/styles`, figmaToken);
 
-    if (file.err || file.status === 403) {
-      return res.status(403).json({ error: 'Figma API error: ' + (file.err || 'Access denied. Check your token has read access to this file.') });
+    if (stylesRes.__status) {
+      const s = stylesRes.__status;
+      if (s === 429) return res.status(429).json({ error: 'Figma rate limit hit. Wait 30–60 seconds and try again.' });
+      if (s === 403) return res.status(403).json({ error: 'Access denied — check your Figma token has "Read" access to this file.' });
+      if (s === 404) return res.status(404).json({ error: 'File not found — make sure the URL is correct and your token can access it.' });
+      return res.status(s).json({ error: `Figma API error ${s}: ${stylesRes.__err}` });
     }
 
-    const stylesMap = file.styles || {};
+    // Build a map from nodeId → style metadata
+    // Figma returns node_id as "1:23" (colon format) — same as file.styles keys
+    const stylesList = stylesRes.meta?.styles || [];
+    console.log(`[Figma] /files/styles raw response — ${stylesList.length} entries, sample:`, JSON.stringify(stylesList[0] || {}));
+
+    const stylesMap = {};
+    stylesList.forEach(s => {
+      // style_type is "FILL", "TEXT", "EFFECT", "GRID" — only care about FILL + TEXT
+      if (s.node_id && (s.style_type === 'FILL' || s.style_type === 'TEXT')) {
+        stylesMap[s.node_id] = { name: s.name, styleType: s.style_type };
+      }
+    });
     const styleIds = Object.keys(stylesMap);
 
-    console.log(`[Figma] Found ${styleIds.length} style IDs in file:`, styleIds.slice(0, 10));
+    console.log(`[Figma] Filtered to ${styleIds.length} FILL+TEXT styles:`, styleIds.slice(0, 10));
 
-    // 2a. If the file has a styles map, fetch those specific nodes
-    if (styleIds.length > 0) {
-      // Do NOT encodeURIComponent — commas and colons are fine in query strings for Figma API
-      const chunk = styleIds.slice(0, 50).join(',');
+    if (styleIds.length === 0) {
+      return res.json({ success: true, colors: [], typography: [], autoApplied: false, message: 'no_local_styles' });
+    }
+
+    // 2. Fetch the actual node properties for each style (in batches of 50)
+    for (let i = 0; i < styleIds.length; i += 50) {
+      const chunk = styleIds.slice(i, i + 50).join(',');
       const nodesData = await figmaRequestWithToken(
         `/files/${fileKey}/nodes?ids=${chunk}`,
         figmaToken
       );
 
-      console.log(`[Figma] Nodes response keys:`, Object.keys(nodesData.nodes || {}).slice(0, 5));
+      if (nodesData.__status) continue; // skip bad batches, don't fail the whole request
+
+      console.log(`[Figma] Nodes batch ${i / 50 + 1} — ${Object.keys(nodesData.nodes || {}).length} nodes`);
 
       Object.entries(nodesData.nodes || {}).forEach(([nodeId, nodeWrapper]) => {
         const node = nodeWrapper?.document;
@@ -2040,46 +2063,6 @@ app.post('/api/figma/fetch-styles', async (req, res) => {
           }
         }
       });
-    }
-
-    // 2b. Fallback: traverse the document tree (catches styles not in the map)
-    if (colors.length === 0 && typography.length === 0) {
-      console.log('[Figma] styles map empty — falling back to document traversal');
-      function traverse(node) {
-        if (!node) return;
-        // Color from fills
-        if (node.fills) {
-          node.fills.forEach(fill => {
-            if (fill.type === 'SOLID' && fill.color) {
-              const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b);
-              const name = node.name || '';
-              // Only keep nodes that look like colour swatches (small rectangles / named colours)
-              if (!colorMap.has(hex) && (node.type === 'RECTANGLE' || node.type === 'ELLIPSE' || name.match(/colour|color|swatch|palette/i))) {
-                colorMap.set(hex, true);
-                colors.push({ id: `color-${Date.now()}-${colors.length}`, name, hex, type: colors.length === 0 ? 'primary' : 'secondary' });
-              }
-            }
-          });
-        }
-        // Typography from text nodes
-        if (node.type === 'TEXT' && node.style?.fontFamily) {
-          const s = node.style;
-          const key = `${s.fontFamily}-${s.fontWeight || 400}`;
-          if (!typographyMap.has(key)) {
-            typographyMap.set(key, true);
-            const lh = s.lineHeightPercentFontSize ? Math.round(s.lineHeightPercentFontSize) + '%' : (s.lineHeightPx ? Math.round(s.lineHeightPx) + 'px' : null);
-            typography.push({
-              name: node.name || s.fontFamily, fontFamily: s.fontFamily,
-              fontSize: s.fontSize || null, fontWeight: s.fontWeight || 400,
-              fontStyle: s.italic ? 'italic' : 'normal',
-              lineHeight: lh, letterSpacing: s.letterSpacing || 0,
-              isGoogleFont: isGoogleFont(s.fontFamily)
-            });
-          }
-        }
-        (node.children || []).forEach(traverse);
-      }
-      (file.document?.children || []).forEach(page => traverse(page));
     }
 
     console.log(`[Figma] Result: ${colors.length} colors, ${typography.length} typography styles`);

@@ -1073,6 +1073,76 @@ async function loadContent() {
             downloadsSection.remove();
         }
 
+        // 08. What's Next (services / upsell) — always visible
+        const servicesSection = document.getElementById('services');
+        const servicesContent = document.getElementById('services-content');
+        if (servicesSection && servicesContent) {
+            const AGENCY_EMAIL = 'hola@santahelena.agency';
+            const services = [
+                {
+                    tag: 'Digital',
+                    title: 'Website Refresh',
+                    description: 'Bring your new brand identity to life online. We update your site\'s typography, colours, components and layout to match your new visual language — so your website finally looks like you.'
+                },
+                {
+                    tag: 'Strategy',
+                    title: 'Social Media Strategy',
+                    description: 'Define your channels, content pillars, posting rhythm and tone of voice. A clear plan for showing up consistently and growing the right audience.'
+                },
+                {
+                    tag: 'Templates',
+                    title: 'Social Media Templates',
+                    description: 'A Canva or Figma template pack — posts, stories, carousels and reels covers. Your team stays on-brand without needing a designer every time.'
+                },
+                {
+                    tag: 'Print',
+                    title: 'Print Design',
+                    description: 'Business cards, letterheads, brochures, packaging and signage. Your brand in the physical world, crafted with the same care as your digital presence.'
+                },
+                {
+                    tag: 'Creative Direction',
+                    title: 'Brand Photography Direction',
+                    description: 'A photography brief, mood board and art direction guide so every image you create or commission feels unmistakably on-brand.'
+                },
+                {
+                    tag: 'Digital',
+                    title: 'Email Newsletter Templates',
+                    description: 'Branded email templates for Mailchimp, Klaviyo or any ESP — headers, layouts, product blocks and footers, all aligned to your new identity.'
+                },
+                {
+                    tag: 'Motion',
+                    title: 'Motion & Animation',
+                    description: 'Animated logo, social motion graphics or presentation transitions. Your brand in movement — designed to perform on every screen.'
+                },
+                {
+                    tag: 'Campaigns',
+                    title: 'Campaign Design',
+                    description: 'Seasonal launches, product drops or brand moments. Full art direction, copy direction and multi-channel assets, ready to go live.'
+                }
+            ];
+
+            const cardsHtml = services.map(s => `
+                <div class="service-card">
+                    <div class="service-tag">${s.tag}</div>
+                    <div class="service-title">${s.title}</div>
+                    <p class="service-description">${s.description}</p>
+                    <a class="service-cta" href="mailto:${AGENCY_EMAIL}?subject=${encodeURIComponent('Interested in ' + s.title)}">Get in touch →</a>
+                </div>`).join('');
+
+            servicesContent.className = 'content-section-content';
+            servicesContent.innerHTML = `
+                <p class="services-intro">Your brand is ready. Here's how we can help you activate it across every touchpoint.</p>
+                <div class="services-grid">${cardsHtml}<div class="services-grid-footer"></div></div>
+                <div class="services-banner">
+                    <div class="services-banner-text">
+                        <h3>Got something else in mind?</h3>
+                        <p>We're always up for a good brief. Tell us what you're building.</p>
+                    </div>
+                    <a href="mailto:${AGENCY_EMAIL}" class="services-banner-cta">Say hello</a>
+                </div>`;
+            sectionIndex++;
+        }
+
         // Apply alternating brand background colors to ALL non-hero sections
         // Use DOM order for alternation — skip sections with hero images (they handle their own bg)
         let nonHeroIdx = 0;
@@ -1093,7 +1163,8 @@ async function loadContent() {
             { id: 'graphic-language', name: 'Graphic Language', navName: 'Graphic Language' },
             { id: 'photography', name: 'Photography', navName: 'Photography' },
             { id: 'applications', name: 'Brand in Use', navName: 'Brand in Use' },
-            { id: 'downloads', name: 'Downloads', navName: 'Downloads' }
+            { id: 'downloads', name: 'Downloads', navName: 'Downloads' },
+            { id: 'services', name: "What's Next", navName: "What's Next" }
         ];
         
         // Build navigation dynamically based on visible sections

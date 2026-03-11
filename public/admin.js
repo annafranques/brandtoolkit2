@@ -5198,7 +5198,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Hide preloader and show content
     hideAdminPreloader();
-    
+
+    // ── Restore saved Figma URL + token from localStorage ──────────────────
+    const savedFigmaUrl   = localStorage.getItem('figma_file_url');
+    const savedFigmaToken = localStorage.getItem('figma_access_token');
+    const figmaUrlEl   = document.getElementById('figma-file-url');
+    const figmaTokenEl = document.getElementById('figma-access-token');
+    if (figmaUrlEl   && savedFigmaUrl)   figmaUrlEl.value   = savedFigmaUrl;
+    if (figmaTokenEl && savedFigmaToken) figmaTokenEl.value = savedFigmaToken;
+
+    // Auto-save Figma URL + token to localStorage whenever they change
+    if (figmaUrlEl)   figmaUrlEl.addEventListener('change', () => localStorage.setItem('figma_file_url',   figmaUrlEl.value.trim()));
+    if (figmaTokenEl) figmaTokenEl.addEventListener('change', () => localStorage.setItem('figma_access_token', figmaTokenEl.value.trim()));
+    // ───────────────────────────────────────────────────────────────────────
+
     // Setup save button
     const saveBtn = document.getElementById('save-btn');
     if (saveBtn) {
@@ -5416,7 +5429,7 @@ async function fetchFigmaStyles() {
 
   btn.disabled = true;
   btn.textContent = 'Fetching…';
-  resultsDiv.innerHTML = `<p style="opacity:.5;font-size:.8125rem;">Reading styles from Figma…</p>`;
+  resultsDiv.innerHTML = `<p style="opacity:.5;font-size:.8125rem;">Reading styles from Figma… <span id="figma-fetch-step">(step 1/2: styles list)</span></p>`;
 
   try {
     const res = await fetch('/api/figma/fetch-styles', {
@@ -5427,16 +5440,27 @@ async function fetchFigmaStyles() {
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      resultsDiv.innerHTML = `<p style="color:#c00;font-size:.875rem;">Error: ${data.error || 'Unknown error'}<br><small style="opacity:.6;">Make sure your token has "Read" access and the file URL is correct.</small></p>`;
+      const is429 = res.status === 429 || (data.error || '').toLowerCase().includes('rate limit');
+      resultsDiv.innerHTML = is429
+        ? `<div style="padding:.875rem 1.25rem;border:1px solid rgba(0,0,0,0.08);font-size:.875rem;line-height:1.5;">
+            <p style="margin:0 0 .4rem;font-weight:600;">Figma rate limit — just wait a moment</p>
+            <p style="margin:0;opacity:.6;">Figma limits API requests. Wait 30–60 seconds, then try again.</p>
+           </div>`
+        : `<p style="color:#c00;font-size:.875rem;">${data.error || 'Unknown error'}<br><small style="opacity:.6;">Make sure your token has "Read" access and the file URL is correct.</small></p>`;
       return;
     }
 
-    const { colors = [], typography = [] } = data;
+    const { colors = [], typography = [], message } = data;
 
-    if (colors.length === 0 && typography.length === 0) {
-      resultsDiv.innerHTML = `<p style="font-size:.875rem;opacity:.6;">No local styles found in this file.<br><br>
-        This usually means the styles (Northern Dusk, Heading etc.) live in a <strong>library file</strong>, not this design file.<br>
-        Try pasting the URL of the file where those styles are actually defined — not a file that just uses them.</p>`;
+    if (message === 'no_local_styles' || (colors.length === 0 && typography.length === 0)) {
+      resultsDiv.innerHTML = `
+        <div style="padding:1rem 1.25rem;border:1px solid rgba(0,0,0,0.08);font-size:.875rem;line-height:1.6;">
+          <p style="margin:0 0 .75rem;font-weight:600;">No styles found in this file</p>
+          <p style="margin:0 0 .75rem;opacity:.7;">Your styles (Northern Dusk, Heading 28, etc.) are probably defined in a <strong>library file</strong> — a separate Figma file that this one links to.</p>
+          <p style="margin:0;opacity:.6;font-size:.8125rem;">
+            <strong>To fix:</strong> In Figma, right-click any of your colour or text styles → <em>Go to definition</em> → copy that file's URL and paste it here instead.
+          </p>
+        </div>`;
       return;
     }
 
